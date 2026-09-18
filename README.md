@@ -47,6 +47,7 @@ Once per distribution interval (1,050 Bitcoin blocks, two per cycle), `calculate
 | `contracts/contracts/risk-feed-trait.clar` | The shared read interface (`get-coverage-summary`). |
 | `contracts/contracts/coverage-guard.clar` | Example consumer: returns `ok` or `paused` based on coverage and staleness. |
 | `indexer/` | Node/TS indexer and public API (Railway, Postgres). |
+| `web/` | Next.js landing page (from the Aceternity Cryptgen template, recoloured) and dashboard (Vercel). The browser only talks to the site's own domain: `/api/*` is proxied to the indexer. |
 | `research/` | Phase 0 raw data and findings. `research/missing-blocks/` explains the reward-paying fraction. |
 
 ## Contracts
@@ -106,6 +107,9 @@ cd contracts && npm install
 npm test            # simnet suite
 npm run test:fork   # pox5-reader against mainnet state pinned at Stacks block 9,019,000
 
+# web (METACENTER_API_ORIGIN defaults to the Railway API)
+cd web && npm install && npm run dev
+
 # indexer
 cd indexer && npm install
 DATABASE_URL=postgres://... npm run once   # one poll, including backfill
@@ -117,6 +121,10 @@ Deploying uses key files kept outside the repo:
 ```sh
 node scripts/deploy.mjs <network> <key-file> <contract>...
 ```
+
+## Branding
+
+Drop `logo.svg` / `logo.png` into `web/public/`. The header, sidebar and favicon then use them; until then a text wordmark is shown. The X handle is the single value `X_HANDLE` in `web/lib/site.ts`; the footer shows the X link once it is set.
 
 ## Licence
 
