@@ -61,7 +61,7 @@ const DesktopNav = ({ navItems, visible, hasLogo }: NavbarProps) => {
       onMouseLeave={() => setHoveredIndex(null)}
       animate={{
         backdropFilter: "blur(16px)",
-        width: visible ? "46%" : "80%",
+        width: visible ? "min(760px, 70%)" : "80%",
         height: visible ? "52px" : "64px",
         y: visible ? 8 : 0,
       }}
@@ -127,33 +127,9 @@ const DesktopNav = ({ navItems, visible, hasLogo }: NavbarProps) => {
       </motion.div>
       <div className="flex items-center gap-2">
         <ThemeToggle />
-        <AnimatePresence mode="popLayout" initial={false}>
-          {!visible && (
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{
-                scale: 1,
-                opacity: 1,
-                transition: {
-                  type: "spring",
-                  stiffness: 400,
-                  damping: 25,
-                },
-              }}
-              exit={{
-                scale: 0.8,
-                opacity: 0,
-                transition: {
-                  duration: 0.2,
-                },
-              }}
-            >
-              <Button as={Link} href="/dashboard" variant="primary" className="hidden md:inline-flex rounded-full">
-                Open dashboard
-              </Button>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <Button as={Link} href="/dashboard" variant="primary" className="rounded-full whitespace-nowrap">
+          Open dashboard
+        </Button>
       </div>
     </motion.div>
   );

@@ -7,7 +7,8 @@ dist/
 .next/
 .vercel/
 .cache/
-coverage/
+/contracts/coverage/
+/indexer/coverage/
 *.log
 # private planning brief
 phase0.md
