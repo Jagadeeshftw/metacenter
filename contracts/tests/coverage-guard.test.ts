@@ -32,9 +32,9 @@ const inputs = (gross: number, target: number) => {
 const post = (index: number, gross: number, target: number) =>
   simnet.callPublicFn("risk-feed", "post-snapshot", [Cl.uint(index), inputs(gross, target)], deployer);
 
-const check = (f = feed) => simnet.callPublicFn("vault-guard", "check", [f], wallet1).result;
+const check = (f = feed) => simnet.callPublicFn("coverage-guard", "check", [f], wallet1).result;
 
-describe("vault-guard (example consumer)", () => {
+describe("coverage-guard (example consumer)", () => {
   it("passes feed errors through (u104 no data)", () => {
     expect(check()).toBeErr(Cl.uint(104));
   });
@@ -66,6 +66,15 @@ describe("vault-guard (example consumer)", () => {
     const v = cvToValue(check()).value;
     expect(v["coverage-bps"].value).toBeNull();
     expect(v.status.value).toBe("ok");
+  });
+
+  it("max age is owner-settable (u201 otherwise) and drives staleness", () => {
+    expect(simnet.callPublicFn("coverage-guard", "set-max-age-blocks", [Cl.uint(10)], wallet1).result).toBeErr(Cl.uint(201));
+    expect(simnet.callPublicFn("coverage-guard", "set-max-age-blocks", [Cl.uint(10)], deployer).result).toBeOk(Cl.bool(true));
+    expect(simnet.callReadOnlyFn("coverage-guard", "get-max-age-blocks", [], wallet1).result).toBeUint(10);
+    post(291, 230327835, 13810222);
+    simnet.mineEmptyBurnBlocks(11);
+    expect(cvToValue(check()).value.stale.value).toBe(true);
   });
 
   it("paused when the feed is stale", () => {

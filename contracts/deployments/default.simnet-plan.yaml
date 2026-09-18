@@ -69,6 +69,11 @@ plan:
       path: contracts/risk-feed-trait.clar
       clarity-version: 6
     - transaction-type: emulated-contract-publish
+      contract-name: coverage-guard
+      emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+      path: contracts/coverage-guard.clar
+      clarity-version: 6
+    - transaction-type: emulated-contract-publish
       contract-name: pox5-reader
       emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
       path: contracts/pox5-reader.clar
@@ -77,10 +82,5 @@ plan:
       contract-name: risk-feed
       emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
       path: contracts/risk-feed.clar
-      clarity-version: 6
-    - transaction-type: emulated-contract-publish
-      contract-name: vault-guard
-      emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
-      path: contracts/vault-guard.clar
       clarity-version: 6
     epoch: '4.0'

@@ -17,8 +17,8 @@ epoch = "4.0"
 path = "contracts/risk-feed.clar"
 epoch = "4.0"
 
-[contracts.vault-guard]
-path = "contracts/vault-guard.clar"
+[contracts.coverage-guard]
+path = "contracts/coverage-guard.clar"
 epoch = "4.0"
 
 # Check-checker settings:

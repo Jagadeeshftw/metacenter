@@ -290,6 +290,8 @@ export async function buildApi() {
         price: f(p0, "sats per STX", "mirrored", price ? `${price.source} @ ${price.price_timestamp}` : "none"),
       },
       assumption: `pool = base_pool * (1 - commit_drop) * (1 - price_drop); ${PRICE_ASSUMPTION}`,
+      commit_model:
+        "pool = sum of confirmed miner commits to the sBTC address over the interval ~= 1,050 blocks x paying fraction (0.66-0.72 observed) x per-block spend (332,500 sats from 5 miners since block 965,936); commit_drop cuts that total (fewer paying blocks, fewer miners or lower spend). PoX-5 burns nothing. See research/missing-blocks.",
       pool: hyp(pool_, "sats per interval", "stressed base_pool"),
       obligation: hyp(w.obligation, "sats per interval", "sum of shares * rate / 10000 / 50"),
       coverage: hyp(w.coverageBps === null ? null : Number(w.coverageBps) / 10000, "x", "pool / obligation", w.coverageBps === null ? "n/a: no bonds" : undefined),
