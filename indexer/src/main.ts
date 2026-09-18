@@ -2,7 +2,7 @@ import { config } from "./config.js";
 import { migrate, pool } from "./db.js";
 import { syncDistributions } from "./distributions.js";
 import { syncCycles, takeLiveSnapshot } from "./live.js";
-import { currentPrice } from "./price.js";
+import { currentPrice, fillMissingPrices } from "./price.js";
 import { publishPending } from "./publisher.js";
 import { buildApi } from "./api.js";
 
@@ -28,6 +28,7 @@ async function poll() {
     });
     await step("price", currentPrice);
     await step("distributions", () => syncDistributions(log));
+    await step("missing prices", fillMissingPrices);
     if (cycle) await step("cycles", () => syncCycles(cycle));
     await step("publish", () => publishPending(log));
   } finally {
