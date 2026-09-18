@@ -1,0 +1,154 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Light theme */
+:root {
+  --radius: 0.5rem;
+  --background: #f7f6f2;
+  --foreground: #12161c;
+  --surface: #ffffff;
+  --surface-2: #efece5;
+  --surface-3: #e6e2d9;
+  --border: #dedad0;
+  --grid: #ece9e2;
+  --muted: #4a525c;
+  --subtle: #5f6873;
+  --hatch: #b9b3a6;
+
+  --brand: #008a7b;
+  --brand-soft: rgba(0, 138, 123, 0.12);
+  --accent: #a86a0e;
+
+  /* chart series (validated: scripts/validate_palette.js, light on #ffffff) */
+  --series-pool: #008a7b;
+  --series-owed: #c4432f;
+  --series-yield: #2f66d0;
+
+  /* provenance */
+  --onchain: #008a7b;
+  --mirrored: #a86a0e;
+  --hyp: #6a57d6;
+
+  /* metallic heading gradient */
+  --metal-a: #6b7775;
+  --metal-b: #2a3b39;
+  --metal-c: #0b1413;
+
+  /* hero glow */
+  --glow-1: rgba(0, 138, 123, 0.16);
+  --glow-2: rgba(168, 106, 14, 0.1);
+  --card-top: #ffffff;
+  --card-bottom: #f3f1eb;
+  --inset-hi: rgba(255, 255, 255, 0.9);
+  --shadow: rgba(18, 22, 28, 0.08);
+}
+
+.dark {
+  --background: #07090c;
+  --foreground: #e9eef2;
+  --surface: #0e1319;
+  --surface-2: #151c24;
+  --surface-3: #1d2631;
+  --border: #222c38;
+  --grid: #19212b;
+  --muted: #a9b4bf;
+  --subtle: #8591a0;
+  --hatch: #3a4656;
+
+  --brand: #26a596;
+  --brand-soft: rgba(38, 165, 150, 0.14);
+  --accent: #bd8420;
+
+  /* chart series (validated: dark on #0e1319) */
+  --series-pool: #26a596;
+  --series-owed: #e0624f;
+  --series-yield: #5b8def;
+
+  --onchain: #26a596;
+  --mirrored: #bd8420;
+  --hyp: #8e7deb;
+
+  --metal-a: #2b3a3a;
+  --metal-b: #8a9795;
+  --metal-c: #ffffff;
+
+  --glow-1: rgba(38, 165, 150, 0.22);
+  --glow-2: rgba(189, 132, 32, 0.12);
+  --card-top: #141b22;
+  --card-bottom: #0a0e12;
+  --inset-hi: rgba(250, 250, 250, 0.08);
+  --shadow: rgba(0, 0, 0, 0.5);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-line: var(--border);
+  --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
+  --color-brand: var(--brand);
+  --color-brand-soft: var(--brand-soft);
+  --color-accent: var(--accent);
+  --color-onchain: var(--onchain);
+  --color-mirrored: var(--mirrored);
+  --color-hyp: var(--hyp);
+  --color-pool: var(--series-pool);
+  --color-owed: var(--series-owed);
+  --color-yield: var(--series-yield);
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-sans);
+  }
+  * {
+    border-color: var(--border);
+  }
+}
+
+/* Cryptgen's metallic heading, driven by theme tokens */
+.text-metal {
+  background-image: radial-gradient(
+    61.17% 178.53% at 38.83% -13.54%,
+    var(--metal-a) 0%,
+    var(--metal-b) 12.61%,
+    var(--metal-c) 50%,
+    var(--metal-b) 80%,
+    var(--metal-a) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+input[type="range"].slider {
+  accent-color: var(--hyp);
+  width: 100%;
+  height: 44px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
