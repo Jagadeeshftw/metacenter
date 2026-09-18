@@ -26,7 +26,7 @@ export const Button = ({
   const variantStyles = {
     primary: cn(
       "border-line text-background bg-foreground",
-      "shadow-[inset_0px_6px_8px_0px_var(--inset-hi),inset_0px_-6px_8px_0px_var(--inset-hi)]",
+      "shadow-[inset_0px_1px_0px_0px_rgba(255,255,255,0.25),0_6px_16px_var(--shadow)]",
     ),
     secondary: cn(
       "text-foreground bg-surface border-line",
