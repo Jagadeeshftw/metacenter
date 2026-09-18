@@ -1,0 +1,122 @@
+{
+ "get-first-pox-5-reward-cycle()": {
+  "okay": true,
+  "result": "0x010000000000000000000000000000008d"
+ },
+ "current-pox-reward-cycle()": {
+  "okay": true,
+  "result": "0x010000000000000000000000000000008f"
+ },
+ "current-distribution-cycle()": {
+  "okay": true,
+  "result": "0x010000000000000000000000000000011f"
+ },
+ "get-pox-info()": {
+  "okay": true,
+  "result": "0x070c000000061c66697273742d6275726e636861696e2d626c6f636b2d68656967687401000000000000000000000000000a29c20f6d696e2d616d6f756e742d757374780100000000000000000000000ba43b740014707265706172652d6379636c652d6c656e67746801000000000000000000000000000000640f7265776172642d6379636c652d6964010000000000000000000000000000008f137265776172642d6379636c652d6c656e677468010000000000000000000000000000083418746f74616c2d6c69717569642d737570706c792d757374780100000000000000000006a282cf617b31"
+ },
+ "get-reserve-balance()": {
+  "okay": true,
+  "result": "0x0100000000000000000000000009198ec1"
+ },
+ "get-rewards()": {
+  "okay": true,
+  "result": "0x01000000000000000000000000062b991b"
+ },
+ "get-new-rewards()": {
+  "okay": true,
+  "result": "0x01000000000000000000000000026ff026"
+ },
+ "get-last-reward-compute-height()": {
+  "okay": true,
+  "result": "0x01000000000000000000000000000ec2e7"
+ },
+ "get-last-accounted-rewards-only()": {
+  "okay": true,
+  "result": "0x0100000000000000000000000003bba8f5"
+ },
+ "get-total-sbtc-staked()": {
+  "okay": true,
+  "result": "0x01000000000000000000000003baa9bb6c"
+ },
+ "get-protocol-bond(u1)": {
+  "okay": true,
+  "result": "0x0a0c00000004126561726c792d756e6c6f636b2d627974657302000000232102fd9c38fb020cb9efe3f89f80cc118a27272828c477eaa0a5a6d7403ee8d8fc45ac0e6d696e2d757374782d726174696f01000000000000000000000000000001f40f7374782d76616c75652d726174696f010000000000000000000000000004bbdd0b7461726765742d72617465010000000000000000000000000000012c"
+ },
+ "get-total-sbtc-staked-for-bond(u1)": {
+  "okay": true,
+  "result": "0x010000000000000000000000055bec1f3c"
+ },
+ "get-bond-l1-unlock-height(u1)": {
+  "okay": true,
+  "result": "0x01000000000000000000000000000f1d24"
+ },
+ "bond-period-to-reward-cycle(u1)": {
+  "okay": true,
+  "result": "0x010000000000000000000000000000008f"
+ },
+ "bond-period-to-burn-height(u1)": {
+  "okay": true,
+  "result": "0x01000000000000000000000000000ebece"
+ },
+ "burn-height-to-reward-cycle(u960230)": {
+  "okay": true,
+  "result": "0x010000000000000000000000000000008c"
+ },
+ "burn-height-to-distribution-index(u960230)": {
+  "okay": true,
+  "result": "0x0100000000000000000000000000000118"
+ },
+ "burn-height-to-distribution-index(u967589)": {
+  "okay": true,
+  "result": "0x010000000000000000000000000000011f"
+ },
+ "burn-height-to-distribution-index(u966350)": {
+  "okay": true,
+  "result": "0x010000000000000000000000000000011e"
+ },
+ "distribution-cycle-to-burn-height(u0)": {
+  "okay": true,
+  "result": "0x01000000000000000000000000000a29c2"
+ },
+ "distribution-cycle-to-burn-height(u1)": {
+  "okay": true,
+  "result": "0x01000000000000000000000000000a2ddc"
+ },
+ "get-total-ustx-stacked(u143)": {
+  "okay": true,
+  "result": "0x0100000000000000000001919c6e1140ed"
+ },
+ "get-ustx-delegated-for-cycle(u143)": {
+  "okay": true,
+  "result": "0x0100000000000000000001919c6e1140ed"
+ },
+ "get-rewards-per-token-for-cycle(u143,(some u1))": {
+  "okay": true,
+  "result": "0x010000000000000000000221b2615f1e8e"
+ },
+ "get-rewards-per-token-for-cycle(u143,none)": {
+  "okay": true,
+  "result": "0x01000000000000000000000061d4840d83"
+ },
+ "get-total-shares-staked-for-cycle(u143,(some u1))": {
+  "okay": true,
+  "result": "0x010000000000000000000000055bec1f3c"
+ },
+ "get-total-shares-staked-for-cycle(u143,none)": {
+  "okay": true,
+  "result": "0x01000000000000000000018e5d1dc06150"
+ },
+ "get-rewards-per-token-for-cycle(u142,none)": {
+  "okay": true,
+  "result": "0x010000000000000000000000d3bfd237a0"
+ },
+ "get-total-shares-staked-for-cycle(u142,none)": {
+  "okay": true,
+  "result": "0x01000000000000000000017f64516035e8"
+ },
+ "is-bond-active-at-height(u1,u967589)": {
+  "okay": true,
+  "result": "0x03"
+ }
+}

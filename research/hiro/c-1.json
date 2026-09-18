@@ -1,0 +1,1 @@
+{"statusCode":400,"code":"FST_ERR_VALIDATION","error":"Bad Request","message":"params/cycle_number must match pattern \"^([0-9]{1,9}|current|previous|next)$\""}

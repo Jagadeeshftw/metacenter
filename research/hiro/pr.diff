@@ -1,0 +1,2037 @@
+diff --git a/migrations/1779800000020_reward-cycle-indexes.ts b/migrations/1779800000020_reward-cycle-indexes.ts
+new file mode 100644
+index 000000000..9c6f4428f
+--- /dev/null
++++ b/migrations/1779800000020_reward-cycle-indexes.ts
+@@ -0,0 +1,35 @@
++import type { ColumnDefinitions, MigrationBuilder } from 'node-pg-migrate';
++
++export const shorthands: ColumnDefinitions | undefined = undefined;
++
++/**
++ * Indexes for the staking cycle endpoint's access paths (all on tables that grow by at most a few
++ * hundred rows per cycle):
++ *  - `signer_reward_claims(reward_cycle)`: the sBTC a cycle's signer managers have claimed
++ *    (previously only indexed by manager).
++ *  - `principal_stx_reward_distributions(reward_cycle)`: the distinct STX-only stakers credited
++ *    for a cycle (previously only indexed by principal).
++ *  - `principal_bond_positions(bond_index)`, canonical rows: a bond's participants, read per
++ *    cycle here and on every `bond-distribution` ingestion (the table's only index led with
++ *    `principal`).
++ *  - `bond_reward_distributions(index_block_hash, canonical)` and `(tx_id)`: the table had no
++ *    index; the reorg flip filters by block and the cycle endpoint joins distributions to their
++ *    `calculate-rewards` row by tx.
++ */
++export function up(pgm: MigrationBuilder): void {
++  pgm.createIndex('signer_reward_claims', 'reward_cycle');
++  pgm.createIndex('principal_stx_reward_distributions', 'reward_cycle');
++  pgm.createIndex('principal_bond_positions', 'bond_index', {
++    where: 'canonical = TRUE AND microblock_canonical = TRUE',
++  });
++  pgm.createIndex('bond_reward_distributions', ['index_block_hash', 'canonical']);
++  pgm.createIndex('bond_reward_distributions', 'tx_id');
++}
++
++export function down(pgm: MigrationBuilder): void {
++  pgm.dropIndex('bond_reward_distributions', 'tx_id');
++  pgm.dropIndex('bond_reward_distributions', ['index_block_hash', 'canonical']);
++  pgm.dropIndex('principal_bond_positions', 'bond_index');
++  pgm.dropIndex('principal_stx_reward_distributions', 'reward_cycle');
++  pgm.dropIndex('signer_reward_claims', 'reward_cycle');
++}
+diff --git a/migrations/1779800000021_bond-reward-distribution-lockup-split.ts b/migrations/1779800000021_bond-reward-distribution-lockup-split.ts
+new file mode 100644
+index 000000000..7211a312a
+--- /dev/null
++++ b/migrations/1779800000021_bond-reward-distribution-lockup-split.ts
+@@ -0,0 +1,102 @@
++import type { ColumnDefinitions, MigrationBuilder } from 'node-pg-migrate';
++
++export const shorthands: ColumnDefinitions | undefined = undefined;
++
++/**
++ * Backfill: rebuild every distribution's lockup split from the canonical pox-5 events that precede
++ * its transaction (side-fork rows are rebuilt from the canonical history too, the best available
++ * approximation of what their own fork held). A participant's BTC in a bond at a point in time is
++ * decided by their latest earlier event: `register-for-bond` for the bond (`sats_total`),
++ * `update-bond-registration` (`amount_sats`), `unstake-sbtc` (`new_amount_sats`), or a roll-over
++ * out of the bond via `stake` or a `register-for-bond` for a different bond (0). The lockup type
++ * comes from the participant's latest `register-for-bond` for the bond (`btc_lockup.type`: `l1`
++ * native, `l2` sBTC). Rows whose bond has no participants get 0 / 0. Exported so the backfill can
++ * be exercised by tests.
++ */
++export const BACKFILL_DISTRIBUTION_LOCKUP_SPLIT_SQL = `
++  WITH split AS (
++    SELECT
++      d.tx_id, d.index_block_hash, d.bond_index,
++      COALESCE(SUM(CASE WHEN p.lockup = 'l1' THEN p.sats ELSE 0 END), 0) AS native_staked_sats,
++      COALESCE(SUM(CASE WHEN p.lockup = 'l2' THEN p.sats ELSE 0 END), 0) AS sbtc_staked_sats
++    FROM bond_reward_distributions d
++    LEFT JOIN LATERAL (
++      SELECT reg.staker, reg.lockup, COALESCE(latest.sats, 0) AS sats
++      FROM (
++        -- Each participant's latest registration for this bond before the distribution's tx.
++        SELECT DISTINCT ON (e.data->>'staker')
++          e.data->>'staker' AS staker,
++          e.data->'btc_lockup'->>'type' AS lockup
++        FROM pox5_events e
++        WHERE e.canonical = TRUE AND e.microblock_canonical = TRUE
++          AND e.name = 'register-for-bond'
++          AND (e.data->>'bond_index')::int = d.bond_index
++          AND (e.block_height, e.microblock_sequence, e.tx_index)
++            < (d.block_height, d.microblock_sequence, d.tx_index)
++        ORDER BY e.data->>'staker',
++          e.block_height DESC, e.microblock_sequence DESC, e.tx_index DESC, e.event_index DESC
++      ) reg
++      LEFT JOIN LATERAL (
++        -- The participant's latest BTC-changing event for this bond before the distribution's tx.
++        SELECT
++          CASE e.name
++            WHEN 'register-for-bond' THEN
++              CASE WHEN (e.data->>'bond_index')::int = d.bond_index
++                THEN (e.data->>'sats_total')::numeric ELSE 0 END
++            WHEN 'update-bond-registration' THEN (e.data->>'amount_sats')::numeric
++            WHEN 'unstake-sbtc' THEN (e.data->>'new_amount_sats')::numeric
++            WHEN 'stake' THEN 0
++          END AS sats
++        FROM pox5_events e
++        WHERE e.canonical = TRUE AND e.microblock_canonical = TRUE
++          AND e.data->>'staker' = reg.staker
++          AND (
++            e.name IN ('stake', 'register-for-bond')
++            OR (
++              e.name IN ('update-bond-registration', 'unstake-sbtc')
++              AND (e.data->>'bond_index')::int = d.bond_index
++            )
++          )
++          AND (e.block_height, e.microblock_sequence, e.tx_index)
++            < (d.block_height, d.microblock_sequence, d.tx_index)
++        ORDER BY e.block_height DESC, e.microblock_sequence DESC, e.tx_index DESC, e.event_index DESC
++        LIMIT 1
++      ) latest ON TRUE
++    ) p ON TRUE
++    GROUP BY d.tx_id, d.index_block_hash, d.bond_index
++  )
++  UPDATE bond_reward_distributions d
++  SET native_staked_sats = s.native_staked_sats,
++    sbtc_staked_sats = s.sbtc_staked_sats
++  FROM split s
++  WHERE d.tx_id = s.tx_id AND d.index_block_hash = s.index_block_hash
++    AND d.bond_index = s.bond_index
++`;
++
++/**
++ * Snapshot of how a bond's staked BTC was locked at each reward distribution: proven Bitcoin L1
++ * lockups (`native_staked_sats`) vs sBTC lockups (`sbtc_staked_sats`), summed from the bond's
++ * positions when the `bond-distribution` event is ingested. The contract reports only the bond's
++ * total (`bond_staked_sats`) per distribution; this split lets a finished cycle report native vs
++ * sBTC from the same snapshot as its total. Existing rows are backfilled from `pox5_events`.
++ */
++export function up(pgm: MigrationBuilder): void {
++  pgm.addColumns('bond_reward_distributions', {
++    native_staked_sats: {
++      type: 'numeric',
++      notNull: true,
++      default: 0,
++    },
++    sbtc_staked_sats: {
++      type: 'numeric',
++      notNull: true,
++      default: 0,
++    },
++  });
++  // Every existing row gets its real split from the event history (see above).
++  pgm.sql(BACKFILL_DISTRIBUTION_LOCKUP_SPLIT_SQL);
++}
++
++export function down(pgm: MigrationBuilder): void {
++  pgm.dropColumns('bond_reward_distributions', ['native_staked_sats', 'sbtc_staked_sats']);
++}
+diff --git a/src/api/routes/v3/staking-cycles.ts b/src/api/routes/v3/staking-cycles.ts
+index f6b3f2c8a..2709bbed9 100644
+--- a/src/api/routes/v3/staking-cycles.ts
++++ b/src/api/routes/v3/staking-cycles.ts
+@@ -1,15 +1,19 @@
+ import { FastifyPluginAsync } from 'fastify';
+ import { Server } from 'node:http';
+ import { Type, TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
+-import { handleChainTipCache } from '../../controllers/cache-controller.js';
++import { handleChainTipWithBurnchainTipCache } from '../../controllers/cache-controller.js';
+ import { getPagingQueryLimit, ResourceType } from '../../pagination.js';
+ import {
+   CursorPaginatedResponse,
+   CursorPaginationQuerystring,
+   SigningKeyCursorSchema,
+ } from '../../schemas/v3/cursors.js';
+-import { CycleSignerSchema } from '../../schemas/v3/entities/staking-cycles.js';
+-import { serializeDbCycleSigner } from '../../serializers/v3/staking-cycles.js';
++import { CycleSelectorParamSchema, parseCycleSelector } from '../../schemas/v3/params.js';
++import { CycleSignerSchema, StakingCycleSchema } from '../../schemas/v3/entities/staking-cycles.js';
++import {
++  serializeDbCycleSigner,
++  serializeDbStakingCycle,
++} from '../../serializers/v3/staking-cycles.js';
+ import { InvalidRequestError, NotFoundError } from '../../../errors.js';
+ 
+ export const StakingCyclesRoutes: FastifyPluginAsync<
+@@ -17,22 +21,44 @@ export const StakingCyclesRoutes: FastifyPluginAsync<
+   Server,
+   TypeBoxTypeProvider
+ > = async fastify => {
++  fastify.get(
++    '/staking/cycles/:cycle_number',
++    {
++      preHandler: handleChainTipWithBurnchainTipCache,
++      schema: {
++        operationId: 'get_staking_cycle',
++        summary: 'Get staking cycle',
++        description: 'A summary of staking for one PoX reward cycle.',
++        tags: ['Staking'],
++        params: Type.Object({ cycle_number: CycleSelectorParamSchema }),
++        response: {
++          200: StakingCycleSchema,
++        },
++      },
++    },
++    async (req, reply) => {
++      const cycle = await fastify.db.v3.getStakingCycle({
++        selector: parseCycleSelector(req.params.cycle_number),
++        poxConstants: await fastify.db.getPoxConstants(),
++      });
++      if (!cycle) {
++        throw new NotFoundError('PoX cycle not found');
++      }
++      await reply.send(serializeDbStakingCycle(cycle));
++    }
++  );
++
+   fastify.get(
+     '/staking/cycles/:cycle_number/signers',
+     {
+-      preHandler: handleChainTipCache,
++      preHandler: handleChainTipWithBurnchainTipCache,
+       schema: {
+         operationId: 'get_cycle_signers',
+         summary: 'Get cycle signers',
+         description:
+-          "Get the signer set of a PoX cycle, including each signer's weight, staked amount, and the signer manager contracts whose registered signing key (via `register-signer`) was this key when the cycle's reward set was calculated. Each manager also lists its live `grant-signer-key` authorizations, and keys registered after the reward set was calculated are surfaced as pending updates that take effect next cycle.",
++          "Get the signer set of a PoX cycle, including each signer's weight, staked amount, and the signer manager contracts whose registered signing key was this key when the cycle's reward set was calculated.",
+         tags: ['Staking'],
+-        params: Type.Object({
+-          cycle_number: Type.Literal('current', {
+-            description:
+-              'The PoX cycle to fetch signers for. Only `current` is supported at the moment.',
+-          }),
+-        }),
++        params: Type.Object({ cycle_number: CycleSelectorParamSchema }),
+         querystring: CursorPaginationQuerystring(SigningKeyCursorSchema, ResourceType.Signer),
+         response: {
+           200: CursorPaginatedResponse(
+@@ -44,13 +70,21 @@ export const StakingCyclesRoutes: FastifyPluginAsync<
+       },
+     },
+     async (req, reply) => {
++      const cycleNumber = await fastify.db.v3.resolveCycleSelector(
++        parseCycleSelector(req.params.cycle_number),
++        await fastify.db.getPoxConstants()
++      );
++      if (cycleNumber === undefined) {
++        throw new NotFoundError('PoX cycle not found');
++      }
+       try {
+-        const results = await fastify.db.v3.getCurrentCycleSigners({
++        const results = await fastify.db.v3.getCycleSigners({
++          cycleNumber,
+           limit: req.query.limit ?? getPagingQueryLimit(ResourceType.Signer),
+           cursor: req.query.cursor,
+         });
+         if (!results) {
+-          throw new NotFoundError('No PoX cycles found');
++          throw new NotFoundError('No reward set for this PoX cycle');
+         }
+         await reply.send({
+           limit: results.limit,
+diff --git a/src/api/schemas/v3/entities/staking-cycles.ts b/src/api/schemas/v3/entities/staking-cycles.ts
+index bef10e739..2d9ffa1c2 100644
+--- a/src/api/schemas/v3/entities/staking-cycles.ts
++++ b/src/api/schemas/v3/entities/staking-cycles.ts
+@@ -1,6 +1,6 @@
+ import { Static, Type } from '@sinclair/typebox';
+ import { Nullable } from '../../v1/util.js';
+-import { PrincipalSchema, TransactionIdSchema } from './common.js';
++import { AmountSchema, BondIndexSchema, PrincipalSchema, TransactionIdSchema } from './common.js';
+ 
+ /** A live `grant-signer-key` authorization held by a signer manager. */
+ export const SignerKeyGrantSchema = Type.Object(
+@@ -99,3 +99,155 @@ export const CycleSignerSchema = Type.Object(
+   { title: 'CycleSigner' }
+ );
+ export type CycleSigner = Static<typeof CycleSignerSchema>;
++
++/** Where a PoX cycle stands relative to the current Bitcoin tip. */
++export const StakingCycleStatusSchema = Type.Union(
++  [
++    Type.Literal('upcoming'),
++    Type.Literal('reward_phase'),
++    Type.Literal('prepare_phase'),
++    Type.Literal('finished'),
++  ],
++  {
++    description: 'Where the cycle stands relative to the current Bitcoin tip.',
++  }
++);
++export type StakingCycleStatus = Static<typeof StakingCycleStatusSchema>;
++
++/** A point on a cycle's timeline. */
++export const CycleSchedulePointSchema = Type.Object({
++  bitcoin_height: Type.Integer({ description: 'The Bitcoin height of this point' }),
++});
++
++/** A per-cycle summary of pox-5 staking: what is locked, who participates, and the rewards. */
++export const StakingCycleSchema = Type.Object(
++  {
++    number: Type.Integer({ description: 'The PoX reward cycle number', examples: [143] }),
++    status: StakingCycleStatusSchema,
++    schedule: Type.Object(
++      {
++        start: CycleSchedulePointSchema,
++        prepare_phase_start: CycleSchedulePointSchema,
++        end: CycleSchedulePointSchema,
++      },
++      {
++        description:
++          'The Bitcoin heights delimiting the cycle, inclusive: its first block, the first block ' +
++          'of its prepare phase, and its last block.',
++      }
++    ),
++    locked: Type.Object(
++      {
++        stx: Type.Object({
++          stx_only: Type.String({
++            ...AmountSchema,
++            description:
++              'STX locked in STX-only staking for this cycle, in µSTX. For a finished cycle this ' +
++              'is the STX-only stake the pox-5 contract accounted for the cycle in its latest ' +
++              'reward calculation; otherwise the STX-only locks live at the tip (or, for an ' +
++              'upcoming cycle, still locked when it starts).',
++          }),
++          bonds: Type.String({
++            ...AmountSchema,
++            description:
++              'STX locked across the bonds covering this cycle, in µSTX. For a finished cycle ' +
++              "with a reward set this is the reward set's total staked STX minus the STX-only " +
++              'stake; otherwise the running locked totals of the bonds covering the cycle.',
++          }),
++          total: Type.String({
++            ...AmountSchema,
++            description: 'Sum of `stx_only` and `bonds`, in µSTX.',
++          }),
++        }),
++        btc: Type.Object({
++          total: Type.String({
++            ...AmountSchema,
++            description:
++              'BTC locked across the bonds covering this cycle, in satoshis (proven Bitcoin L1 ' +
++              'lockups and sBTC lockups). For a finished cycle this is the BTC staked per bond at ' +
++              "the cycle's latest reward distribution; otherwise the bonds' running locked totals.",
++          }),
++          native: Type.String({
++            ...AmountSchema,
++            description: 'Of `total`, the satoshis locked through proven Bitcoin L1 lockups.',
++          }),
++          sbtc: Type.String({
++            ...AmountSchema,
++            description: 'Of `total`, the satoshis locked through sBTC lockups.',
++          }),
++        }),
++      },
++      { description: 'The assets locked by staking for this cycle' }
++    ),
++    participants: Type.Object(
++      {
++        stakers: Type.Object({
++          stx_only: Type.Integer({
++            description:
++              'Principals with an STX-only stake covering this cycle. For a finished cycle, the ' +
++              'principals credited STX-staking rewards for it.',
++          }),
++          bonds: Type.Integer({
++            description:
++              'Principals holding a position in a bond covering this cycle, as of the current ' +
++              'tip (positions rolled over into another bond or stake are excluded).',
++          }),
++        }),
++        signers: Nullable(
++          Type.Integer({
++            description:
++              "Signers in the cycle's reward set. `null` until the node has emitted the reward " +
++              "set, which happens during the previous cycle's prepare phase.",
++          })
++        ),
++      },
++      { description: 'Who participates in the cycle' }
++    ),
++    bonds: Type.Object(
++      {
++        total: Type.Integer({ description: 'Bonds whose term covers this cycle' }),
++        indexes: Type.Array(BondIndexSchema, { description: 'Their bond indexes, ascending' }),
++      },
++      { description: 'The pox-5 bonds active during this cycle' }
++    ),
++    rewards: Type.Object(
++      {
++        btc: Type.Object({
++          total: Type.String({
++            ...AmountSchema,
++            description:
++              'sBTC rewards booked to this cycle by the pox-5 reward distributions run so far, in ' +
++              'satoshis. Distributions run periodically within a cycle, so this grows while the ' +
++              'cycle is active; it equals the sum of the `waterfall` entries.',
++          }),
++          waterfall: Type.Object(
++            {
++              bonds: Type.String({
++                ...AmountSchema,
++                description: 'The share paid to bond participants, in satoshis.',
++              }),
++              stx_only: Type.String({
++                ...AmountSchema,
++                description: 'The share paid to STX-only stakers, in satoshis.',
++              }),
++              reserve_deposit: Type.String({
++                ...AmountSchema,
++                description: 'The share deposited into the protocol reserve, in satoshis.',
++              }),
++            },
++            { description: 'How the accrued rewards were split, in payout order' }
++          ),
++          claimed: Type.String({
++            ...AmountSchema,
++            description:
++              'sBTC claimed from the pox-5 contract by signer managers for this cycle so far, in ' +
++              'satoshis. Claims trail distributions and can keep growing after the cycle ends.',
++          }),
++        }),
++      },
++      { description: 'The rewards generated by this cycle' }
++    ),
++  },
++  { title: 'StakingCycle' }
++);
++export type StakingCycle = Static<typeof StakingCycleSchema>;
+diff --git a/src/api/schemas/v3/params.ts b/src/api/schemas/v3/params.ts
+index 19a2df795..218ef24f8 100644
+--- a/src/api/schemas/v3/params.ts
++++ b/src/api/schemas/v3/params.ts
+@@ -1,7 +1,8 @@
+-import { ObjectOptions, TSchema, Type } from '@sinclair/typebox';
++import { ObjectOptions, Static, TSchema, Type } from '@sinclair/typebox';
+ import { getPagingQueryLimit, pagingQueryLimits, ResourceType } from '../../pagination.js';
+ import { Nullable } from '../v1/util.js';
+ import { TransactionIdSchema } from './entities/common.js';
++import type { PoxCycleSelector } from '../../../datastore/pox-constants.js';
+ 
+ /**
+  * Cursor pagination querystring
+@@ -91,3 +92,24 @@ export const TransactionIdsQuerystringParam = (description: string) =>
+       `${description} Provide as repeated querystring values (\`?tx_id=A&tx_id=B\`) or as a ` +
+       'single comma-separated value (`?tx_id=A,B`).',
+   });
++
++/**
++ * A PoX cycle selector: a cycle number, or an alias resolved against the current burn tip with the
++ * network's PoX constants: `current` (the cycle containing the burn tip), `previous`, or `next`.
++ */
++export const CycleSelectorParamSchema = Type.String({
++  // Up to nine digits keeps every accepted number inside PostgreSQL's `integer` range.
++  pattern: '^([0-9]{1,9}|current|previous|next)$',
++  description:
++    'A PoX cycle number (up to nine digits), or one of `current` (the cycle containing the ' +
++    'current Bitcoin tip), `previous`, or `next`. The prepare phase at the end of a cycle ' +
++    'belongs to that cycle.',
++  examples: ['143', 'current'],
++});
++export type CycleSelectorParam = Static<typeof CycleSelectorParamSchema>;
++
++/** Parse a validated cycle selector path param. */
++export function parseCycleSelector(param: string): PoxCycleSelector {
++  if (param === 'current' || param === 'previous' || param === 'next') return param;
++  return parseInt(param, 10);
++}
+diff --git a/src/api/serializers/v3/staking-cycles.ts b/src/api/serializers/v3/staking-cycles.ts
+index ab1c369ea..f5ac108ce 100644
+--- a/src/api/serializers/v3/staking-cycles.ts
++++ b/src/api/serializers/v3/staking-cycles.ts
+@@ -1,5 +1,5 @@
+-import { DbCycleSigner } from '../../../datastore/v3/types.js';
+-import { CycleSigner } from '../../schemas/v3/entities/staking-cycles.js';
++import { DbCycleSigner, DbStakingCycle } from '../../../datastore/v3/types.js';
++import { CycleSigner, StakingCycle } from '../../schemas/v3/entities/staking-cycles.js';
+ 
+ export function serializeDbCycleSigner(signer: DbCycleSigner, cycleNumber: number): CycleSigner {
+   return {
+@@ -35,3 +35,46 @@ export function serializeDbCycleSigner(signer: DbCycleSigner, cycleNumber: numbe
+     })),
+   };
+ }
++
++export function serializeDbStakingCycle(cycle: DbStakingCycle): StakingCycle {
++  return {
++    number: cycle.number,
++    status: cycle.status,
++    schedule: {
++      start: { bitcoin_height: cycle.schedule.startBitcoinHeight },
++      prepare_phase_start: { bitcoin_height: cycle.schedule.preparePhaseStartBitcoinHeight },
++      end: { bitcoin_height: cycle.schedule.endBitcoinHeight },
++    },
++    locked: {
++      stx: {
++        stx_only: cycle.locked.stx_only,
++        bonds: cycle.locked.bond_stx,
++        total: (BigInt(cycle.locked.stx_only) + BigInt(cycle.locked.bond_stx)).toString(),
++      },
++      btc: {
++        total: cycle.locked.btc,
++        native: cycle.locked.btc_native,
++        sbtc: cycle.locked.btc_sbtc,
++      },
++    },
++    participants: {
++      stakers: {
++        stx_only: cycle.participants.stx_only_stakers,
++        bonds: cycle.participants.bond_stakers,
++      },
++      signers: cycle.participants.signers,
++    },
++    bonds: { total: cycle.bonds.length, indexes: cycle.bonds },
++    rewards: {
++      btc: {
++        total: cycle.rewards.total,
++        waterfall: {
++          bonds: cycle.rewards.bonds,
++          stx_only: cycle.rewards.stx_only,
++          reserve_deposit: cycle.rewards.reserve_deposit,
++        },
++        claimed: cycle.rewards.claimed,
++      },
++    },
++  };
++}
+diff --git a/src/datastore/common.ts b/src/datastore/common.ts
+index d3631fb02..8477c88ff 100644
+--- a/src/datastore/common.ts
++++ b/src/datastore/common.ts
+@@ -1826,6 +1826,10 @@ export interface DbBondRewardDistributionInsertValues extends DbTxLocation {
+   bond_staked_sats: string;
+   accrued_rewards_per_sat: string;
+   cumulative_rewards_per_sat: string;
++  /** Sats staked through proven Bitcoin L1 lockups at this distribution (positions snapshot). */
++  native_staked_sats: string;
++  /** Sats staked through sBTC lockups at this distribution (positions snapshot). */
++  sbtc_staked_sats: string;
+ }
+ 
+ /** Cycle-level reward calculation aggregate, from the pox-5 `calculate-rewards` event. */
+diff --git a/src/datastore/pg-store.ts b/src/datastore/pg-store.ts
+index 1bcb3940f..c6ad0c641 100644
+--- a/src/datastore/pg-store.ts
++++ b/src/datastore/pg-store.ts
+@@ -97,7 +97,7 @@ import {
+ import * as path from 'path';
+ import { PgStoreV2 } from './pg-store-v2.js';
+ import { ENV } from '../env.js';
+-import { MAINNET_POX_CONSTANTS, type PoxConstants } from '../pox-constants.js';
++import { MAINNET_POX_CONSTANTS, type PoxConstants } from './pox-constants.js';
+ import { BlockIdParam } from '../api/routes/v2/schemas.js';
+ import { PgStoreV3 } from './v3/pg-store-v3.js';
+ import { Pox4EventName } from '@stacks/codec';
+diff --git a/src/datastore/pg-write-store.ts b/src/datastore/pg-write-store.ts
+index f2316e124..cb693c887 100644
+--- a/src/datastore/pg-write-store.ts
++++ b/src/datastore/pg-write-store.ts
+@@ -1,5 +1,5 @@
+ import assert from 'node:assert';
+-import type { PoxConstants } from '../pox-constants.js';
++import type { PoxConstants } from './pox-constants.js';
+ import * as prom from 'prom-client';
+ import { getOrAdd, I32_MAX } from '../helpers.js';
+ import {
+@@ -71,6 +71,7 @@ import {
+   DbPrincipalBondPositionInsertValues,
+   DbPrincipalBondPositionStatus,
+   bondLockupTypeFromString,
++  DbBondLockupType,
+   DbBondRewardCalculationInsertValues,
+   DbBondRewardDistributionInsertValues,
+   DbPrincipalBondRewardDistributionInsertValues,
+@@ -1138,6 +1139,30 @@ export class PgWriteStore extends PgStore {
+     event: Pox5EventBondDistribution
+   ) {
+     const bondIndex = parseInt(event.data.bond_index);
++    // Snapshot how the bond's staked BTC is locked right now: the contract only reports the bond's
++    // total per distribution, so this split is what lets a finished cycle report native vs sBTC
++    // from the same moment as its total. Positions carry the amount, registrations the lockup type.
++    // A side-fork distribution sees the canonical positions here, not its own fork's; if that fork
++    // wins, `recomputeBondDistributionLockupSplits` re-derives the split from the fork's events.
++    const [lockupSplit] = await sql<{ native: string; sbtc: string }[]>`
++      SELECT
++        COALESCE(SUM(CASE WHEN r.btc_lockup_type = ${DbBondLockupType.L1} THEN p.btc_locked END), 0)::text AS native,
++        COALESCE(SUM(CASE WHEN r.btc_lockup_type = ${DbBondLockupType.L2} THEN p.btc_locked END), 0)::text AS sbtc
++      FROM principal_bond_positions p
++      -- Latest canonical registration per position: a staker who rolled out of the bond and
++      -- registered for it again has several registration rows but one position.
++      JOIN LATERAL (
++        SELECT btc_lockup_type
++        FROM bond_registrations r
++        WHERE r.bond_index = p.bond_index AND r.staker = p.principal
++          AND r.canonical = true AND r.microblock_canonical = true
++        ORDER BY r.block_height DESC, r.microblock_sequence DESC, r.tx_index DESC, r.id DESC
++        LIMIT 1
++      ) r ON TRUE
++      WHERE p.bond_index = ${bondIndex}
++        AND p.canonical = true
++        AND p.microblock_canonical = true
++    `;
+     const rewardDistribution: DbBondRewardDistributionInsertValues = {
+       ...txLocation,
+       bond_index: bondIndex,
+@@ -1146,6 +1171,8 @@ export class PgWriteStore extends PgStore {
+       bond_staked_sats: event.data.bond_staked_sats,
+       accrued_rewards_per_sat: event.data.accrued_rewards_per_sat,
+       cumulative_rewards_per_sat: event.data.cumulative_rewards_per_sat,
++      native_staked_sats: lockupSplit.native,
++      sbtc_staked_sats: lockupSplit.sbtc,
+     };
+     await sql`
+       INSERT INTO bond_reward_distributions ${sql(rewardDistribution)}
+@@ -5118,11 +5145,87 @@ export class PgWriteStore extends PgStore {
+       await this.restoreOrphanedChain(sql, parentResult[0].index_block_hash, updatedEntities);
+     }
+     // Every earlier block of the restored fork is canonical now: apply this block's roll-overs that
+-    // targeted positions registered on the fork (see `applyPendingBondPositionRollovers`).
++    // targeted positions registered on the fork (see `applyPendingBondPositionRollovers`), and
++    // rebuild this block's distribution lockup snapshots from the fork's own history (see
++    // `recomputeBondDistributionLockupSplits`).
+     await this.applyPendingBondPositionRollovers(sql, indexBlockHash);
++    await this.recomputeBondDistributionLockupSplits(sql, indexBlockHash);
+     return updatedEntities;
+   }
+ 
++  /**
++   * Rebuild the native / sBTC lockup split of a block's canonical `bond_reward_distributions` rows
++   * from the canonical pox-5 event history preceding each distribution's tx. Used when a fork is
++   * restored: a distribution ingested on a side fork snapshotted the split from the then-canonical
++   * positions, not its own fork's (a registration earlier on that fork was non-canonical at the
++   * time), so once the fork wins the snapshot is re-derived from the events, which are canonical by
++   * then. Same derivation as the migration backfill: a participant's BTC in the bond is decided by
++   * their latest earlier `register-for-bond` for the bond (`sats_total`),
++   * `update-bond-registration` (`amount_sats`), `unstake-sbtc` (`new_amount_sats`), or a roll-over
++   * out via `stake` / `register-for-bond` for another bond (0); the lockup type by their latest
++   * registration for the bond.
++   */
++  private async recomputeBondDistributionLockupSplits(sql: PgSqlClient, indexBlockHash: string) {
++    await sql`
++      WITH split AS (
++        SELECT
++          d.tx_id, d.index_block_hash, d.bond_index,
++          COALESCE(SUM(CASE WHEN p.lockup = 'l1' THEN p.sats ELSE 0 END), 0) AS native_staked_sats,
++          COALESCE(SUM(CASE WHEN p.lockup = 'l2' THEN p.sats ELSE 0 END), 0) AS sbtc_staked_sats
++        FROM bond_reward_distributions d
++        LEFT JOIN LATERAL (
++          SELECT reg.staker, reg.lockup, COALESCE(latest.sats, 0) AS sats
++          FROM (
++            SELECT DISTINCT ON (e.data->>'staker')
++              e.data->>'staker' AS staker,
++              e.data->'btc_lockup'->>'type' AS lockup
++            FROM pox5_events e
++            WHERE e.canonical = TRUE AND e.microblock_canonical = TRUE
++              AND e.name = 'register-for-bond'
++              AND (e.data->>'bond_index')::int = d.bond_index
++              AND (e.block_height, e.microblock_sequence, e.tx_index)
++                < (d.block_height, d.microblock_sequence, d.tx_index)
++            ORDER BY e.data->>'staker',
++              e.block_height DESC, e.microblock_sequence DESC, e.tx_index DESC, e.event_index DESC
++          ) reg
++          LEFT JOIN LATERAL (
++            SELECT
++              CASE e.name
++                WHEN 'register-for-bond' THEN
++                  CASE WHEN (e.data->>'bond_index')::int = d.bond_index
++                    THEN (e.data->>'sats_total')::numeric ELSE 0 END
++                WHEN 'update-bond-registration' THEN (e.data->>'amount_sats')::numeric
++                WHEN 'unstake-sbtc' THEN (e.data->>'new_amount_sats')::numeric
++                WHEN 'stake' THEN 0
++              END AS sats
++            FROM pox5_events e
++            WHERE e.canonical = TRUE AND e.microblock_canonical = TRUE
++              AND e.data->>'staker' = reg.staker
++              AND (
++                e.name IN ('stake', 'register-for-bond')
++                OR (
++                  e.name IN ('update-bond-registration', 'unstake-sbtc')
++                  AND (e.data->>'bond_index')::int = d.bond_index
++                )
++              )
++              AND (e.block_height, e.microblock_sequence, e.tx_index)
++                < (d.block_height, d.microblock_sequence, d.tx_index)
++            ORDER BY e.block_height DESC, e.microblock_sequence DESC, e.tx_index DESC, e.event_index DESC
++            LIMIT 1
++          ) latest ON TRUE
++        ) p ON TRUE
++        WHERE d.index_block_hash = ${indexBlockHash} AND d.canonical = TRUE
++        GROUP BY d.tx_id, d.index_block_hash, d.bond_index
++      )
++      UPDATE bond_reward_distributions d
++      SET native_staked_sats = s.native_staked_sats,
++        sbtc_staked_sats = s.sbtc_staked_sats
++      FROM split s
++      WHERE d.tx_id = s.tx_id AND d.index_block_hash = s.index_block_hash
++        AND d.bond_index = s.bond_index
++    `;
++  }
++
+   /**
+    * Marks all canonical blocks above the given height (and their associated entities) as
+    * non-canonical, walking down from the current chain tip. Used when a Nakamoto block re-orgs the
+diff --git a/src/pox-constants.ts b/src/datastore/pox-constants.ts
+similarity index 90%
+rename from src/pox-constants.ts
+rename to src/datastore/pox-constants.ts
+index 6c547819e..90a91c169 100644
+--- a/src/pox-constants.ts
++++ b/src/datastore/pox-constants.ts
+@@ -1,6 +1,6 @@
+ import { logger, timeout } from '@stacks/api-toolkit';
+ import type { CoreRpcClient } from '@stacks/rpc-client';
+-import type { ChainID } from './helpers.js';
++import type { ChainID } from '../helpers.js';
+ 
+ /**
+  * The PoX cycle geometry of the network the API serves. Cycle boundaries, phases, and the
+@@ -219,3 +219,30 @@ export function getPoxCyclePhase(c: PoxConstants, cycle: number, burnTip: number
+   if (burnTip >= s.preparePhaseStartBitcoinHeight) return 'prepare_phase';
+   return 'reward_phase';
+ }
++
++/** A cycle selector: a cycle number, or an alias relative to the cycle containing the burn tip. */
++export type PoxCycleSelector = number | 'current' | 'previous' | 'next';
++
++/**
++ * Resolve a cycle selector against the burn tip. Returns `undefined` when the tip precedes the
++ * first PoX burn block (no cycle exists yet) or the selector points before cycle 0.
++ */
++export function resolvePoxCycleSelector(
++  c: PoxConstants,
++  selector: PoxCycleSelector,
++  burnTip: number
++): number | undefined {
++  if (typeof selector === 'number') {
++    return Number.isInteger(selector) && selector >= 0 ? selector : undefined;
++  }
++  if (burnTip < c.firstBurnchainBlockHeight) return undefined;
++  const current = burnHeightToRewardCycle(c, burnTip);
++  switch (selector) {
++    case 'current':
++      return current;
++    case 'next':
++      return current + 1;
++    case 'previous':
++      return current > 0 ? current - 1 : undefined;
++  }
++}
+diff --git a/src/datastore/v3/pg-store-v3.ts b/src/datastore/v3/pg-store-v3.ts
+index 3391beedb..9dfe91175 100644
+--- a/src/datastore/v3/pg-store-v3.ts
++++ b/src/datastore/v3/pg-store-v3.ts
+@@ -9,6 +9,7 @@ import {
+   DbBondSummary,
+   DbCursorPaginatedResult,
+   DbCycleSigner,
++  DbStakingCycle,
+   DbFtHolder,
+   DbNftHistoryEvent,
+   DbMempoolTransaction,
+@@ -50,6 +51,14 @@ import {
+ import { MaterializedStxLockRow, prefixedCols, resolveMaterializedStxLock } from '../helpers.js';
+ import { Principal } from '../../api/schemas/v3/entities/common.js';
+ import { normalizeHashString } from '../../helpers.js';
++import {
++  PoxConstants,
++  PoxCycleSelector,
++  getPoxCyclePhase,
++  getPoxCycleSchedule,
++  resolvePoxCycleSelector,
++} from '../pox-constants.js';
++import { DbBondLockupType, DbPrincipalBondPositionStatus } from '../common.js';
+ import { BlockIdParam } from '../../api/routes/v2/schemas.js';
+ import { InvalidRequestError, InvalidRequestErrorType } from '../../errors.js';
+ import { TransactionIncludeField } from '../../api/schemas/v3/entities/transactions.js';
+@@ -1964,6 +1973,235 @@ export class PgStoreV3 extends BasePgStoreModule {
+     });
+   }
+ 
++  /**
++   * Resolve a cycle selector (`current` / `previous` / `next` / a number) against the current burn
++   * tip. Returns undefined when no such cycle exists (tip before PoX started, or `previous` of
++   * cycle 0).
++   */
++  async resolveCycleSelector(
++    selector: PoxCycleSelector,
++    poxConstants: PoxConstants
++  ): Promise<number | undefined> {
++    const [tip] = await this.sql<{ burn_block_height: number }[]>`
++      SELECT burn_block_height FROM chain_tip
++    `;
++    return resolvePoxCycleSelector(poxConstants, selector, tip?.burn_block_height ?? 0);
++  }
++
++  /**
++   * A per-cycle summary of pox-5 staking. What each block is read from depends on whether the cycle
++   * has finished:
++   *
++   * - Not finished (upcoming or in progress): locks are tip state. Pox-5 STX-only locks still
++   *   active at the tip (or, for an upcoming cycle, at its start), and the running locked totals of
++   *   the bonds whose term covers the cycle. Stakers are counted the same way.
++   * - Finished: the pox-5 contract's own accounting for the cycle. The STX-only stake from the
++   *   latest `calculate-rewards` for the cycle (`cycle_staked_ustx`), bond STX as the reward set's
++   *   total staked STX minus that (falling back to the bonds' totals without a reward set), BTC as
++   *   each bond's `bond_staked_sats` at the cycle's latest distribution, and STX-only stakers as
++   *   the principals credited STX-staking rewards for the cycle.
++   *
++   * Rewards are running sums over the cycle's `calculate-rewards` rows, which pox-5 runs
++   * periodically within a cycle, so they grow while the cycle is active; `claimed` sums the signer
++   * managers' `claim-rewards` for the cycle. All queries are single-row or small indexed range
++   * reads (`stx_cycle`, `reward_cycle`, bond terms, active locks).
++   * @returns The cycle summary, or null when the selector resolves to no cycle.
++   */
++  async getStakingCycle(args: {
++    selector: PoxCycleSelector;
++    poxConstants: PoxConstants;
++  }): Promise<DbStakingCycle | null> {
++    return await this.sqlTransaction(async sql => {
++      const [tip] = await sql<{ burn_block_height: number }[]>`
++        SELECT burn_block_height FROM chain_tip
++      `;
++      const burnTip = tip?.burn_block_height ?? 0;
++      const c = args.poxConstants;
++      const number = resolvePoxCycleSelector(c, args.selector, burnTip);
++      if (number === undefined) return null;
++      const schedule = getPoxCycleSchedule(c, number);
++      const status = getPoxCyclePhase(c, number, burnTip);
++      const finished = status === 'finished';
++
++      const [rewardSet] = await sql<{ total_stacked_amount: string; total_signers: number }[]>`
++        SELECT total_stacked_amount::text, total_signers
++        FROM pox_cycles
++        WHERE canonical = TRUE AND cycle_number = ${number}
++        LIMIT 1
++      `;
++      const bonds = await sql<{ bond_index: number; stx_locked: string; btc_locked: string }[]>`
++        SELECT bond_index, stx_locked::text, btc_locked::text
++        FROM bonds
++        WHERE canonical = TRUE AND microblock_canonical = TRUE
++          AND first_reward_cycle <= ${number} AND unlock_cycle > ${number}
++        ORDER BY bond_index ASC
++      `;
++      const bondIndexes = bonds.map(b => b.bond_index);
++      const sumBig = (values: string[]) => values.reduce((acc, v) => acc + BigInt(v), 0n);
++
++      const [rewards] = await sql<
++        {
++          total: string;
++          bonds: string;
++          stx_only: string;
++          reserve_deposit: string;
++          calculations: number;
++        }[]
++      >`
++        SELECT
++          COALESCE(SUM(gross_accrued_rewards), 0)::text AS total,
++          COALESCE(SUM(total_bond_rewards), 0)::text AS bonds,
++          COALESCE(SUM(total_stx_staker_rewards), 0)::text AS stx_only,
++          COALESCE(SUM(reserve_deposit), 0)::text AS reserve_deposit,
++          COUNT(*)::int AS calculations
++        FROM bond_reward_calculations
++        WHERE canonical = TRUE AND microblock_canonical = TRUE AND stx_cycle = ${number}
++      `;
++      const [claims] = await sql<{ claimed: string }[]>`
++        SELECT COALESCE(SUM(total_rewards), 0)::text AS claimed
++        FROM signer_reward_claims
++        WHERE canonical = TRUE AND microblock_canonical = TRUE AND reward_cycle = ${number}
++      `;
++
++      // The bonds' running totals and the positions' native / sBTC split at the tip: the lock
++      // figures for an unfinished cycle, and the documented fallback for a finished cycle the
++      // contract never ran a reward calculation for.
++      const tipBondLocks = async () => {
++        const bondStx = sumBig(bonds.map(b => b.stx_locked)).toString();
++        const btc = sumBig(bonds.map(b => b.btc_locked)).toString();
++        if (bondIndexes.length === 0) {
++          return { bondStx, btc, btcNative: '0', btcSbtc: '0' };
++        }
++        const [split] = await sql<{ native: string; sbtc: string }[]>`
++          SELECT
++            COALESCE(SUM(CASE WHEN r.btc_lockup_type = ${DbBondLockupType.L1} THEN p.btc_locked END), 0)::text AS native,
++            COALESCE(SUM(CASE WHEN r.btc_lockup_type = ${DbBondLockupType.L2} THEN p.btc_locked END), 0)::text AS sbtc
++          FROM principal_bond_positions p
++          -- Latest canonical registration per position: a staker who rolled out of the bond and
++          -- registered for it again has several registration rows but one position.
++          JOIN LATERAL (
++            SELECT btc_lockup_type
++            FROM bond_registrations r
++            WHERE r.bond_index = p.bond_index AND r.staker = p.principal
++              AND r.canonical = TRUE AND r.microblock_canonical = TRUE
++            ORDER BY r.block_height DESC, r.microblock_sequence DESC, r.tx_index DESC, r.id DESC
++            LIMIT 1
++          ) r ON TRUE
++          WHERE p.canonical = TRUE AND p.microblock_canonical = TRUE
++            AND p.bond_index IN ${sql(bondIndexes)}
++        `;
++        return { bondStx, btc, btcNative: split.native, btcSbtc: split.sbtc };
++      };
++
++      let stxOnly: string;
++      let bondStx: string;
++      let btc: string;
++      let btcNative: string;
++      let btcSbtc: string;
++      let stxOnlyStakers: number;
++      if (finished && rewards.calculations === 0) {
++        // No pox-5 reward accounting exists for this cycle (pre-pox-5, or no calculation was ever
++        // booked to it), so there is no historical STX-only figure to report; today's locks say
++        // nothing about a past cycle. Bond figures fall back to the bonds' running totals.
++        stxOnly = '0';
++        stxOnlyStakers = 0;
++        ({ bondStx, btc, btcNative, btcSbtc } = await tipBondLocks());
++      } else if (finished) {
++        const [latestCalc] = await sql<{ cycle_staked_ustx: string }[]>`
++          SELECT cycle_staked_ustx::text
++          FROM bond_reward_calculations
++          WHERE canonical = TRUE AND microblock_canonical = TRUE AND stx_cycle = ${number}
++          ORDER BY block_height DESC, microblock_sequence DESC, tx_index DESC
++          LIMIT 1
++        `;
++        stxOnly = latestCalc.cycle_staked_ustx;
++        if (rewardSet) {
++          const diff = BigInt(rewardSet.total_stacked_amount) - BigInt(stxOnly);
++          bondStx = (diff > 0n ? diff : 0n).toString();
++        } else {
++          bondStx = sumBig(bonds.map(b => b.stx_locked)).toString();
++        }
++        // Each bond's BTC at the cycle's latest distribution (distributions share their tx with
++        // the cycle's calculate-rewards event), with the native / sBTC split snapshotted then.
++        const [latestSats] = await sql<{ btc: string; native: string; sbtc: string }[]>`
++          SELECT
++            COALESCE(SUM(bond_staked_sats), 0)::text AS btc,
++            COALESCE(SUM(native_staked_sats), 0)::text AS native,
++            COALESCE(SUM(sbtc_staked_sats), 0)::text AS sbtc
++          FROM (
++            SELECT DISTINCT ON (d.bond_index)
++              d.bond_staked_sats, d.native_staked_sats, d.sbtc_staked_sats
++            FROM bond_reward_distributions d
++            JOIN bond_reward_calculations c
++              ON c.tx_id = d.tx_id AND c.index_block_hash = d.index_block_hash
++            WHERE d.canonical = TRUE AND d.microblock_canonical = TRUE
++              AND c.canonical = TRUE AND c.microblock_canonical = TRUE
++              AND c.stx_cycle = ${number}
++            ORDER BY d.bond_index, d.block_height DESC, d.microblock_sequence DESC, d.tx_index DESC
++          ) latest
++        `;
++        btc = latestSats.btc;
++        btcNative = latestSats.native;
++        btcSbtc = latestSats.sbtc;
++        const [credited] = await sql<{ stakers: number }[]>`
++          SELECT COUNT(DISTINCT principal)::int AS stakers
++          FROM principal_stx_reward_distributions
++          WHERE canonical = TRUE AND microblock_canonical = TRUE AND reward_cycle = ${number}
++        `;
++        stxOnlyStakers = credited.stakers;
++      } else {
++        // Locks still active at the tip; for an upcoming cycle, still locked when it starts.
++        const activeAt = Math.max(burnTip, schedule.startBitcoinHeight);
++        const [locks] = await sql<{ amount: string; stakers: number }[]>`
++          SELECT COALESCE(SUM(locked_amount), 0)::text AS amount, COUNT(*)::int AS stakers
++          FROM stx_locked_balances
++          WHERE pox_version = 5 AND locked_amount > 0 AND unlock_burn_height >= ${activeAt}
++        `;
++        stxOnly = locks.amount;
++        stxOnlyStakers = locks.stakers;
++        ({ bondStx, btc, btcNative, btcSbtc } = await tipBondLocks());
++      }
++
++      let bondStakers = 0;
++      if (bondIndexes.length > 0) {
++        const [positions] = await sql<{ stakers: number }[]>`
++          SELECT COUNT(DISTINCT principal)::int AS stakers
++          FROM principal_bond_positions
++          WHERE canonical = TRUE AND microblock_canonical = TRUE
++            AND status <> ${DbPrincipalBondPositionStatus.RolledOver}
++            AND bond_index IN ${sql(bondIndexes)}
++        `;
++        bondStakers = positions.stakers;
++      }
++
++      return {
++        number,
++        status,
++        schedule,
++        locked: {
++          stx_only: stxOnly,
++          bond_stx: bondStx,
++          btc,
++          btc_native: btcNative,
++          btc_sbtc: btcSbtc,
++        },
++        participants: {
++          stx_only_stakers: stxOnlyStakers,
++          bond_stakers: bondStakers,
++          signers: rewardSet ? rewardSet.total_signers : null,
++        },
++        bonds: bondIndexes,
++        rewards: {
++          total: rewards.total,
++          bonds: rewards.bonds,
++          stx_only: rewards.stx_only,
++          reserve_deposit: rewards.reserve_deposit,
++          claimed: claims.claimed,
++        },
++      };
++    });
++  }
++
+   /**
+    * Gets the signer set of the current PoX cycle (the latest canonical cycle with a computed reward
+    * set) joined with the signer manager key bindings that were effective when the cycle's reward
+@@ -1981,9 +2219,10 @@ export class PgStoreV3 extends BasePgStoreModule {
+    * Keyset-paginated by weight descending, then signing key ascending, with the signing key as the
+    * cursor.
+    * @param args - The arguments for the query.
+-   * @returns The cycle's signers, or null if no PoX cycle exists yet.
++   * @returns The cycle's signers, or null if the node has not emitted a reward set for the cycle.
+    */
+-  async getCurrentCycleSigners(args: {
++  async getCycleSigners(args: {
++    cycleNumber: number;
+     limit: number;
+     cursor?: string;
+   }): Promise<(DbCursorPaginatedResult<DbCycleSigner> & { cycle_number: number }) | null> {
+@@ -1991,13 +2230,24 @@ export class PgStoreV3 extends BasePgStoreModule {
+       const [cycle] = await sql<{ cycle_number: number; block_height: number }[]>`
+         SELECT cycle_number, block_height
+         FROM pox_cycles
+-        WHERE canonical = TRUE
+-        ORDER BY cycle_number DESC
++        WHERE canonical = TRUE AND cycle_number = ${args.cycleNumber}
+         LIMIT 1
+       `;
+       if (!cycle) return null;
+       const cycleNumber = cycle.cycle_number;
+       const anchorHeight = cycle.block_height;
++      // Registrations after this cycle's anchor are pending for the next cycle only up to the next
++      // cycle's own anchor; anything later belongs to cycles after that. Unbounded while the next
++      // reward set has not been emitted (i.e. for the current cycle).
++      const [nextCycle] = await sql<{ block_height: number }[]>`
++        SELECT block_height
++        FROM pox_cycles
++        WHERE canonical = TRUE AND cycle_number = ${cycleNumber + 1}
++        LIMIT 1
++      `;
++      const pendingUpperBound = nextCycle
++        ? sql`AND block_height < ${nextCycle.block_height}`
++        : sql``;
+       const cursor = args.cursor
+         ? has0xPrefix(args.cursor)
+           ? args.cursor
+@@ -2054,6 +2304,7 @@ export class PgStoreV3 extends BasePgStoreModule {
+           FROM signer_key_grants
+           WHERE canonical = TRUE AND microblock_canonical = TRUE
+             AND block_height >= ${anchorHeight}
++            ${pendingUpperBound}
+             AND kind = ${DbSignerKeyGrantKind.Register}
+           ORDER BY signer_manager,
+             block_height DESC, microblock_sequence DESC, tx_index DESC, event_index DESC
+diff --git a/src/datastore/v3/types.ts b/src/datastore/v3/types.ts
+index cdb74d49d..c9800eb8f 100644
+--- a/src/datastore/v3/types.ts
++++ b/src/datastore/v3/types.ts
+@@ -6,6 +6,7 @@ import {
+   DbTxStatus,
+   DbTxTypeId,
+ } from '../common.js';
++import type { PoxCyclePhase, PoxCycleSchedule } from '../pox-constants.js';
+ 
+ export type DbCursorPaginatedResult<T> = {
+   limit: number;
+@@ -354,6 +355,40 @@ export interface DbCycleSigner {
+   signer_managers: DbCycleSignerManager[];
+ }
+ 
++/** A per-cycle summary of pox-5 staking (see `PgStoreV3.getStakingCycle`). */
++export interface DbStakingCycle {
++  number: number;
++  status: PoxCyclePhase;
++  schedule: PoxCycleSchedule;
++  locked: {
++    /** µSTX in STX-only stakes covering the cycle. */
++    stx_only: string;
++    /** µSTX locked across the bonds covering the cycle. */
++    bond_stx: string;
++    /** Sats locked across the bonds covering the cycle. */
++    btc: string;
++    /** Of `btc`, sats locked via proven Bitcoin L1 lockups. */
++    btc_native: string;
++    /** Of `btc`, sats locked via sBTC lockups. */
++    btc_sbtc: string;
++  };
++  participants: {
++    stx_only_stakers: number;
++    bond_stakers: number;
++    /** Signers in the cycle's reward set; null until the node has emitted it. */
++    signers: number | null;
++  };
++  /** Indexes of the bonds whose term covers the cycle, ascending. */
++  bonds: number[];
++  rewards: {
++    total: string;
++    bonds: string;
++    stx_only: string;
++    reserve_deposit: string;
++    claimed: string;
++  };
++}
++
+ /** A staker that belongs to a signer, with the staking type(s) it participates in. */
+ export interface DbSignerStaker {
+   staker: string;
+diff --git a/src/index.ts b/src/index.ts
+index 90c2fe098..f5a61225b 100644
+--- a/src/index.ts
++++ b/src/index.ts
+@@ -5,7 +5,7 @@ import {
+ } from './helpers.js';
+ import * as sourceMapSupport from 'source-map-support';
+ import { startApiServer } from './api/init.js';
+-import { ensurePoxConstants } from './pox-constants.js';
++import { ensurePoxConstants } from './datastore/pox-constants.js';
+ import { startEventServer } from './event-stream/event-server.js';
+ import { getCoreNodeEndpoint, getCoreRpcClient, waitForCoreRpcConnection } from './core-rpc.js';
+ import * as promClient from 'prom-client';
+diff --git a/tests/api/pox5/cycle-signers.test.ts b/tests/api/pox5/cycle-signers.test.ts
+index 718e4ebc4..7a7b610e6 100644
+--- a/tests/api/pox5/cycle-signers.test.ts
++++ b/tests/api/pox5/cycle-signers.test.ts
+@@ -57,6 +57,19 @@ describe('pox-5 cycle signers', () => {
+       .build();
+   }
+ 
++  /** Ingest an empty block at the builder's default burn height so `current` resolves to CYCLE. */
++  async function tipBlock(height: number) {
++    await db.update(
++      new TestBlockBuilder({
++        block_height: height,
++        block_hash: hash(height),
++        index_block_hash: hash(height),
++        parent_block_hash: hash(height - 1),
++        parent_index_block_hash: hash(height - 1),
++      }).build()
++    );
++  }
++
+   async function seedCycle(
+     cycle: number,
+     anchorHeight: number,
+@@ -92,18 +105,30 @@ describe('pox-5 cycle signers', () => {
+     }
+   }
+ 
+-  async function getCycleSigners(query: Record<string, string> = {}) {
++  async function getCycleSigners(query: Record<string, string> = {}, selector = 'current') {
+     const res = await supertest(api.server)
+-      .get('/extended/v3/staking/cycles/current/signers')
++      .get(`/extended/v3/staking/cycles/${selector}/signers`)
+       .query(query);
+     return res;
+   }
+ 
+   beforeEach(async () => {
+     await migrate('up');
+-    db = await PgWriteStore.connect({ usageName: 'tests', withNotifier: false, skipMigrations: true });
++    db = await PgWriteStore.connect({
++      usageName: 'tests',
++      withNotifier: false,
++      skipMigrations: true,
++    });
+     client = db.sql;
+     api = await startApiServer({ datastore: db, chainId: STACKS_TESTNET.chainId });
++    // `current` resolves from the burn tip with the network's PoX constants. The fixture blocks sit
++    // at the builder's default burn height (713000); with these constants that is cycle CYCLE's
++    // reward phase: (713000 - 703000) / 100 = 100.
++    await db.setPoxConstants({
++      firstBurnchainBlockHeight: 703000,
++      rewardCycleLength: 100,
++      preparePhaseBlockLength: 10,
++    });
+   });
+ 
+   afterEach(async () => {
+@@ -117,11 +142,17 @@ describe('pox-5 cycle signers', () => {
+     assert.equal(res.status, 404, res.text);
+   });
+ 
+-  test('only `current` is accepted as the cycle number', async () => {
+-    // The route is generic (`/staking/cycles/:cycle_number/signers`) so it can
+-    // later serve previous cycles, but for now the param only allows `current`.
+-    const res = await supertest(api.server).get('/extended/v3/staking/cycles/100/signers');
+-    assert.equal(res.status, 400, res.text);
++  test('the cycle param accepts a number or `current` / `previous` / `next`', async () => {
++    await tipBlock(1);
++    await seedCycle(CYCLE, ANCHOR_HEIGHT, [{ key: KEY1, weight: 1, stacked: '100000000000' }]);
++    assert.equal((await getCycleSigners({}, String(CYCLE))).status, 200);
++    assert.equal((await getCycleSigners({}, 'current')).status, 200);
++    // No reward set for the neighbours yet.
++    assert.equal((await getCycleSigners({}, 'previous')).status, 404);
++    assert.equal((await getCycleSigners({}, 'next')).status, 404);
++    assert.equal((await getCycleSigners({}, String(CYCLE + 5))).status, 404);
++    assert.equal((await getCycleSigners({}, 'latest')).status, 400);
++    assert.equal((await getCycleSigners({}, '-1')).status, 400);
+   });
+ 
+   test('cycle signers with registered, granted, revoked, and pending keys', async () => {
+@@ -266,9 +297,7 @@ describe('pox-5 cycle signers', () => {
+     assert.equal(entryA.registered_at.block_height, 1);
+     assert.equal(entryA.registered_at.tx_id, txId(1));
+     assert.equal(typeof entryA.registered_at.bitcoin_block_height, 'number');
+-    assert.deepEqual(entryA.granted_keys, [
+-      { signer_key: KEY5, auth_id: '444', tx_id: txId(9) },
+-    ]);
++    assert.deepEqual(entryA.granted_keys, [{ signer_key: KEY5, auth_id: '444', tx_id: txId(9) }]);
+     assert.equal(entryA.grant_active, false);
+     assert.deepEqual(entryA.pending_key_update, {
+       signer_key: KEY5,
+@@ -325,8 +354,27 @@ describe('pox-5 cycle signers', () => {
+       })
+     );
+     await seedCycle(CYCLE + 1, 3, [{ key: KEY5, weight: 1, stacked: '100000000000' }]);
++    // A registration after cycle 101's anchor: pending for 101, irrelevant to cycle 100.
++    await db.update(
++      bindingBlock({
++        height: 3,
++        name: Pox5EventName.RegisterSigner,
++        data: { signer: MANAGER_A, signer_key: KEY2 },
++      })
++    );
+ 
+-    const res = await getCycleSigners();
++    // `current` is the cycle containing the burn tip, not the newest reward set: while CYCLE is
++    // running, CYCLE + 1's set (emitted during CYCLE's prepare phase) is reachable as `next`.
++    const current = await getCycleSigners();
++    assert.equal(current.status, 200, current.text);
++    const [currentSigner] = JSON.parse(current.text).results;
++    assert.equal(currentSigner.signing_key, KEY1);
++    // Cycle 100's pending update is the key that took effect in 101 (registered before 101's
++    // anchor), not the later KEY2 registration.
++    assert.equal(currentSigner.signer_managers[0].pending_key_update.signer_key, KEY5);
++    assert.equal(currentSigner.signer_managers[0].pending_key_update.effective_cycle, CYCLE + 1);
++
++    const res = await getCycleSigners({}, 'next');
+     assert.equal(res.status, 200, res.text);
+     const body = JSON.parse(res.text);
+     assert.equal(body.total, 1);
+@@ -335,7 +383,9 @@ describe('pox-5 cycle signers', () => {
+     assert.equal(signer.signer_managers.length, 1);
+     assert.equal(signer.signer_managers[0].signer_manager, MANAGER_A);
+     assert.equal(signer.signer_managers[0].registered_at.block_height, 2);
+-    assert.equal(signer.signer_managers[0].pending_key_update, null);
++    // For 101 (no later reward set yet) the post-anchor KEY2 registration is pending.
++    assert.equal(signer.signer_managers[0].pending_key_update.signer_key, KEY2);
++    assert.equal(signer.signer_managers[0].pending_key_update.effective_cycle, CYCLE + 2);
+   });
+ 
+   test('registrations overwrite each other; grants and revokes never change bindings', async () => {
+@@ -389,10 +439,12 @@ describe('pox-5 cycle signers', () => {
+     assert.equal(res.status, 200, res.text);
+     const body = JSON.parse(res.text);
+     const managersByKey = Object.fromEntries(
+-      body.results.map((r: { signing_key: string; signer_managers: { signer_manager: string }[] }) => [
+-        r.signing_key,
+-        r.signer_managers.map(m => m.signer_manager),
+-      ])
++      body.results.map(
++        (r: { signing_key: string; signer_managers: { signer_manager: string }[] }) => [
++          r.signing_key,
++          r.signer_managers.map(m => m.signer_manager),
++        ]
++      )
+     );
+     assert.deepEqual(managersByKey, {
+       [KEY1]: [], // overwritten by MANAGER_A's registration of KEY2
+@@ -402,6 +454,7 @@ describe('pox-5 cycle signers', () => {
+   });
+ 
+   test('paginates by weight descending with signing key cursor', async () => {
++    await tipBlock(1);
+     await seedCycle(CYCLE, 1, [
+       { key: KEY1, weight: 5, stacked: '500000000000' },
+       { key: KEY2, weight: 3, stacked: '300000000000' },
+diff --git a/tests/api/pox5/pox-constants.test.ts b/tests/api/pox5/pox-constants.test.ts
+index 27b6e3d21..49f6f1e50 100644
+--- a/tests/api/pox5/pox-constants.test.ts
++++ b/tests/api/pox5/pox-constants.test.ts
+@@ -15,7 +15,7 @@ import {
+   poxConstantsFromNodeInfo,
+   rewardCycleToBurnHeight,
+   validatePoxConstants,
+-} from '../../../src/pox-constants.ts';
++} from '../../../src/datastore/pox-constants.ts';
+ 
+ /**
+  * PoX constants: the writer's one-time `ensurePoxConstants` (pox_state → mainnet → node), the
+diff --git a/tests/api/pox5/staking-cycle.test.ts b/tests/api/pox5/staking-cycle.test.ts
+new file mode 100644
+index 000000000..e57e78e26
+--- /dev/null
++++ b/tests/api/pox5/staking-cycle.test.ts
+@@ -0,0 +1,743 @@
++import supertest from 'supertest';
++import { afterEach, beforeEach, describe, test } from 'node:test';
++import assert from 'node:assert/strict';
++import { STACKS_TESTNET } from '@stacks/network';
++import { Pox5EventName } from '@stacks/codec';
++import { ApiServer, startApiServer } from '../../../src/api/init.ts';
++import { PgWriteStore } from '../../../src/datastore/pg-write-store.ts';
++import { migrate } from '../../test-helpers.ts';
++import { TestBlockBuilder } from '../test-builders.ts';
++import { BACKFILL_DISTRIBUTION_LOCKUP_SPLIT_SQL } from '../../../migrations/1779800000021_bond-reward-distribution-lockup-split.ts';
++
++/**
++ * `GET /extended/v3/staking/cycles/:cycle_number` — the per-cycle pox-5 staking summary — with
++ * `current` / `previous` / `next` resolved from the burn tip and the PoX constants on `pox_state`.
++ *
++ * Geometry: cycles of 100 Bitcoin blocks from height 0 with a 10-block prepare phase. The fixture
++ * tip is 1050, i.e. cycle 10's reward phase (1000-1099, prepare phase from 1090).
++ */
++
++const ADMIN = 'ST3NBRSFKX28FQ2ZJ1MAKX58HKHSDGNV5N7R21XCP';
++const ALICE = 'STB44HYPYAT2BB2QE513NSP81HTMYWBJP02HPGK6';
++const BOB = 'ST11NJTTKGVT6D1HY4NJRVQWMQM7TVAR091EJ8P2Y';
++const CAROL = 'ST2REHHS5J3CERCRBEPMGH7921Q6PYKAADT7JP2VB';
++const DAVE = 'ST1SJ3DTE5DN7X54YDH5D64R3BCB6A2AG2ZQ8YPD5';
++const ERIN = 'ST3DWSXBPYDB484QXFTR81K4AWG4ZB5XZNFF3H70C';
++const SIGNER = `${ADMIN}.signer-manager`;
++
++const CONSTANTS = {
++  firstBurnchainBlockHeight: 0,
++  rewardCycleLength: 100,
++  preparePhaseBlockLength: 10,
++};
++const TIP = 1050;
++
++// Bond 0 covers cycles 8-19 (active at TIP); bond 1 covers cycles 11-22 (upcoming at TIP).
++const BOND_ACTIVE = { index: 0, first_cycle: 8, unlock_cycle: 20, start: 800, unlock: 2000 };
++const BOND_UPCOMING = { index: 1, first_cycle: 11, unlock_cycle: 23, start: 1100, unlock: 2300 };
++
++interface StakingCycleResponse {
++  number: number;
++  status: string;
++  schedule: {
++    start: { bitcoin_height: number };
++    prepare_phase_start: { bitcoin_height: number };
++    end: { bitcoin_height: number };
++  };
++  locked: {
++    stx: { stx_only: string; bonds: string; total: string };
++    btc: { total: string; native: string; sbtc: string };
++  };
++  participants: { stakers: { stx_only: number; bonds: number }; signers: number | null };
++  bonds: { total: number; indexes: number[] };
++  rewards: {
++    btc: {
++      total: string;
++      waterfall: { bonds: string; stx_only: string; reserve_deposit: string };
++      claimed: string;
++    };
++  };
++}
++
++function setupBondData(bond: typeof BOND_ACTIVE) {
++  return {
++    bond_index: String(bond.index),
++    target_rate: '300',
++    stx_value_ratio: '10000000',
++    min_ustx_ratio: '1000',
++    early_unlock_bytes: '',
++    first_reward_cycle: String(bond.first_cycle),
++    bond_start_height: String(bond.start),
++    unlock_cycle: String(bond.unlock_cycle),
++    unlock_burn_height: String(bond.unlock),
++  };
++}
++
++function registerData(args: {
++  bond: typeof BOND_ACTIVE;
++  staker: string;
++  ustx: bigint;
++  sats: bigint;
++  /** Proven Bitcoin L1 lockup (`l1`, "native") or sBTC (`l2`, the default). */
++  lockup?: 'l1' | 'l2';
++}) {
++  const lockup = args.lockup ?? 'l2';
++  return {
++    bond_index: String(args.bond.index),
++    signer: SIGNER,
++    staker: args.staker,
++    amount_ustx: args.ustx.toString(),
++    sats_total: args.sats.toString(),
++    first_reward_cycle: String(args.bond.first_cycle),
++    unlock_burn_height: String(args.bond.unlock),
++    unlock_cycle: String(args.bond.unlock_cycle),
++    is_l1_lock: lockup === 'l1',
++    btc_lockup:
++      lockup === 'l1'
++        ? { type: 'l1', txs: [{ txid: '0x' + 'ab'.repeat(32), output_index: '0' }] }
++        : { type: 'l2', txs: [] },
++  };
++}
++
++function stakeData(args: { staker: string; ustx: bigint; unlock: number }) {
++  return {
++    signer: SIGNER,
++    staker: args.staker,
++    amount_ustx: args.ustx.toString(),
++    num_cycles: '2',
++    first_reward_cycle: '8',
++    unlock_burn_height: String(args.unlock),
++    unlock_cycle: '20',
++  };
++}
++
++/** A `calculate-rewards` booked to `cycle`, with the given waterfall and STX-only stake. */
++function calculateRewardsData(args: {
++  cycle: number;
++  height: number;
++  bonds: bigint;
++  stxOnly: bigint;
++  reserve: bigint;
++  cycleStakedUstx: bigint;
++}) {
++  return {
++    bond_periods: [String(BOND_ACTIVE.index)],
++    calculation_height: String(args.height),
++    gross_accrued_rewards: (args.bonds + args.stxOnly + args.reserve).toString(),
++    total_bond_rewards: args.bonds.toString(),
++    reserve_deposit: args.reserve.toString(),
++    reserve_balance: '0',
++    stx_cycle: String(args.cycle),
++    total_stx_staker_rewards: args.stxOnly.toString(),
++    cycle_staked_ustx: args.cycleStakedUstx.toString(),
++    // 1e18 fixed point: 1 sat per µSTX, so every live STX-only locker is credited a reward row.
++    accrued_rewards_per_ustx: '1000000000000000000',
++    cumulative_rewards_per_ustx: '1000000000000000000',
++  };
++}
++
++function bondDistributionData(args: { bondRewards: bigint; stakedSats: bigint }) {
++  return {
++    bond_index: String(BOND_ACTIVE.index),
++    target_yield: '300',
++    bond_rewards: args.bondRewards.toString(),
++    bond_staked_sats: args.stakedSats.toString(),
++    accrued_rewards_per_sat: '1000000000000000000',
++    cumulative_rewards_per_sat: '1000000000000000000',
++  };
++}
++
++describe('staking cycle', () => {
++  let db: PgWriteStore;
++  let api: ApiServer;
++  let height = 0;
++  let lastIndexHash = '0x00';
++
++  function nextBlock(args?: { burn_block_height?: number }) {
++    height += 1;
++    const indexHash = '0x' + height.toString(16).padStart(4, '0');
++    const builder = new TestBlockBuilder({
++      block_height: height,
++      block_hash: indexHash,
++      index_block_hash: indexHash,
++      parent_block_hash: lastIndexHash,
++      parent_index_block_hash: lastIndexHash,
++      burn_block_height: args?.burn_block_height ?? TIP,
++    }).addTx({ tx_id: '0x' + height.toString(16).padStart(64, '0') });
++    lastIndexHash = indexHash;
++    return builder;
++  }
++
++  async function seedRewardSet(cycle: number, totalStacked: bigint, signers: number) {
++    await db.sql`
++      INSERT INTO pox_cycles (
++        block_height, index_block_hash, parent_index_block_hash, cycle_number,
++        canonical, total_weight, total_stacked_amount, total_signers
++      )
++      VALUES (1, ${'0x' + 'ee'.repeat(32)}, ${'0x' + 'ed'.repeat(32)}, ${cycle},
++        true, ${signers}, ${totalStacked}, ${signers})
++    `;
++  }
++
++  async function getCycle(selector: string): Promise<StakingCycleResponse> {
++    const res = await supertest(api.server).get(`/extended/v3/staking/cycles/${selector}`);
++    assert.equal(res.status, 200, `GET cycles/${selector} -> ${res.status}: ${res.text}`);
++    return JSON.parse(res.text) as StakingCycleResponse;
++  }
++
++  /** Stakes, bonds, registrations, cycle 9's reward accounting, and reward sets for 9 and 10. */
++  async function seedFixture() {
++    await db.setPoxConstants(CONSTANTS);
++    // alice's stake outlives the fixture tip; bob's expired before it.
++    await db.update(
++      nextBlock()
++        .addTxPox5Event({ name: Pox5EventName.SetupBond, data: setupBondData(BOND_ACTIVE) })
++        .addTxPox5Event({ name: Pox5EventName.SetupBond, data: setupBondData(BOND_UPCOMING) })
++        .addTxPox5Event({
++          name: Pox5EventName.Stake,
++          data: stakeData({ staker: ALICE, ustx: 50_000_000n, unlock: 1500 }),
++        })
++        .addTxPox5Event({
++          name: Pox5EventName.Stake,
++          data: stakeData({ staker: BOB, ustx: 30_000_000n, unlock: 1040 }),
++        })
++        .addTxPox5Event({
++          name: Pox5EventName.RegisterForBond,
++          data: registerData({ bond: BOND_ACTIVE, staker: CAROL, ustx: 10_000_000n, sats: 1_000n }),
++        })
++        .addTxPox5Event({
++          name: Pox5EventName.RegisterForBond,
++          data: registerData({
++            bond: BOND_ACTIVE,
++            staker: DAVE,
++            ustx: 20_000_000n,
++            sats: 2_000n,
++            lockup: 'l1',
++          }),
++        })
++        .addTxPox5Event({
++          name: Pox5EventName.RegisterForBond,
++          data: registerData({ bond: BOND_UPCOMING, staker: ERIN, ustx: 5_000_000n, sats: 500n }),
++        })
++        .build()
++    );
++    // Cycle 9's rewards: two distributions (weekly runs), each with the bond's distribution in
++    // the same tx, then a signer claim for the cycle.
++    await db.update(
++      nextBlock()
++        .addTxPox5Event({
++          name: Pox5EventName.CalculateRewards,
++          data: calculateRewardsData({
++            cycle: 9,
++            height: 950,
++            bonds: 400n,
++            stxOnly: 500n,
++            reserve: 100n,
++            cycleStakedUstx: 40_000_000n,
++          }),
++        })
++        .addTxPox5Event({
++          name: Pox5EventName.BondDistribution,
++          data: bondDistributionData({ bondRewards: 400n, stakedSats: 2_500n }),
++        })
++        .build()
++    );
++    // carol withdraws 400 of her 1000 sBTC before the second distribution.
++    await db.update(
++      nextBlock()
++        .addTxPox5Event({
++          name: Pox5EventName.UnstakeSbtc,
++          data: {
++            staker: CAROL,
++            signer: SIGNER,
++            bond_index: String(BOND_ACTIVE.index),
++            amount_sats_released: '400',
++            new_amount_sats: '600',
++          },
++        })
++        .build()
++    );
++    await db.update(
++      nextBlock()
++        .addTxPox5Event({
++          name: Pox5EventName.CalculateRewards,
++          data: calculateRewardsData({
++            cycle: 9,
++            height: 999,
++            bonds: 800n,
++            stxOnly: 1_000n,
++            reserve: 200n,
++            cycleStakedUstx: 45_000_000n,
++          }),
++        })
++        .addTxPox5Event({
++          name: Pox5EventName.BondDistribution,
++          data: bondDistributionData({ bondRewards: 800n, stakedSats: 2_600n }),
++        })
++        .addTxPox5Event({
++          name: Pox5EventName.ClaimRewards,
++          data: {
++            signer_manager: SIGNER,
++            reward_cycle: '9',
++            stx_rewards: { earned: '200', rewards_per_token: '1' },
++            bond_rewards: [
++              { bond_index: String(BOND_ACTIVE.index), earned: '400', rewards_per_token: '1' },
++            ],
++            bond_totals: '400',
++            total_rewards: '600',
++          },
++        })
++        .build()
++    );
++    await seedRewardSet(9, 100_000_000n, 3);
++    await seedRewardSet(10, 110_000_000n, 4);
++  }
++
++  beforeEach(async () => {
++    await migrate('up');
++    db = await PgWriteStore.connect({
++      usageName: 'tests',
++      withNotifier: false,
++      skipMigrations: true,
++    });
++    api = await startApiServer({ datastore: db, chainId: STACKS_TESTNET.chainId });
++    height = 0;
++    lastIndexHash = '0x00';
++  });
++
++  afterEach(async () => {
++    await api.terminate();
++    await db?.close();
++    await migrate('down');
++  });
++
++  test('the current cycle: tip-state locks and participants, no rewards booked yet', async () => {
++    await seedFixture();
++    const cycle = await getCycle('current');
++    assert.deepEqual(cycle, {
++      number: 10,
++      status: 'reward_phase',
++      schedule: {
++        start: { bitcoin_height: 1000 },
++        prepare_phase_start: { bitcoin_height: 1090 },
++        end: { bitcoin_height: 1099 },
++      },
++      locked: {
++        // alice only (bob's lock expired at 1040 < tip); bond 0 is the only bond covering cycle 10.
++        stx: { stx_only: '50000000', bonds: '30000000', total: '80000000' },
++        // dave's 2000 sats are a native L1 lockup, carol's remaining 600 are sBTC.
++        btc: { total: '2600', native: '2000', sbtc: '600' },
++      },
++      participants: { stakers: { stx_only: 1, bonds: 2 }, signers: 4 },
++      bonds: { total: 1, indexes: [0] },
++      rewards: {
++        btc: {
++          total: '0',
++          waterfall: { bonds: '0', stx_only: '0', reserve_deposit: '0' },
++          claimed: '0',
++        },
++      },
++    });
++    // A number resolves to the same cycle.
++    assert.deepEqual(await getCycle('10'), cycle);
++  });
++
++  test("a finished cycle: the contract's reward accounting and running reward sums", async () => {
++    await seedFixture();
++    const cycle = await getCycle('previous');
++    assert.equal(cycle.number, 9);
++    assert.equal(cycle.status, 'finished');
++    assert.deepEqual(cycle.schedule, {
++      start: { bitcoin_height: 900 },
++      prepare_phase_start: { bitcoin_height: 990 },
++      end: { bitcoin_height: 999 },
++    });
++    // STX-only from the latest calculation, bonds = reward set total minus that, BTC from the
++    // bond's latest distribution in the cycle.
++    assert.deepEqual(cycle.locked, {
++      stx: { stx_only: '45000000', bonds: '55000000', total: '100000000' },
++      // The split is the snapshot taken at that distribution, after carol's unstake.
++      btc: { total: '2600', native: '2000', sbtc: '600' },
++    });
++    // Both lockers were credited STX rewards at calculation time; bond stakers as of the tip.
++    assert.deepEqual(cycle.participants, { stakers: { stx_only: 2, bonds: 2 }, signers: 3 });
++    assert.deepEqual(cycle.bonds, { total: 1, indexes: [0] });
++    // Sums over the two distributions; claimed from the signer claim.
++    assert.deepEqual(cycle.rewards, {
++      btc: {
++        total: '3000',
++        waterfall: { bonds: '1200', stx_only: '1500', reserve_deposit: '300' },
++        claimed: '600',
++      },
++    });
++    assert.deepEqual(await getCycle('9'), cycle);
++  });
++
++  test('an upcoming cycle: registrations so far, locks that outlive its start, no reward set', async () => {
++    await seedFixture();
++    const cycle = await getCycle('next');
++    assert.equal(cycle.number, 11);
++    assert.equal(cycle.status, 'upcoming');
++    assert.deepEqual(cycle.schedule, {
++      start: { bitcoin_height: 1100 },
++      prepare_phase_start: { bitcoin_height: 1190 },
++      end: { bitcoin_height: 1199 },
++    });
++    // alice's lock (unlock 1500) is still live when cycle 11 starts; both bonds cover cycle 11.
++    assert.deepEqual(cycle.locked, {
++      stx: { stx_only: '50000000', bonds: '35000000', total: '85000000' },
++      btc: { total: '3100', native: '2000', sbtc: '1100' },
++    });
++    assert.deepEqual(cycle.participants, { stakers: { stx_only: 1, bonds: 3 }, signers: null });
++    assert.deepEqual(cycle.bonds, { total: 2, indexes: [0, 1] });
++    assert.equal(cycle.rewards.btc.total, '0');
++  });
++
++  test('the prepare phase belongs to the ending cycle; the next cycle stays upcoming', async () => {
++    await seedFixture();
++    await db.update(nextBlock({ burn_block_height: 1095 }).build());
++    assert.equal((await getCycle('current')).status, 'prepare_phase');
++    assert.equal((await getCycle('current')).number, 10);
++    assert.equal((await getCycle('next')).status, 'upcoming');
++    assert.equal((await getCycle('9')).status, 'finished');
++    // Entering cycle 11's reward phase moves `current`.
++    await db.update(nextBlock({ burn_block_height: 1100 }).build());
++    const current = await getCycle('current');
++    assert.equal(current.number, 11);
++    assert.equal(current.status, 'reward_phase');
++    assert.equal((await getCycle('10')).status, 'finished');
++  });
++
++  test('a fresh network with no pox-5 activity still answers with schedule and zeros', async () => {
++    await db.setPoxConstants(CONSTANTS);
++    await db.update(nextBlock().build());
++    const cycle = await getCycle('current');
++    assert.equal(cycle.number, 10);
++    assert.deepEqual(cycle.locked, {
++      stx: { stx_only: '0', bonds: '0', total: '0' },
++      btc: { total: '0', native: '0', sbtc: '0' },
++    });
++    assert.deepEqual(cycle.participants, { stakers: { stx_only: 0, bonds: 0 }, signers: null });
++    assert.deepEqual(cycle.bonds, { total: 0, indexes: [] });
++  });
++
++  test('selectors that resolve to no cycle are 404, malformed ones are 400', async () => {
++    // Tip below the first PoX burn block: no cycle exists yet.
++    await db.setPoxConstants({ ...CONSTANTS, firstBurnchainBlockHeight: 5000 });
++    await db.update(nextBlock().build());
++    for (const selector of ['current', 'previous', 'next']) {
++      const res = await supertest(api.server).get(`/extended/v3/staking/cycles/${selector}`);
++      assert.equal(res.status, 404, `${selector}: ${res.text}`);
++    }
++    // Explicit numbers are always answerable (a far-future cycle is simply upcoming).
++    assert.equal((await getCycle('3')).status, 'upcoming');
++    // `previous` of cycle 0.
++    await db.setPoxConstants({
++      ...CONSTANTS,
++      firstBurnchainBlockHeight: 0,
++      rewardCycleLength: 5000,
++    });
++    assert.equal((await getCycle('current')).number, 0);
++    assert.equal(
++      (await supertest(api.server).get('/extended/v3/staking/cycles/previous')).status,
++      404
++    );
++    for (const bad of ['latest', '-1', '1.5', '']) {
++      const res = await supertest(api.server).get(`/extended/v3/staking/cycles/${bad}`);
++      assert.ok(res.status === 400 || res.status === 404, `${bad}: ${res.status}`);
++    }
++    // Numbers are capped at nine digits so they always fit PostgreSQL's integer columns.
++    assert.equal((await getCycle('999999999')).status, 'upcoming');
++    assert.equal(
++      (await supertest(api.server).get('/extended/v3/staking/cycles/2147483648')).status,
++      400
++    );
++  });
++
++  test('a finished cycle without any reward calculation reports no historical STX-only stake', async () => {
++    await seedFixture();
++    // Cycle 8 is covered by bond 0 but pox-5 never ran calculate-rewards for it. Today's live
++    // stakes (alice) say nothing about it, so the STX-only figures are zero; the bond figures fall
++    // back to the bonds' running totals as documented.
++    const cycle = await getCycle('8');
++    assert.equal(cycle.status, 'finished');
++    assert.deepEqual(cycle.locked, {
++      stx: { stx_only: '0', bonds: '30000000', total: '30000000' },
++      btc: { total: '2600', native: '2000', sbtc: '600' },
++    });
++    assert.deepEqual(cycle.participants, { stakers: { stx_only: 0, bonds: 2 }, signers: null });
++    assert.equal(cycle.rewards.btc.total, '0');
++  });
++
++  test('without persisted constants the mainnet geometry applies', async () => {
++    // No setPoxConstants: the read side falls back to mainnet, under which a tip of 1050 precedes
++    // PoX, so aliases are 404 while explicit numbers use the mainnet schedule.
++    await db.update(nextBlock().build());
++    assert.equal(
++      (await supertest(api.server).get('/extended/v3/staking/cycles/current')).status,
++      404
++    );
++    const cycle = await getCycle('143');
++    assert.deepEqual(cycle.schedule, {
++      start: { bitcoin_height: 966350 },
++      prepare_phase_start: { bitcoin_height: 968350 },
++      end: { bitcoin_height: 968449 },
++    });
++    assert.equal(cycle.status, 'upcoming');
++  });
++
++  test('each distribution snapshots the native / sBTC split, and the backfill rebuilds it from events', async () => {
++    await seedFixture();
++    const rows = () =>
++      db.sql<
++        {
++          bond_staked_sats: string;
++          native_staked_sats: string | null;
++          sbtc_staked_sats: string | null;
++        }[]
++      >`
++        SELECT bond_staked_sats::text, native_staked_sats::text, sbtc_staked_sats::text
++        FROM bond_reward_distributions
++        WHERE canonical = TRUE
++        ORDER BY block_height ASC
++      `;
++    // Snapshotted at ingestion: 1000 sBTC + 2000 native at the first distribution, 600 sBTC after
++    // carol's unstake at the second.
++    const expected = [
++      { bond_staked_sats: '2500', native_staked_sats: '2000', sbtc_staked_sats: '1000' },
++      { bond_staked_sats: '2600', native_staked_sats: '2000', sbtc_staked_sats: '600' },
++    ];
++    assert.deepEqual([...(await rows())], expected);
++
++    // Reset the split to the column default (a row that predates the columns) and rebuild it from
++    // pox5_events.
++    await db.sql`UPDATE bond_reward_distributions SET native_staked_sats = 0, sbtc_staked_sats = 0`;
++    const wiped = await getCycle('previous');
++    assert.deepEqual(wiped.locked.btc, { total: '2600', native: '0', sbtc: '0' });
++    await db.sql.unsafe(BACKFILL_DISTRIBUTION_LOCKUP_SPLIT_SQL);
++    assert.deepEqual([...(await rows())], expected);
++    assert.deepEqual((await getCycle('previous')).locked.btc, {
++      total: '2600',
++      native: '2000',
++      sbtc: '600',
++    });
++  });
++
++  test('the backfill treats a roll-over out of the bond as releasing its BTC', async () => {
++    await seedFixture();
++    // dave rolls his bond-0 position into an STX-only stake, then a third distribution runs.
++    await db.update(
++      nextBlock()
++        .addTxPox5Event({
++          name: Pox5EventName.Stake,
++          data: stakeData({ staker: DAVE, ustx: 21_000_000n, unlock: 1500 }),
++        })
++        .build()
++    );
++    await db.update(
++      nextBlock()
++        .addTxPox5Event({
++          name: Pox5EventName.CalculateRewards,
++          data: calculateRewardsData({
++            cycle: 10,
++            height: 1050,
++            bonds: 100n,
++            stxOnly: 100n,
++            reserve: 10n,
++            cycleStakedUstx: 71_000_000n,
++          }),
++        })
++        .addTxPox5Event({
++          name: Pox5EventName.BondDistribution,
++          data: bondDistributionData({ bondRewards: 100n, stakedSats: 600n }),
++        })
++        .build()
++    );
++    const latest = () =>
++      db.sql<{ native_staked_sats: string; sbtc_staked_sats: string }[]>`
++        SELECT native_staked_sats::text, sbtc_staked_sats::text
++        FROM bond_reward_distributions
++        WHERE canonical = TRUE
++        ORDER BY block_height DESC
++        LIMIT 1
++      `;
++    assert.deepEqual([...(await latest())], [{ native_staked_sats: '0', sbtc_staked_sats: '600' }]);
++    await db.sql`UPDATE bond_reward_distributions SET native_staked_sats = 0, sbtc_staked_sats = 0`;
++    await db.sql.unsafe(BACKFILL_DISTRIBUTION_LOCKUP_SPLIT_SQL);
++    assert.deepEqual([...(await latest())], [{ native_staked_sats: '0', sbtc_staked_sats: '600' }]);
++  });
++
++  test('a side-fork distribution has its lockup split rebuilt from the fork when the fork wins', async () => {
++    await db.setPoxConstants(CONSTANTS);
++    // Canonical chain: bond 0 with carol's sBTC registration, then two empty blocks.
++    await db.update(
++      nextBlock()
++        .addTxPox5Event({ name: Pox5EventName.SetupBond, data: setupBondData(BOND_ACTIVE) })
++        .addTxPox5Event({
++          name: Pox5EventName.RegisterForBond,
++          data: registerData({ bond: BOND_ACTIVE, staker: CAROL, ustx: 10_000_000n, sats: 1_000n }),
++        })
++        .build()
++    );
++    const forkPoint = lastIndexHash;
++    await db.update(nextBlock().build());
++    await db.update(nextBlock().build());
++
++    // Side fork of equal length: dave's native registration in 2', a cycle-9 distribution in 3'.
++    // At ingestion the distribution only sees the canonical positions (carol), so its snapshot
++    // says 0 native / 1000 sBTC.
++    const sideFork = (height: number, hash: string, parent: string) =>
++      new TestBlockBuilder({
++        block_height: height,
++        block_hash: hash,
++        index_block_hash: hash,
++        parent_block_hash: parent,
++        parent_index_block_hash: parent,
++        burn_block_height: TIP,
++        canonical: false,
++      }).addTx({ tx_id: '0x' + hash.slice(2).repeat(32), canonical: false });
++    await db.update(
++      sideFork(2, '0xf2', forkPoint)
++        .addTxPox5Event({
++          name: Pox5EventName.RegisterForBond,
++          data: registerData({
++            bond: BOND_ACTIVE,
++            staker: DAVE,
++            ustx: 20_000_000n,
++            sats: 2_000n,
++            lockup: 'l1',
++          }),
++        })
++        .build()
++    );
++    await db.update(
++      sideFork(3, '0xf3', '0xf2')
++        .addTxPox5Event({
++          name: Pox5EventName.CalculateRewards,
++          data: calculateRewardsData({
++            cycle: 9,
++            height: 999,
++            bonds: 300n,
++            stxOnly: 0n,
++            reserve: 30n,
++            cycleStakedUstx: 0n,
++          }),
++        })
++        .addTxPox5Event({
++          name: Pox5EventName.BondDistribution,
++          data: bondDistributionData({ bondRewards: 300n, stakedSats: 3_000n }),
++        })
++        .build()
++    );
++    const snapshot = () =>
++      db.sql<{ canonical: boolean; native_staked_sats: string; sbtc_staked_sats: string }[]>`
++        SELECT canonical, native_staked_sats::text, sbtc_staked_sats::text
++        FROM bond_reward_distributions
++        WHERE index_block_hash = ${'0xf3'}
++      `;
++    assert.deepEqual(
++      [...(await snapshot())],
++      [{ canonical: false, native_staked_sats: '0', sbtc_staked_sats: '1000' }]
++    );
++
++    // The fork wins: dave's registration is canonical now, and the distribution's snapshot is
++    // rebuilt from the fork's own history.
++    await db.update(
++      new TestBlockBuilder({
++        block_height: 4,
++        block_hash: '0xf4',
++        index_block_hash: '0xf4',
++        parent_block_hash: '0xf3',
++        parent_index_block_hash: '0xf3',
++        burn_block_height: TIP,
++      }).build()
++    );
++    assert.deepEqual(
++      [...(await snapshot())],
++      [{ canonical: true, native_staked_sats: '2000', sbtc_staked_sats: '1000' }]
++    );
++    const cycle = await getCycle('9');
++    assert.equal(cycle.status, 'finished');
++    assert.deepEqual(cycle.locked.btc, { total: '3000', native: '2000', sbtc: '1000' });
++  });
++
++  test('a staker who re-registers for a bond is counted once, under the latest lockup type', async () => {
++    await seedFixture();
++    // carol (600 sBTC in bond 0) rolls out into an STX-only stake, then registers for bond 0 again
++    // with a native lockup. bond_registrations now holds two canonical rows for her; her position
++    // is one row and must be counted once, as native.
++    await db.update(
++      nextBlock()
++        .addTxPox5Event({
++          name: Pox5EventName.Stake,
++          data: stakeData({ staker: CAROL, ustx: 12_000_000n, unlock: 1500 }),
++        })
++        .build()
++    );
++    await db.update(
++      nextBlock()
++        .addTxPox5Event({
++          name: Pox5EventName.RegisterForBond,
++          data: registerData({
++            bond: BOND_ACTIVE,
++            staker: CAROL,
++            ustx: 11_000_000n,
++            sats: 700n,
++            lockup: 'l1',
++          }),
++        })
++        .build()
++    );
++    const registrations = await db.sql<{ n: number }[]>`
++      SELECT COUNT(*)::int AS n FROM bond_registrations
++      WHERE canonical = TRUE AND staker = ${CAROL} AND bond_index = ${BOND_ACTIVE.index}
++    `;
++    assert.equal(registrations[0].n, 2);
++    // Tip state: dave 2000 native + carol 700 native, nothing sBTC.
++    const cycle = await getCycle('current');
++    assert.deepEqual(cycle.locked.btc, { total: '2700', native: '2700', sbtc: '0' });
++    // A distribution snapshot taken now agrees.
++    await db.update(
++      nextBlock()
++        .addTxPox5Event({
++          name: Pox5EventName.CalculateRewards,
++          data: calculateRewardsData({
++            cycle: 10,
++            height: 1050,
++            bonds: 100n,
++            stxOnly: 100n,
++            reserve: 10n,
++            cycleStakedUstx: 50_000_000n,
++          }),
++        })
++        .addTxPox5Event({
++          name: Pox5EventName.BondDistribution,
++          data: bondDistributionData({ bondRewards: 100n, stakedSats: 2_700n }),
++        })
++        .build()
++    );
++    const [latest] = await db.sql<{ native_staked_sats: string; sbtc_staked_sats: string }[]>`
++      SELECT native_staked_sats::text, sbtc_staked_sats::text
++      FROM bond_reward_distributions WHERE canonical = TRUE
++      ORDER BY block_height DESC LIMIT 1
++    `;
++    assert.deepEqual(latest, { native_staked_sats: '2700', sbtc_staked_sats: '0' });
++  });
++
++  test('serves a combined-tip ETag and answers 304 when unchanged', async () => {
++    await seedFixture();
++    const first = await supertest(api.server).get('/extended/v3/staking/cycles/current');
++    assert.equal(first.status, 200);
++    const etag = first.headers['etag'];
++    assert.ok(etag);
++    const second = await supertest(api.server)
++      .get('/extended/v3/staking/cycles/current')
++      .set('If-None-Match', etag);
++    assert.equal(second.status, 304);
++    await db.updateBurnChainBlockHeight({ blockHeight: TIP + 1 });
++    const third = await supertest(api.server)
++      .get('/extended/v3/staking/cycles/current')
++      .set('If-None-Match', etag);
++    assert.equal(third.status, 200);
++  });
++});

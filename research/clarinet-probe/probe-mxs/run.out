@@ -1,0 +1,18 @@
+Warning: unable to mint the configured sbtc_balance: SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-deposit is not deployed in this session. The sBTC contracts require epoch 3.0 or later.
+
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+error: use of unresolved contract 'ST000000000000000000002AMW42H.pox-5'
+--> /private/tmp/claude-501/-Users-jagadeesh-personal-projects-grants-Plimsoll/1b7e1968-1d24-4f58-89aa-57a2ff84c5fc/scratchpad/clarinet-probe/probe-mxs/contracts/reader.clar:4:4
+  (contract-call? 'ST000000000000000000002AMW42H.pox-5 get-protocol-bond i))
+   ^~~~~~~~~~~~~~
+  (contract-call? 'ST000000000000000000002AMW42H.pox-5 get-protocol-bond i))
+                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  (contract-call? 'ST000000000000000000002AMW42H.pox-5 get-protocol-bond i))
+                                                       ^~~~~~~~~~~~~~~~~
+  (contract-call? 'ST000000000000000000002AMW42H.pox-5 get-protocol-bond i))
+                                                                         ^
+(Use `node --trace-uncaught ...` to show where the exception was thrown)
+
+Node.js v24.11.1
