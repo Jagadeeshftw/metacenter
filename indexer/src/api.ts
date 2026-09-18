@@ -123,6 +123,20 @@ export async function buildApi() {
     endpoints: ["/metrics/current", "/metrics/cycles/:n", "/intervals", "/bonds/order?cycle=", "/stress?commit_drop=&price_drop=&book_btc=&bonds="],
   }));
 
+  app.get("/meta", async () => {
+    const [feedAddress] = config.feedContract.split(".");
+    return {
+      pox5: config.pox5,
+      reader: config.readerContract ?? null,
+      reader_network: "mainnet",
+      feed: config.feedContract,
+      trait: { mainnet: config.readerContract ? `${config.readerContract.split(".")[0]}.risk-feed-trait` : null, testnet: `${feedAddress}.risk-feed-trait` },
+      guard: `${feedAddress}.coverage-guard`,
+      feed_network: "testnet",
+      repo: "https://github.com/Jagadeeshftw/metacenter",
+    };
+  });
+
   app.get("/health", async () => {
     const live = await latestLive();
     return { ok: true, last_poll: live?.taken_at ?? null, burn_height: live?.burn_height ?? null };
@@ -249,7 +263,6 @@ export async function buildApi() {
     }
     const last = (await pool.query("SELECT * FROM intervals ORDER BY distribution_index DESC LIMIT 1")).rows[0];
     const live = await latestLive();
-    const price = await latestPrice();
     if (!last || !live) return reply.code(503).send({ error: "no data yet" });
 
     const base = BigInt(last.gross_pool_sats);
@@ -273,7 +286,9 @@ export async function buildApi() {
     const book = bookBtc === null ? current : hypotheticalBook(bookBtc, bondCount, 300n, topRatio);
     const pool_ = stressedPool(base, commitDrop, priceDrop);
     const w = waterfall(pool_, book, stxShares);
-    const p0 = price ? Number(price.sats_per_stx) : null;
+    // Same base as the realised figures: the latest distribution and the price at its block,
+    // so zero stress reproduces the realised STX-only yield exactly.
+    const p0 = last.price_sats_per_stx === null ? null : Number(last.price_sats_per_stx);
     const p1 = p0 === null ? null : p0 * (1 - priceDrop);
     const yieldSats = stxShares === 0n ? null : (Number(w.stxOnly) * 1e6) / Number(stxShares);
     const hyp = (value: unknown, unit: string, source: string, note?: string) => f(value, unit, "hypothetical", source, note);
@@ -287,7 +302,8 @@ export async function buildApi() {
         book: bookBtc === null
           ? f("current", "book", order ? "onchain" : "mirrored", bookSource)
           : hyp({ book_btc: bookBtc, bonds: bondCount, target_rate_bps: 300, stx_value_ratios: book.map((b) => b.stxValueRatio.toString()) }, "book", "query parameters", `illustrative: ${bondCount} equal bonds at 3%, stx-value-ratios stepped 5% below the top current bond; ${SIP_BOOK_NOTE}`),
-        price: f(p0, "sats per STX", "mirrored", price ? `${price.source} @ ${price.price_timestamp}` : "none"),
+        price: f(p0, "sats per STX", "mirrored", `${last.price_source} @ ${last.price_timestamp} (price at distribution ${last.distribution_index})`),
+        base: `distribution ${last.distribution_index} (cycle ${last.stx_cycle}, calculation height ${last.calculation_height})`,
       },
       assumption: `pool = base_pool * (1 - commit_drop) * (1 - price_drop); ${PRICE_ASSUMPTION}`,
       commit_model:
