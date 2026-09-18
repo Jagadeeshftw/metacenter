@@ -87,7 +87,7 @@ export function Hero({ stats, bars, asOf }: { stats: HeroStat[]; bars: HeroBar[]
                     {s.label}
                     <ProvenanceTag kind={s.provenance} />
                   </span>
-                  <span className="num text-3xl md:text-5xl font-medium tracking-tight text-foreground">{s.value}</span>
+                  <span className="num text-[26px] sm:text-3xl md:text-5xl font-medium tracking-tight text-foreground whitespace-nowrap">{s.value}</span>
                   <span className="text-xs md:text-sm text-muted">{s.detail}</span>
                 </div>
               ))}
@@ -128,13 +128,13 @@ function MiniChart({ bars }: { bars: HeroBar[] }) {
               {b.owed > 0 && (
                 <line x1={x - 8} x2={x + bw + 8} y1={y(b.owed)} y2={y(b.owed)} stroke="var(--series-owed)" strokeWidth="3" strokeLinecap="round" />
               )}
-              <text x={x + bw / 2} y={base + 18} textAnchor="middle" fontSize="11" fill="var(--subtle)" className="num">
+              <text x={x + bw / 2} y={base + 18} textAnchor="middle" fontSize="14" fill="var(--subtle)" className="num">
                 {b.index}
               </text>
             </g>
           );
         })}
-        <text x={10 + (bars.length - 1) * slot + slot / 2} y={y(last.pool) - 8} textAnchor="middle" fontSize="12" fill="var(--foreground)" className="num">
+        <text x={10 + (bars.length - 1) * slot + slot / 2} y={y(last.pool) - 8} textAnchor="middle" fontSize="14" fill="var(--foreground)" className="num">
           {(last.pool / 1e6).toFixed(1)}M sats
         </text>
       </svg>

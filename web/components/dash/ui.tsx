@@ -39,7 +39,7 @@ export function Panel({
         </div>
       )}
       {children}
-      {source && <p className="num text-[11px] leading-relaxed text-subtle break-all">{source}</p>}
+      {source && <p className="num text-[11px] leading-relaxed text-subtle [overflow-wrap:anywhere]">{source}</p>}
     </section>
   );
 }
@@ -67,7 +67,7 @@ export function Stat({
       </div>
       <span className={cn("num font-medium tracking-tight text-foreground", big ? "text-5xl md:text-6xl" : "text-3xl md:text-4xl")}>{value}</span>
       {detail && <span className="text-sm text-muted">{detail}</span>}
-      {source && <span className="num mt-auto pt-2 text-[11px] text-subtle break-all">{source}</span>}
+      {source && <span className="num mt-auto pt-2 text-[11px] text-subtle [overflow-wrap:anywhere]">{source}</span>}
     </div>
   );
 }
