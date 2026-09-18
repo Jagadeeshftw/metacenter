@@ -24,7 +24,7 @@
 (define-data-var latest-index (optional uint) none)
 
 (define-map snapshots
-    uint ;; mainnet pox-5 distribution index: (calculation-height - 666050) / 1050
+    uint ;; mainnet pox-5 distribution index (calculation-height / 1050 on mainnet)
     {
         ;; raw inputs (mainnet)
         stx-cycle: uint, ;; reward cycle the distribution was booked to
