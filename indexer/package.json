@@ -1,0 +1,32 @@
+{
+  "name": "metacenter-indexer",
+  "version": "0.1.0",
+  "description": "Metacenter indexer and public API for Stacks Bitcoin Staking (PoX-5) risk metrics",
+  "license": "MIT",
+  "author": "Jagadeesh B",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsc -p .",
+    "start": "node dist/main.js",
+    "dev": "tsx src/main.ts",
+    "once": "tsx src/main.ts --once",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@fastify/cors": "^11.3.0",
+    "@stacks/transactions": "^7.6.0",
+    "fastify": "^5.12.5",
+    "pg": "^8.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.5",
+    "@types/pg": "^8.23.1",
+    "tsx": "^4.23.13",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.11"
+  }
+}
