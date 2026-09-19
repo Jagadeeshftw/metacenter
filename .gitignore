@@ -19,3 +19,6 @@ secrets/
 # demo recordings (large binaries, kept locally)
 demo/*.mp4
 demo/*.webm
+
+# marketing clips (stills are committed)
+marketing/clips/*.mp4
