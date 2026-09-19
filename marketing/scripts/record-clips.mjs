@@ -134,27 +134,37 @@ function encode(name, { frames, t0 }, crops, snapAt) {
 
 // Record one clip: `setup` prepares the page and returns the focus rect; `act(snap)` runs
 // for ~6 s and calls snap() at the key moment for the stills.
+// Each clip is recorded twice: in a 1280×720 viewport for the landscape version, and in a
+// 760×760 viewport for the square one, so the site reflows to its narrower layout instead
+// of being cropped at the edges.
 async function clip(name, setup, act, viewport = { width: 1280, height: 720 }) {
   if (only && !only.includes(name[0])) return;
-  W = viewport.width;
-  H = viewport.height;
-  const { ctx, page } = await newPage();
-  try {
-    const focus = await setup(page);
-    const crops = [["1280x720", fit(focus, 16 / 9), 1280, 720], ["1080x1080", fit(focus, 1, 24, 480), 1080, 1080]];
-    let snapAt = null;
-    // mark the key moment; the still is cut from the recorded frame at that time
-    const snap = async () => { snapAt ??= Date.now() / 1000; };
-    const cap = await capture(page, async () => {
-      await act(page, snap);
-    });
-    // screencast timestamps are wall-clock seconds, like Date.now()
-    encode(name, cap, crops, snapAt);
-    const sizes = crops.map(([s]) => `${s} ${(fs.statSync(path.join(OUT, `${name}-${s}.mp4`)).size / 1e6).toFixed(1)} MB`).join(", ");
-    console.log(`${name}: ${cap.frames.length} frames · ${sizes}`);
-  } finally {
-    await ctx.close();
+  const variants = [
+    { suffix: "1280x720", vp: viewport, aspect: 16 / 9, outW: 1280, outH: 720 },
+    { suffix: "1080x1080", vp: { width: 760, height: 760 }, aspect: 1, outW: 1080, outH: 1080 },
+  ];
+  const report = [];
+  for (const v of variants) {
+    W = v.vp.width;
+    H = v.vp.height;
+    const { ctx, page } = await newPage();
+    try {
+      const focus = await setup(page);
+      const crop = fit(focus, v.aspect, 24, v.aspect === 1 ? 480 : 560);
+      let snapAt = null;
+      // mark the key moment; the still is cut from the recorded frame at that time
+      const snap = async () => { snapAt ??= Date.now() / 1000; };
+      const cap = await capture(page, async () => {
+        await act(page, snap);
+      });
+      // screencast timestamps are wall-clock seconds, like Date.now()
+      encode(name, cap, [[v.suffix, crop, v.outW, v.outH]], snapAt);
+      report.push(`${v.suffix} ${cap.frames.length} frames ${(fs.statSync(path.join(OUT, `${name}-${v.suffix}.mp4`)).size / 1e6).toFixed(1)} MB`);
+    } finally {
+      await ctx.close();
+    }
   }
+  console.log(`${name}: ${report.join(" · ")}`);
 }
 
 const settle = (page) => page.waitForLoadState("networkidle").catch(() => {});
@@ -193,11 +203,11 @@ await clip(
   async (page) => {
     await page.goto(`${SITE}/dashboard`);
     await settle(page);
-    const cards = page.locator("section[aria-label='Headline figures']");
-    await scrollTo(page, cards, 170);
-    const b = await box(cards);
+    const cards = page.locator("section[aria-label='Headline figures'] > div");
+    await scrollTo(page, cards.nth(0), 170);
+    const b = union(await box(cards.nth(0)), await box(cards.nth(1)));
     // include the space above the cards, where the provenance tooltip opens
-    return { x: b.x, y: b.y - 90, width: b.width * 0.76, height: b.height + 90 };
+    return { x: b.x, y: b.y - 90, width: b.width, height: b.height + 90 };
   },
   async (page, snap) => {
     const cards = page.locator("section[aria-label='Headline figures'] > div");
