@@ -30,7 +30,8 @@ type MetricName =
   | "cliff"
   | "sipCliff"
   | "friedger"
-  | "price";
+  | "price"
+  | "distPrice";
 
 /** Inline live figure: value, provenance tag, and where/when it was read. */
 export async function Metric({ name }: { name: MetricName }) {
@@ -47,10 +48,11 @@ export async function Metric({ name }: { name: MetricName }) {
     apy: { v: last?.stx_only_apy_btc.value == null ? null : pct(last.stx_only_apy_btc.value, 2), p: "mirrored", at: dist },
     yieldPerStx: { v: last?.stx_only_yield.value == null ? null : `${last.stx_only_yield.value.toFixed(4)} sats per STX`, p: "mirrored", at: dist },
     pool: { v: last ? satsExact(last.gross_pool.value) : null, p: "mirrored", at: dist },
-    cliff: { v: cur?.cliff.price.value == null ? null : satsPerStx(cur.cliff.price.value), p: "mirrored", at: block },
-    sipCliff: { v: cur?.cliff.sip_book_scenario.value == null ? null : `≈ ${satsPerStx(cur.cliff.sip_book_scenario.value)}`, p: "hypothetical", at: block },
+    cliff: { v: cur?.cliff.price.value == null ? null : satsPerStx(cur.cliff.price.value), p: "mirrored", at: dist },
+    sipCliff: { v: cur?.cliff.sip_book_scenario.value == null ? null : `≈ ${satsPerStx(cur.cliff.sip_book_scenario.value)}`, p: "hypothetical", at: dist },
     friedger: { v: cur?.cliff.friedger_sip_inputs.value == null ? null : satsPerStx(cur.cliff.friedger_sip_inputs.value), p: "hypothetical", at: "SIP launch inputs" },
     price: { v: cur?.price.value == null ? null : satsPerStx(cur.price.value, 2), p: "mirrored", at: block },
+    distPrice: { v: last?.price.value == null ? null : `${satsPerStx(last.price.value, 2)} (${last.price.source})`, p: "mirrored", at: dist },
   };
   const m = map[name];
   if (!m.v) return <Unavailable />;

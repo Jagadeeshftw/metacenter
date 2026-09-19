@@ -159,6 +159,7 @@ export async function buildApi() {
       r ? f(value, unit, "onchain", reader(fn), note) : f(null, unit, "onchain", reader(fn), READER_MISSING);
 
     const pNow = price ? Number(price.sats_per_stx) : null;
+    const pDist = last?.price_sats_per_stx == null ? null : Number(last.price_sats_per_stx);
     const gross = last ? BigInt(last.gross_pool_sats) : null;
     const sipObligation = targetPerInterval(300000000000n, 300n); // 3,000 BTC at 3%
 
@@ -181,10 +182,22 @@ export async function buildApi() {
       payout_order: onchain(order?.map((b: any) => ({ bond_index: Number(b["bond-index"]), stx_value_ratio: b["stx-value-ratio"], target_rate_bps: b["target-rate"], shares_sats: b.shares, target_per_interval_sats: b["target-per-interval"] })), "bonds", `get-bond-payout-order(u${cycle})`, "descending stx-value-ratio, ties to the lower bond index"),
       latest_interval: iv,
       price: f(pNow, "sats per STX", "mirrored", price ? `${price.source} @ ${price.price_timestamp}` : "none"),
+      // Cliffs use the price at the distribution whose pool they divide by (as /intervals, /stress
+      // and risk-feed do). Under the linear-bid assumption today's price cancels out, so pairing it
+      // with an older pool would only add drift.
       cliff: {
         headline: onchain(bps(summary?.["headroom-bps"]), "fraction", "get-coverage-summary: headroom-bps", "pool can fall this much before bond yield is impaired"),
-        price: f(pNow && gross && last ? cliffSatsPerStx(pNow, gross, BigInt(last.bond_target_sats)) : null, "sats per STX", "mirrored", "current price * latest interval obligation / latest interval gross pool", PRICE_ASSUMPTION),
-        sip_book_scenario: f(pNow && gross ? cliffSatsPerStx(pNow, gross, sipObligation) : null, "sats per STX", "hypothetical", "current price * 180,000,000 sats (3,000 BTC * 3% / 50) / latest interval gross pool", `${SIP_BOOK_NOTE}; ${PRICE_ASSUMPTION}`),
+        price: f(pDist && gross && last ? cliffSatsPerStx(pDist, gross, BigInt(last.bond_target_sats)) : null, "sats per STX", "mirrored", `price at distribution ${last?.distribution_index} * its obligation / its gross pool`, PRICE_ASSUMPTION),
+        sip_book_scenario: f(pDist && gross ? cliffSatsPerStx(pDist, gross, sipObligation) : null, "sats per STX", "hypothetical", `price at distribution ${last?.distribution_index} * 180,000,000 sats (3,000 BTC * 3% / 50) / its gross pool`, `${SIP_BOOK_NOTE}; ${PRICE_ASSUMPTION}`),
+        inputs: last
+          ? {
+              distribution_index: last.distribution_index,
+              price: f(pDist, "sats per STX", "mirrored", `${last.price_source} @ ${last.price_timestamp} (price at distribution ${last.distribution_index})`),
+              gross_pool: f(gross, "sats", "mirrored", `${txSource(last.txid)}: gross-accrued-rewards`),
+              obligation: f(BigInt(last.bond_target_sats), "sats", "mirrored", `${txSource(last.txid)}: sum of bond-distribution target-yield`),
+              sip_book_obligation: f(sipObligation, "sats", "hypothetical", "3,000 BTC * 3% / 50"),
+            }
+          : null,
         friedger_sip_inputs: f(friedgerCliff(), "sats per STX", "hypothetical", "3,000 BTC * 3% / (1,000 STX/block * 52,560 blocks/year)", "friedger's figure under SIP launch inputs (forum.stacks.org/t/18862, post #14)"),
       },
     };

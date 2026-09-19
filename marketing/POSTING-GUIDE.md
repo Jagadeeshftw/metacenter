@@ -2,11 +2,11 @@
 
 Copy-paste order for the 14 launch posts. Nothing in this repo posts anything; you post by hand.
 
-- **Figures refreshed** with `node marketing/scripts/refresh-posts.mjs` at **Bitcoin block 967,720** (2026-09-19 15:44 UTC), from distribution 286. The sources for every figure are in [`posts.md`](posts.md).
+- **Figures refreshed** with `node marketing/scripts/refresh-posts.mjs` at **Bitcoin block 967,731** (2026-09-19 UTC), from distribution 286. The sources for every figure are in [`posts.md`](posts.md).
 - **Before each posting day**, run `node marketing/scripts/refresh-posts.mjs`. If it shows CHANGED, run it with `--write` and copy the text from `posts.md`. The next distribution (287) is due after Bitcoin block 968,449, around 24 Sep; after that, the distribution figures change.
 - **Post text** is inside each `text` block, exactly as it should appear on X: plain text, no formatting. Copy everything inside the block.
 - **Clips** are local files: `.mp4` files are git-ignored, so re-record them with `marketing/scripts/record-clips.mjs` on a fresh checkout. Attach the 1080×1080 version by default; the 1280×720 version is the alternative.
-- **Dates** assume Day 1 is Saturday 19 Sep 2026. Slot 1 is the first post of the day and Slot 2 the second.
+- **Dates** assume Day 1 is Saturday 19 Sep 2026; shift them if Day 1 moves. Slot 1 is the first post of the day and Slot 2 the second. The two Day 7 posts have no fixed date: each goes out when its trigger happens (see below).
 
 **Handles:**
 
@@ -152,24 +152,36 @@ Drag the sliders yourself: https://metacenter.0xo.in/dashboard/stress
 
 ## Day 5 · Slot 2: the 3,000 BTC hypothetical, thread of 2 (Wed 23 Sep)
 
-**Status:** ready
+**Status:** ready (untagged)
 **Clip (on 1/):** `marketing/clips/e-stress-3000btc-book-1080x1080.mp4` (alternative: `marketing/clips/e-stress-3000btc-book-1280x720.mp4`)
-**Tags:** @friedger TO VERIFY (in 2/)
-**Check before posting:** the ~293 sats/STX cliff uses the current STX price and moves hourly. It was 296 at block 967,716 and 293 at block 967,720. The 18.8M sats shortfall also depends on price. Run `refresh-posts.mjs --write` right before posting, and copy both parts from `posts.md`.
+**Tags:** none. @friedger is TO VERIFY, so this post tags nobody until the handle is confirmed. Use the untagged 2/.
+**Check before posting:** the cliff is price-based. It is the price at the latest distribution × 180,000,000 sats ÷ that distribution's pool: 315.01 sats/STX (distribution 286, CoinGecko) × 180,000,000 ÷ 230,327,835 = 246.18. It changes only when a new distribution lands, and so do 1.28× and 18.8M. Run `refresh-posts.mjs` before posting: it prints the cliff's inputs, and which one moved if it changed.
 
 Post 1/ first, then reply to it with 2/.
 
 ```text
-1/ Hypothetical: the SIP's 3,000 BTC launch book at 3% would owe 180M sats per distribution. Against today's pool that's 1.28× coverage.
+1/ Hypothetical: the SIP's 3,000 BTC launch book at 3% would owe 180M sats per distribution. Against the latest distribution's pool that's 1.28× coverage.
 
 With a 30% STX price drop on top, the last bond in the payout order would be short-paid by 18.8M sats.
 ```
 
+2/, untagged (use this one):
+
 ```text
-2/ At today's pool, that hypothetical book puts the zero-yield cliff near 293 sats/STX (assuming miner bids track the STX price).
+2/ At the latest distribution's pool and price, that book puts the zero-yield cliff near 246 sats/STX (if miner bids track the STX price).
+
+friedger derived the original on the Stacks forum: 171.2 sats/STX under the SIP's launch inputs. Both are hypothetical.
+```
+
+2/, tagged. Use it only once @friedger is VERIFIED:
+
+```text
+2/ At the latest distribution's pool and price, that book puts the zero-yield cliff near 246 sats/STX (if miner bids track the STX price).
 
 Credit to @friedger for the original derivation: 171.2 sats/STX under the SIP's launch inputs. Both are hypothetical.
 ```
+
+> **Why the cliff changed from ~293 to ~246:** until 20 Sep `/api/metrics/current` multiplied the **current** STX price by distribution 286's pool. So the figure moved every hour with the price: ~269 → ~278 → ~276 → ~296 → ~293 over 18–19 Sep, as STX/BTC rose from 343.8 to 379.3 sats. That was wrong, because under the linear-bid assumption today's price cancels out. It now uses the price at that distribution, the same as `/api/stress`, `/api/intervals` and the `risk-feed` contract. See `posts.md` for the full inputs.
 
 ## Day 6 · Slot 1: methodology and open API (Thu 24 Sep)
 
@@ -200,9 +212,9 @@ How we check the data: each PoX-5 distribution is recomputed from contract state
 All five so far (282–286) match the event within 2 sats, and the reserve change matches exactly.
 ```
 
-## Day 7 · Slot 1: pox5-reader on mainnet (Fri 25 Sep)
+## Day 7 · Slot 1: pox5-reader on mainnet (post the same day the mainnet deploy lands)
 
-**Status:** waits for mainnet
+**Status:** waits for mainnet. **Trigger:** the mainnet deploy. Post it the same day, not on a fixed date.
 **Clip:** clip i, not recorded yet. After the deploy it will be `marketing/clips/i-mainnet-reader-1080x1080.mp4` (alternative: `marketing/clips/i-mainnet-reader-1280x720.mp4`).
 **Tags:** none
 
@@ -214,9 +226,9 @@ pox5-reader is live on Stacks mainnet: a read-only contract that computes PoX-5 
 [MAINNET CONTRACT ID + explorer link]
 ```
 
-## Day 7 · Slot 2: grant application (Fri 25 Sep)
+## Day 7 · Slot 2: grant application (post on your submission, planned 23 Sep evening IST)
 
-**Status:** waits for mainnet and waits for submission
+**Status:** waits for submission. **Trigger:** your grant submission, planned for the evening of 23 Sep IST. Post it after submitting. The text mentions a mainnet reader contract, so if the deploy hasn't landed by then, use the variant below.
 **Clip:** `marketing/clips/a-landing-hero-1080x1080.mp4` (alternative: `marketing/clips/a-landing-hero-1280x720.mp4`)
 **Tags:** @Stacks VERIFIED, @StacksEndowment VERIFIED
 
@@ -224,6 +236,16 @@ Say "applied" only, never "awarded". Post only after you have submitted.
 
 ```text
 We've applied to the Stacks Endowment Q3 2026 grants with Metacenter: an open risk feed for Bitcoin Staking, with a mainnet reader contract, a public API and a dashboard.
+
+https://metacenter.0xo.in
+
+@Stacks @StacksEndowment
+```
+
+Variant for when the mainnet deploy hasn't landed yet:
+
+```text
+We've applied to the Stacks Endowment Q3 2026 grants with Metacenter: an open risk feed for Bitcoin Staking, with a public API, a dashboard and Clarity contracts other protocols can read.
 
 https://metacenter.0xo.in
 
@@ -245,8 +267,8 @@ https://metacenter.0xo.in
 | D4·1 payout order | f-bond-payout-order | Tue 22 Sep · 1 | ready |
 | D4·2 contracts can read it | none | Tue 22 Sep · 2 | ready |
 | D5·1 stress, 50% commit drop | d-stress-commit-drop | Wed 23 Sep · 1 | ready (price-based: check) |
-| D5·2 3,000 BTC thread (2 parts) | e-stress-3000btc-book | Wed 23 Sep · 2 | ready (price-based: check; @friedger TO VERIFY) |
+| D5·2 3,000 BTC thread (2 parts) | e-stress-3000btc-book | Wed 23 Sep · 2 | ready, untagged (price-based: check; @friedger TO VERIFY) |
 | D6·1 methodology and API | h-methodology-source | Thu 24 Sep · 1 | ready |
 | D6·2 recompute check | c-coverage-history | Thu 24 Sep · 2 | ready |
-| D7·1 pox5-reader on mainnet | i (not recorded yet) | Fri 25 Sep · 1 | waits for mainnet |
-| D7·2 grant application | a-landing-hero | Fri 25 Sep · 2 | waits for mainnet and waits for submission |
+| D7·1 pox5-reader on mainnet | i (not recorded yet) | same day the mainnet deploy lands | waits for mainnet |
+| D7·2 grant application | a-landing-hero | on your submission (planned 23 Sep evening IST) | waits for submission |

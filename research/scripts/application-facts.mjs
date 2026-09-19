@@ -98,8 +98,8 @@ The indexer last polled at Bitcoin block **${n(cur.as_of.burn_height)}** (${cur.
 | Hypothetical cover | ${cur.reserve_cover.value != null ? cur.reserve_cover.value.toFixed(2) : (Math.floor((Number(last.reserve_balance.value) * 100) / (2 * Number(last.obligation.value))) / 100).toFixed(2)} cycles. The reserve cannot pay out without a SIP |
 | Pending pool | ${pending.value == null ? "n/a" : n(pending.value) + " sats"}, via ${pending.how}, at the Bitcoin tip ${n(info.burn_block_height)} (Stacks ${n(info.stacks_tip_height)}) |
 | STX-only realised yield | ${pct(last.stx_only_apy_btc.value, 2)} a year in BTC terms _(mirrored)_. ${Number(last.stx_only_yield.value).toFixed(4)} sats/STX in distribution ${last.distribution_index}, priced at ${Number(last.price.value).toFixed(2)} sats/STX (${last.price.source}) |
-| Cliff price, live | ${cur.cliff.price.value?.toFixed(1) ?? "n/a"} sats/STX _(mirrored; assumes miner bids scale with STX price)_ |
-| Cliff, 3,000 BTC book | ≈ ${cur.cliff.sip_book_scenario.value?.toFixed(1) ?? "n/a"} sats/STX _(hypothetical; the SIP launch book at today's pool)_ |
+| Cliff price | ${cur.cliff.price.value?.toFixed(1) ?? "n/a"} sats/STX _(mirrored; price at distribution ${last.distribution_index} × obligation ÷ pool; assumes miner bids scale with STX price)_ |
+| Cliff, 3,000 BTC book | ≈ ${cur.cliff.sip_book_scenario.value?.toFixed(1) ?? "n/a"} sats/STX _(hypothetical; price at distribution ${last.distribution_index}, ${Number(last.price.value).toFixed(2)} sats/STX, × 180,000,000 sats ÷ its pool ${n(last.gross_pool.value)} sats)_ |
 | Cliff, friedger's SIP inputs | ${cur.cliff.friedger_sip_inputs.value.toFixed(1)} sats/STX _(hypothetical: 3,000 BTC × 3% ÷ (1,000 STX/block × 52,560 blocks/year))_ |
 
 ## Tests

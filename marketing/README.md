@@ -40,11 +40,11 @@ Recorded at Bitcoin block 967,717 (2026-09-19), with logo C.
 | D4 · 1: payout order enforced (L2285–2299) | f | none | ready |
 | D4 · 2: contracts can read it (coverage-guard) | none | @ZestProtocol | ready |
 | D5 · 1: stress, 50% commit drop → 8.34× | d | none | ready |
-| D5 · 2: 3,000 BTC hypothetical, ~293 cliff, friedger 171.2 (thread) | e | @friedger (TO VERIFY) | ready |
+| D5 · 2: 3,000 BTC hypothetical, ~246 cliff, friedger 171.2 (thread) | e | none (untagged; @friedger TO VERIFY) | ready |
 | D6 · 1: methodology and open API | h | @hirosystems | ready |
 | D6 · 2: every distribution recomputed within 2 sats | c or still h | none | ready |
-| D7 · 1: pox5-reader live on mainnet | i | none | waits for mainnet |
-| D7 · 2: applied to Stacks Endowment Q3 grants | a | @Stacks @StacksEndowment | waits for mainnet and submission |
+| D7 · 1: pox5-reader live on mainnet | i | none | waits for mainnet (post the same day as the deploy) |
+| D7 · 2: applied to Stacks Endowment Q3 grants | a | @Stacks @StacksEndowment | waits for submission (planned 23 Sep evening IST) |
 
 ## Re-recording
 

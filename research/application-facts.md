@@ -1,6 +1,6 @@
 # Metacenter: application facts
 
-Generated 2026-09-19 03:02 UTC by `research/scripts/application-facts.mjs` from public data. Rerun it to refresh.
+Generated 2026-09-19 18:34 UTC by `research/scripts/application-facts.mjs` from public data. Rerun it to refresh.
 
 ## Links
 
@@ -29,7 +29,7 @@ The testnet feed mirrors mainnet data. Every distribution below is posted there 
 
 ## Headline numbers
 
-The indexer last polled at Bitcoin block **967,652** (2026-09-19T02:54:30.812Z). Figures that come from the latest distribution are as of that distribution, **286**: cycle 143, calculation height 967,399.
+The indexer last polled at Bitcoin block **967,731** (2026-09-19T18:33:22.782Z). Figures that come from the latest distribution are as of that distribution, **286**: cycle 143, calculation height 967,399.
 
 | Figure | Value |
 |---|---|
@@ -37,10 +37,10 @@ The indexer last polled at Bitcoin block **967,652** (2026-09-19T02:54:30.812Z).
 | Headroom | 94.0% _(mirrored)_. The pool can fall this far before bond yield is impaired |
 | Reserve | 152,669,889 sats _(mirrored)_ |
 | Hypothetical cover | 5.52 cycles. The reserve cannot pay out without a SIP |
-| Pending pool | 55,189,923 sats, via direct read of pox-5 get-new-rewards (pox5-reader not deployed yet), at the Bitcoin tip 967,652 (Stacks 9,022,407) |
+| Pending pool | 72,854,784 sats, via direct read of pox-5 get-new-rewards (pox5-reader not deployed yet), at the Bitcoin tip 967,731 (Stacks 9,027,080) |
 | STX-only realised yield | 6.67% a year in BTC terms _(mirrored)_. 0.4202 sats/STX in distribution 286, priced at 315.01 sats/STX (coingecko:market_chart/range @ 1789642800) |
-| Cliff price, live | 21.0 sats/STX _(mirrored; assumes miner bids scale with STX price)_ |
-| Cliff, 3,000 BTC book | ≈ 273.1 sats/STX _(hypothetical; the SIP launch book at today's pool)_ |
+| Cliff price | 18.9 sats/STX _(mirrored; price at distribution 286 × obligation ÷ pool; assumes miner bids scale with STX price)_ |
+| Cliff, 3,000 BTC book | ≈ 246.2 sats/STX _(hypothetical; price at distribution 286, 315.01 sats/STX, × 180,000,000 sats ÷ its pool 230,327,835 sats)_ |
 | Cliff, friedger's SIP inputs | 171.2 sats/STX _(hypothetical: 3,000 BTC × 3% ÷ (1,000 STX/block × 52,560 blocks/year))_ |
 
 ## Tests

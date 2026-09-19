@@ -30,7 +30,7 @@ const ROWS: { metric: string; formula: string; unit: string; label: Provenance; 
   { metric: "Reserve deposit and state", formula: "reserve-deposit; > 0 → not drawing, 0 → flat", unit: "sats", label: "mirrored", source: "calculate-rewards event; equals the reserve delta in pox-5 state", api: "/intervals reserve_deposit · /metrics/current reserve_state" },
   { metric: "STX-only realised yield", formula: "total-stx-staker-rewards ÷ cycle-staked-ustx × 1e6", unit: "sats/STX", label: "mirrored", source: "calculate-rewards event; risk-feed stx-yield-sats-per-stx-e9", api: "/intervals stx_only_yield" },
   { metric: "STX-only APY (BTC terms)", formula: "yield × 50 ÷ STX/BTC price at the distribution", unit: "%", label: "mirrored", source: "price: CoinGecko hourly (Coinbase STX-USD/BTC-USD fallback), stored with source and timestamp", api: "/intervals stx_only_apy_btc" },
-  { metric: "Cliff price", formula: "price × obligation ÷ pool (assumes miner bids scale with price)", unit: "sats/STX", label: "mirrored", source: "risk-feed cliff-sats-per-stx-e6", api: "/metrics/current cliff.price" },
+  { metric: "Cliff price", formula: "price at the distribution × obligation ÷ pool (assumes miner bids scale with price)", unit: "sats/STX", label: "mirrored", source: "risk-feed cliff-sats-per-stx-e6", api: "/metrics/current cliff.price" },
   { fn: "simulate-waterfall", metric: "Stress results", formula: "pool × (1 − commit drop) × (1 − price drop), split in pox-5 order", unit: "sats, ×, %", label: "hypothetical", source: `/stress; ${R}::simulate-waterfall for the current book`, api: "/stress" },
 ];
 
@@ -129,12 +129,12 @@ export default async function Methodology() {
             <p className="mt-2 text-xs text-muted">
               Inputs are the SIP&apos;s hypothetical launch book (
               <a className="underline underline-offset-4" href="https://forum.stacks.org/t/introducing-the-bitcoin-staking-sip-v1-draft/18862/14">forum post #14</a>
-              ). The same inputs give his 1.65× coverage at 282 sats/STX.
+              ). The same inputs give the post's 1.65× coverage at 282 sats/STX.
             </p>
           </div>
           <div className="rounded-xl border border-line p-4 text-sm">
-            <p className="font-medium">3,000 BTC at today&apos;s pool (hypothetical)</p>
-            <p className="num mt-2 text-xs">price × 180,000,000 sats ÷ latest pool</p>
+            <p className="font-medium">3,000 BTC at the latest distribution (hypothetical)</p>
+            <p className="num mt-2 text-xs">price at the latest distribution × 180,000,000 sats ÷ its pool</p>
             <p className="mt-2 text-xs text-muted">180,000,000 sats = 3,000 BTC × 3% ÷ 50, the book&apos;s obligation per interval.</p>
           </div>
         </div>

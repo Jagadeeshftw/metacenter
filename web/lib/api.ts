@@ -58,6 +58,13 @@ export type Current = {
     headline: Field<number | null>;
     price: Field<number | null>;
     sip_book_scenario: Field<number | null>;
+    inputs: {
+      distribution_index: number;
+      price: Field<number | null>;
+      gross_pool: Field<string>;
+      obligation: Field<string>;
+      sip_book_obligation: Field<string>;
+    } | null;
     friedger_sip_inputs: Field<number | null>;
   };
 };

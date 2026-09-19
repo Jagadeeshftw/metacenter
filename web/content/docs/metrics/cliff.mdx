@@ -13,14 +13,14 @@ Converting headroom to an STX/BTC price needs an assumption: that miner BTC bids
 
 | Figure | Value | Formula |
 |---|---|---|
-| Cliff price today | <Metric name="cliff" /> | current price × obligation ÷ latest pool |
-| With the SIP's 3,000 BTC launch book | <Metric name="sipCliff" /> | current price × 180,000,000 sats ÷ latest pool |
+| Cliff price | <Metric name="cliff" /> | price at the latest distribution × its obligation ÷ its pool |
+| With the SIP's 3,000 BTC launch book | <Metric name="sipCliff" /> | price at the latest distribution × 180,000,000 sats ÷ its pool |
 | friedger's figure, SIP inputs | <Metric name="friedger" /> | 3,000 BTC × 3% ÷ (1,000 STX/block × 52,560 blocks/year) |
 
-The current price is <Metric name="price" />. 180,000,000 sats is what a 3,000 BTC book at 3% owes per interval (3,000 × 10⁸ × 0.03 ÷ 50).
+The price used is the STX/BTC price at the latest distribution: <Metric name="distPrice" />. It is the price at which that distribution's pool was earned. Under the linear-bid assumption the pool scales with price, so the cliff is that price × obligation ÷ pool, and today's price cancels out. The cliffs change only when a new distribution lands, and they match `/api/stress` and the `risk-feed` contract, which use the same price. 180,000,000 sats is what a 3,000 BTC book at 3% owes per interval (3,000 × 10⁸ × 0.03 ÷ 50).
 
 <Callout type="warn" title="Treat price cliffs as indicative">
 Miner bids only roughly track the STX price. Across distributions 282–286 the pool per sat/STX of price ranged from 0.58M to 0.89M sats.
 </Callout>
 
-friedger's derivation is from [post #14](https://forum.stacks.org/t/introducing-the-bitcoin-staking-sip-v1-draft/18862/14) of the SIP discussion. The same inputs reproduce his 1.65× coverage at 282 sats/STX.
+friedger's derivation is from [post #14](https://forum.stacks.org/t/introducing-the-bitcoin-staking-sip-v1-draft/18862/14) of the SIP discussion. The same inputs reproduce the post's 1.65× coverage at 282 sats/STX.

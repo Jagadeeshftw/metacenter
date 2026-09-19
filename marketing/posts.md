@@ -6,7 +6,7 @@ Drafts only. Nothing here has been posted, and no social account has been touche
 
 **Where the numbers come from:** all figures were read from the live public API at `https://metacenter.0xo.in/api`.
 
-- Indexer poll at **Bitcoin block 967,720** (2026-09-19 15:44:31 UTC).
+- Indexer poll at **Bitcoin block 967,731** (2026-09-19 18:33:22 UTC).
 - Distribution figures are from **distribution 286**: cycle 143, calculation height 967,399.
 - Re-read them before posting. The next distribution is due after Bitcoin block 968,449, and any post can cite that one instead.
 
@@ -182,16 +182,26 @@ Drag the sliders yourself: https://metacenter.0xo.in/dashboard/stress
 
 ## Day 5 · Slot 2 (thread, 2 parts)
 
-**Status:** ready · **Clip:** e-stress-3000btc-book · **Tags:** @friedger (TO VERIFY)
+**Status:** ready (untagged) · **Clip:** e-stress-3000btc-book · **Tags:** none. @friedger is TO VERIFY, so post the untagged 2/ below.
 
 ```text
-1/ Hypothetical: the SIP's 3,000 BTC launch book at 3% would owe 180M sats per distribution. Against today's pool that's 1.28× coverage.
+1/ Hypothetical: the SIP's 3,000 BTC launch book at 3% would owe 180M sats per distribution. Against the latest distribution's pool that's 1.28× coverage.
 
 With a 30% STX price drop on top, the last bond in the payout order would be short-paid by 18.8M sats.
 ```
 
+2/, untagged (use this one):
+
 ```text
-2/ At today's pool, that hypothetical book puts the zero-yield cliff near 293 sats/STX (assuming miner bids track the STX price).
+2/ At the latest distribution's pool and price, that book puts the zero-yield cliff near 246 sats/STX (if miner bids track the STX price).
+
+friedger derived the original on the Stacks forum: 171.2 sats/STX under the SIP's launch inputs. Both are hypothetical.
+```
+
+2/, tagged. Use it only once @friedger is VERIFIED:
+
+```text
+2/ At the latest distribution's pool and price, that book puts the zero-yield cliff near 246 sats/STX (if miner bids track the STX price).
 
 Credit to @friedger for the original derivation: 171.2 sats/STX under the SIP's launch inputs. Both are hypothetical.
 ```
@@ -200,11 +210,12 @@ Credit to @friedger for the original derivation: 171.2 sats/STX under the SIP's 
 - 180M sats: 3,000 BTC × 3% ÷ 50 = 180,000,000 sats; `/api/stress?book_btc=3000&bonds=6` → `obligation` = 180,000,000.
 - 1.28×: same call, `coverage` = 1.2795.
 - 30% drop: `/api/stress?book_btc=3000&bonds=6&price_drop=0.3` → the 6th bond `partial`, `shortfall` = 18,770,516 sats.
-- ~293 sats/STX: `/api/metrics/current` → `cliff.sip_book_scenario` = 293.46 (at current price 375.52 sats/STX, `price`, CoinGecko; block 967,720).
+- ~246 sats/STX: `/api/metrics/current` → `cliff.sip_book_scenario` = 246.18 = price at distribution 286 (315.01 sats/STX, coingecko:market_chart/range @ 1789642800) × 180,000,000 sats ÷ gross pool 230,327,835 sats (`cliff.inputs`; read at block 967,731).
 - 171.2: `cliff.friedger_sip_inputs` = 171.23; forum.stacks.org/t/18862, post #14.
-- Block: read at block 967,686.
 
-**Before posting:** re-read `cliff.sip_book_scenario`. It moves with the STX price; it was ~269 in an earlier brief and ~278 on 19 Sep 08:34 UTC.
+**Cliff definition:** price at the latest distribution × 180,000,000 sats ÷ that distribution's gross pool. This is the same definition as `/api/stress`, `/api/intervals` and the `risk-feed` contract. It changes only when a new distribution lands. Until 20 Sep 2026 `/api/metrics/current` used the current price instead, which moved the figure hourly (~269 → ~278 → ~276 → ~296 → ~293 over 18–19 Sep, as STX/BTC went from 343.8 to 379.3 sats). That definition was wrong: under the linear-bid assumption today's price cancels out. `refresh-posts.mjs` prints the inputs, and the reason, whenever the cliff changes.
+
+**Before posting:** run `refresh-posts.mjs`. If distribution 287 has landed, the cliff, 1.28× and 18.8M change with its pool and price; the script says which input moved.
 
 ## Day 6 · Slot 1
 
@@ -235,7 +246,7 @@ All five so far (282–286) match the event within 2 sats, and the reserve chang
 
 ## Day 7 · Slot 1
 
-**Status:** waits for mainnet · **Clip:** i (to be recorded after the deploy) · **Tags:** none
+**Status:** waits for mainnet · **When:** the same day the mainnet deploy lands (no fixed date) · **Clip:** i (to be recorded after the deploy) · **Tags:** none
 
 ```text
 pox5-reader is live on Stacks mainnet: a read-only contract that computes PoX-5 coverage, headroom and the bond payout order straight from pox-5 state. The dashboard's headline figures now read "onchain".
@@ -247,10 +258,20 @@ pox5-reader is live on Stacks mainnet: a read-only contract that computes PoX-5 
 
 ## Day 7 · Slot 2
 
-**Status:** waits for mainnet and waits for submission · **Clip:** a-landing-hero · **Tags:** @Stacks, @StacksEndowment (VERIFIED)
+**Status:** waits for submission · **When:** on your submission, planned for the evening of 23 Sep IST · **Clip:** a-landing-hero · **Tags:** @Stacks, @StacksEndowment (VERIFIED)
 
 ```text
 We've applied to the Stacks Endowment Q3 2026 grants with Metacenter: an open risk feed for Bitcoin Staking, with a mainnet reader contract, a public API and a dashboard.
+
+https://metacenter.0xo.in
+
+@Stacks @StacksEndowment
+```
+
+Variant for when the mainnet deploy hasn't landed yet:
+
+```text
+We've applied to the Stacks Endowment Q3 2026 grants with Metacenter: an open risk feed for Bitcoin Staking, with a public API, a dashboard and Clarity contracts other protocols can read.
 
 https://metacenter.0xo.in
 

@@ -52,8 +52,8 @@ describe("model mirrors pox-5", () => {
   it("stress and cliff arithmetic", () => {
     expect(stressedPool(1000n, 0.5, 0.5)).toBe(250n);
     expect(cliffSatsPerStx(339, 230327835n, 13810222n)).toBeCloseTo(20.326, 3);
-    // 3,000 BTC SIP launch book at today's pool
-    expect(cliffSatsPerStx(339, 230327835n, 180000000n)).toBeCloseTo(264.93, 2);
+    // 3,000 BTC SIP launch book at distribution 286: its price (315.011644) and its pool
+    expect(cliffSatsPerStx(315.011644, 230327835n, 180000000n)).toBeCloseTo(246.18, 2);
     expect(friedgerCliff()).toBeCloseTo(171.23, 2);
   });
 });

@@ -57,13 +57,35 @@ for (const f of FIGURES) {
 }
 console.log(`live: block ${cur.as_of.burn_height}, distribution ${li.distribution_index}\n`);
 console.table(rows);
+
+// The 3,000 BTC cliff = price at the latest distribution × 180,000,000 sats ÷ that distribution's
+// gross pool. It can only move when one of those inputs moves, so say which one did.
+const sip = n(cur.cliff.sip_book_scenario.value);
+const ci = cur.cliff.inputs;
+const inNow = { dist: String(ci.distribution_index), price: n(ci.price.value).toFixed(2), src: ci.price.source.replace(/ \(price at .*\)$/, ""), pool: n(ci.gross_pool.value).toLocaleString("en-US") };
+const SOURCES_RE = /- ~\d+ sats\/STX: `\/api\/metrics\/current` → `cliff\.sip_book_scenario` = [^\n]*/;
+const sourcesLine = `- ~${Math.round(sip)} sats/STX: \`/api/metrics/current\` → \`cliff.sip_book_scenario\` = ${sip.toFixed(2)} = price at distribution ${inNow.dist} (${inNow.price} sats/STX, ${inNow.src}) × 180,000,000 sats ÷ gross pool ${inNow.pool} sats (\`cliff.inputs\`; read at block ${n(cur.as_of.burn_height).toLocaleString("en-US")}).`;
+const drafted = text.match(SOURCES_RE)?.[0] ?? "";
+const was = {
+  cliff: drafted.match(/= ([\d.]+)/)?.[1],
+  dist: drafted.match(/price at distribution (\d+)/)?.[1],
+  price: drafted.match(/\(([\d.]+) sats\/STX, /)?.[1] ?? drafted.match(/at current price ([\d.]+)/)?.[1],
+  pool: drafted.match(/gross pool ([\d,]+) sats/)?.[1],
+};
+const why = [];
+if (!was.dist) why.push(`definition changed: the draft used the current price (${was.price}); the cliff now uses the price at the distribution whose pool it divides by`);
+else {
+  if (was.dist !== inNow.dist) why.push(`new distribution ${was.dist} → ${inNow.dist}`);
+  if (was.price !== inNow.price) why.push(`price ${was.price} → ${inNow.price} sats/STX`);
+  if (was.pool !== inNow.pool) why.push(`pool ${was.pool} → ${inNow.pool} sats`);
+}
+console.log(
+  `3,000 BTC cliff: drafted ${was.cliff ?? "?"}, live ${sip.toFixed(2)} = ${inNow.price} sats/STX (distribution ${inNow.dist}, ${inNow.src}) × 180,000,000 ÷ ${inNow.pool} sats.` +
+    (was.cliff && Math.abs(Number(was.cliff) - sip) >= 0.005 ? `\n  changed because: ${why.join("; ") || "unexplained: inputs match, check the formula"}` : "\n  unchanged"),
+);
 if (process.argv.includes("--write")) {
-  // the D5·2 sources line cites the raw scenario value, the price it used and the block
-  const sip = n(cur.cliff.sip_book_scenario.value);
-  text = text.replace(
-    /- ~\d+ sats\/STX: `\/api\/metrics\/current` → `cliff\.sip_book_scenario` = [\d.]+ \(at current price [\d.]+ sats\/STX, `price`, CoinGecko; block [\d,]+\)\./,
-    `- ~${Math.round(sip)} sats/STX: \`/api/metrics/current\` → \`cliff.sip_book_scenario\` = ${sip.toFixed(2)} (at current price ${n(cur.price.value).toFixed(2)} sats/STX, \`price\`, CoinGecko; block ${n(cur.as_of.burn_height).toLocaleString("en-US")}).`,
-  );
+  // the D5·2 sources line cites the cliff with every input it was computed from
+  text = text.replace(SOURCES_RE, sourcesLine);
   // and the posts table in marketing/README.md names the cliff
   const readme = path.join(path.dirname(FILE), "README.md");
   fs.writeFileSync(readme, fs.readFileSync(readme, "utf8").replace(/~\d+ cliff/, `~${Math.round(sip)} cliff`));

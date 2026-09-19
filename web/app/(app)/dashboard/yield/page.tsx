@@ -48,16 +48,16 @@ export default async function YieldPage() {
       <Panel title="Distance to the zero-yield cliff">
         <div className="grid gap-6 md:grid-cols-3">
           <CliffItem
-            label="Cliff price today"
+            label={`Cliff price, distribution ${c?.inputs?.distribution_index ?? "?"}`}
             value={satsPerStx(c?.price.value ?? null)}
             provenance="mirrored"
-            note={`current price ${satsPerStx(cur?.price.value ?? null, 2)} × obligation ÷ pool. ${c?.price.note ?? ""}`}
+            note={`price at that distribution ${satsPerStx(c?.inputs?.price.value ?? null, 2)} × obligation ÷ pool. ${c?.price.note ?? ""}`}
           />
           <CliffItem
             label="With the SIP's 3,000 BTC launch book"
             value={c?.sip_book_scenario.value == null ? "n/a" : `≈ ${c.sip_book_scenario.value.toFixed(1)} sats/STX`}
             provenance="hypothetical"
-            note="3,000 BTC at 3% owes 180,000,000 sats per interval, against today's pool."
+            note={`3,000 BTC at 3% owes 180,000,000 sats per interval: price at distribution ${c?.inputs?.distribution_index ?? "?"} × 180,000,000 ÷ its pool.`}
           />
           <CliffItem
             label="friedger's figure, SIP inputs"
@@ -67,7 +67,8 @@ export default async function YieldPage() {
           />
         </div>
         <p className="text-xs text-subtle">
-          Price-denominated cliffs assume miner BTC bids scale with the STX price. Observed pool per sat/STX of price ranged
+          Price-denominated cliffs assume miner BTC bids scale with the STX price, so they use the price at the distribution whose
+          pool they divide by; today&apos;s price would cancel out. They change only when a new distribution lands. Observed pool per sat/STX of price ranged
           0.58M–0.89M sats across distributions 282–286, so treat them as indicative.
         </p>
       </Panel>
