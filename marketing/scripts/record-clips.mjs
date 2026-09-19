@@ -4,13 +4,16 @@
 //
 // Frames come from Chrome's screencast at devicePixelRatio 2 (1280×720 CSS viewport,
 // 2560×1440 frames), so cropping to a panel stays sharp. Each clip is encoded twice with
-// ffmpeg: 1280×720 and 1080×1080, H.264, 30 fps, no audio, 6 s. A still PNG of each
-// crop is saved at the clip's key moment. Needs `playwright` resolvable from the working
+// ffmpeg: 1280×720 and 1080×1080, H.264, 30 fps, no audio: 6 s of footage with a small
+// logo watermark bottom-right, then a 1 s end card (logo + metacenter.0xo.in), 7 s total.
+// The logo comes from web/brand/mark.json (the single logo asset). A still PNG of each
+// crop is saved at the clip's key moment (no watermark). Needs `playwright` resolvable from the working
 // directory, CHROMIUM_PATH pointing at a Chromium build, and ffmpeg on PATH.
 import { chromium } from "playwright";
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const SITE = "https://metacenter.0xo.in";
 let W = 1280, H = 720;
@@ -20,12 +23,45 @@ const OUT = path.resolve(argv[0] ?? "clips");
 const ip = argv.includes("--resolve") ? argv[argv.indexOf("--resolve") + 1] : null;
 const only = argv.includes("--only") ? argv[argv.indexOf("--only") + 1].split(",") : null;
 fs.mkdirSync(OUT, { recursive: true });
+const ROOT = process.env.REPO_ROOT ?? path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+const MARK = JSON.parse(fs.readFileSync(path.join(ROOT, "web", "brand", "mark.json"), "utf8"));
+const GEIST = process.env.GEIST_DIR; // optional: geist/dist/fonts/geist-sans for the end card
+const END_CARD = 1; // seconds
 
 const browser = await chromium.launch({
   executablePath: process.env.CHROMIUM_PATH,
   // without this flag the screencast delivers CSS-size frames regardless of deviceScaleFactor
   args: [`--force-device-scale-factor=${DPR}`, ...(ip ? [`--host-resolver-rules=MAP metacenter.0xo.in ${ip}`] : [])],
 });
+
+// ---------- brand overlays (watermark + end card), rendered once per output size ----------
+const markSvg = (size, ink = "#e9eef2", accent = "#26a596") =>
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${MARK.viewBox}" width="${size}" height="${size}">${MARK.svg.replaceAll("{ink}", ink).replaceAll("{accent}", accent)}</svg>`;
+const fontCss = GEIST ? `@font-face{font-family:Geist;font-weight:600;src:url("file://${path.join(GEIST, "Geist-SemiBold.ttf")}")}@font-face{font-family:Geist;font-weight:400;src:url("file://${path.join(GEIST, "Geist-Regular.ttf")}")}` : "";
+const BRAND_DIR = path.join(OUT, ".brand");
+fs.mkdirSync(BRAND_DIR, { recursive: true });
+async function renderPng(html, w, h, file, transparent = false) {
+  const page = await browser.newPage({ viewport: { width: w, height: h } });
+  await page.setContent(`<html><head><style>${fontCss}body{margin:0;background:${transparent ? "transparent" : "#07090c"};font-family:Geist,ui-sans-serif,system-ui,sans-serif}</style></head><body>${html}</body></html>`);
+  await page.evaluate(() => document.fonts.ready);
+  await page.screenshot({ path: file, omitBackground: transparent, clip: { x: 0, y: 0, width: w, height: h } });
+  await page.close();
+}
+const BRAND = {};
+for (const [key, w, h, wm] of [["1280x720", 1280, 720, 40], ["1080x1080", 1080, 1080, 52]]) {
+  const water = path.join(BRAND_DIR, `watermark-${key}.png`);
+  await renderPng(`<div style="width:${wm}px;height:${wm}px;opacity:.8">${markSvg(wm)}</div>`, wm, wm, water, true);
+  const end = path.join(BRAND_DIR, `endcard-${key}.png`);
+  const big = Math.round(Math.min(w, h) * 0.2);
+  await renderPng(
+    `<div style="width:${w}px;height:${h}px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:${Math.round(big * 0.28)}px;color:#e9eef2;background:radial-gradient(closest-side at 50% 42%,rgba(38,165,150,.18),rgba(7,9,12,0) 70%),#07090c">
+      <div style="display:flex;align-items:center;gap:${Math.round(big * 0.22)}px">${markSvg(big)}<span style="font-size:${Math.round(big * 0.62)}px;font-weight:600;letter-spacing:-0.02em">Metacenter</span></div>
+      <div style="font-size:${Math.round(big * 0.3)}px;color:#26a596;font-weight:600">metacenter.0xo.in</div>
+    </div>`,
+    w, h, end,
+  );
+  BRAND[key] = { water, end };
+}
 
 // ---------- helpers ----------
 const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
@@ -126,7 +162,21 @@ function encode(name, { frames, t0 }, crops, snapAt) {
   for (const [suffix, c, outW, outH] of crops) {
     const crop = `crop=${c.w * DPR}:${c.h * DPR}:${c.x * DPR}:${c.y * DPR},scale=${outW}:${outH}:flags=lanczos`;
     const out = path.join(OUT, `${name}-${suffix}.mp4`);
-    execFileSync("ffmpeg", ["-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", path.join(dir, "list.ffconcat"), "-vf", `${crop},fps=${FPS},format=yuv420p`, "-t", String(DURATION), "-r", String(FPS), "-c:v", "libx264", "-preset", "slow", "-crf", "18", "-movflags", "+faststart", "-an", out]);
+    const b = BRAND[suffix];
+    const graph =
+      `[0:v]${crop},fps=${FPS},format=yuv420p,trim=duration=${DURATION},setpts=PTS-STARTPTS[main];` +
+      `[main][1:v]overlay=W-w-28:H-h-24:format=auto[wm];` +
+      `[2:v]scale=${outW}:${outH},fps=${FPS},format=yuv420p,trim=duration=${END_CARD},setpts=PTS-STARTPTS[end];` +
+      `[wm][end]concat=n=2:v=1:a=0,format=yuv420p[out]`;
+    execFileSync("ffmpeg", [
+      "-y", "-loglevel", "error",
+      "-f", "concat", "-safe", "0", "-i", path.join(dir, "list.ffconcat"),
+      "-i", b.water,
+      "-loop", "1", "-t", String(END_CARD + 0.5), "-i", b.end,
+      "-filter_complex", graph, "-map", "[out]",
+      "-t", String(DURATION + END_CARD), "-r", String(FPS),
+      "-c:v", "libx264", "-preset", "slow", "-crf", "18", "-movflags", "+faststart", "-an", out,
+    ]);
     execFileSync("ffmpeg", ["-y", "-loglevel", "error", "-i", stillSrc, "-vf", crop, "-frames:v", "1", path.join(OUT, `${name}-${suffix}.png`)]);
   }
   fs.rmSync(dir, { recursive: true, force: true });
@@ -363,4 +413,5 @@ await clip(
   { width: 960, height: 540 },
 );
 
+fs.rmSync(BRAND_DIR, { recursive: true, force: true });
 await browser.close();

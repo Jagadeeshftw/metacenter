@@ -19,10 +19,9 @@ interface NavbarProps {
     link: string;
   }[];
   visible: boolean;
-  hasLogo: boolean;
 }
 
-export const Navbar = ({ hasLogo }: { hasLogo: boolean }) => {
+export const Navbar = () => {
   const navItems = [
     { name: "What it measures", link: "/#measures" },
     { name: "Use it", link: "/#use" },
@@ -48,13 +47,13 @@ export const Navbar = ({ hasLogo }: { hasLogo: boolean }) => {
 
   return (
     <motion.div ref={ref} className="w-full fixed top-2 inset-x-0 z-50">
-      <DesktopNav visible={visible} navItems={navItems} hasLogo={hasLogo} />
-      <MobileNav visible={visible} navItems={navItems} hasLogo={hasLogo} />
+      <DesktopNav visible={visible} navItems={navItems} />
+      <MobileNav visible={visible} navItems={navItems} />
     </motion.div>
   );
 };
 
-const DesktopNav = ({ navItems, visible, hasLogo }: NavbarProps) => {
+const DesktopNav = ({ navItems, visible }: NavbarProps) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   return (
@@ -80,7 +79,7 @@ const DesktopNav = ({ navItems, visible, hasLogo }: NavbarProps) => {
         visible ? "bg-background/80" : "bg-background/40"
       )}
     >
-      <Link href="/" aria-label="Metacenter home"><Wordmark hasLogo={hasLogo} className="text-sm" /></Link>
+      <Link href="/" aria-label="Metacenter home"><Wordmark className="text-sm" /></Link>
       <motion.div
         className="flex flex-row flex-1 items-center justify-center space-x-1 text-sm whitespace-nowrap"
         animate={{
@@ -136,7 +135,7 @@ const DesktopNav = ({ navItems, visible, hasLogo }: NavbarProps) => {
   );
 };
 
-const MobileNav = ({ navItems, visible, hasLogo }: NavbarProps) => {
+const MobileNav = ({ navItems, visible }: NavbarProps) => {
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -162,7 +161,7 @@ const MobileNav = ({ navItems, visible, hasLogo }: NavbarProps) => {
         )}
       >
         <div className="flex flex-row justify-between items-center w-full">
-          <Link href="/" aria-label="Metacenter home"><Wordmark hasLogo={hasLogo} className="text-sm" /></Link>
+          <Link href="/" aria-label="Metacenter home"><Wordmark className="text-sm" /></Link>
           <div className="flex items-center gap-2">
             <ThemeToggle />
             <button

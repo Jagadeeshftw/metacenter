@@ -37,7 +37,7 @@ const NAV = [
 
 export type Status = { cycle: number | null; burnHeight: number | null; updated: string | null };
 
-export function AppShell({ children, status, hasLogo }: { children: React.ReactNode; status: Status; hasLogo: boolean }) {
+export function AppShell({ children, status }: { children: React.ReactNode; status: Status }) {
   const [collapsed, setCollapsed] = useState(false);
   const [drawer, setDrawer] = useState(false);
   const path = usePathname();
@@ -63,7 +63,7 @@ export function AppShell({ children, status, hasLogo }: { children: React.ReactN
       <aside className="sticky top-0 z-40 flex h-screen flex-col" aria-label="Sections">
         <div className={cn("flex h-16 items-center border-b border-line", collapsed ? "justify-center" : "px-5")}>
           <Link href="/" aria-label="Metacenter home">
-            <Wordmark hasLogo={hasLogo} compact={collapsed} />
+            <Wordmark compact={collapsed} />
           </Link>
         </div>
         <SideNav path={path} collapsed={collapsed} />
@@ -85,7 +85,7 @@ export function AppShell({ children, status, hasLogo }: { children: React.ReactN
           <div className="absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col border-r border-line bg-surface">
             <div className="flex h-16 items-center justify-between border-b border-line px-4">
               <Link href="/" aria-label="Metacenter home">
-                <Wordmark hasLogo={hasLogo} />
+                <Wordmark />
               </Link>
               <button type="button" aria-label="Close menu" onClick={() => setDrawer(false)} className="inline-flex h-11 w-11 items-center justify-center text-foreground">
                 <IconX />

@@ -4,7 +4,7 @@ import { IconBrandGithub, IconBrandX } from "@tabler/icons-react";
 import { Wordmark } from "@/components/shared/wordmark";
 import { site } from "@/lib/site";
 
-export function Footer({ hasLogo, reader, feed }: { hasLogo: boolean; reader: string | null; feed: string }) {
+export function Footer({ reader, feed }: { reader: string | null; feed: string }) {
   const product = [
     { title: "Dashboard", href: "/dashboard" },
     { title: "Stress test", href: "/dashboard/stress" },
@@ -38,7 +38,7 @@ export function Footer({ hasLogo, reader, feed }: { hasLogo: boolean; reader: st
         <div className="flex flex-col md:flex-row justify-between gap-10">
           <div>
             <Link href="/" aria-label="Metacenter home">
-              <Wordmark hasLogo={hasLogo} />
+              <Wordmark />
             </Link>
             <p className="mt-4 max-w-xs text-sm text-muted">{site.description}</p>
             <div className="flex gap-3 mt-6">

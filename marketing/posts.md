@@ -6,7 +6,7 @@ Drafts only. Nothing here has been posted, and no social account has been touche
 
 **Where the numbers come from:** all figures were read from the live public API at `https://metacenter.0xo.in/api`.
 
-- Indexer poll at **Bitcoin block 967,686** (2026-09-19 08:34:30 UTC).
+- Indexer poll at **Bitcoin block 967,688** (2026-09-19 09:34:31 UTC).
 - Distribution figures are from **distribution 286**: cycle 143, calculation height 967,399.
 - Re-read them before posting. The next distribution is due after Bitcoin block 968,449, and any post can cite that one instead.
 
@@ -193,7 +193,7 @@ With a 30% STX price drop on top, the last bond in the payout order would be sho
 ```
 
 ```text
-2/ At today's pool, that hypothetical book puts the zero-yield cliff near 278 sats/STX (assuming miner bids track the STX price).
+2/ At today's pool, that hypothetical book puts the zero-yield cliff near 276 sats/STX (assuming miner bids track the STX price).
 
 Credit to @friedger for the original derivation: 171.2 sats/STX under the SIP's launch inputs. Both are hypothetical.
 ```
@@ -202,11 +202,11 @@ Credit to @friedger for the original derivation: 171.2 sats/STX under the SIP's 
 - 180M sats: 3,000 BTC × 3% ÷ 50 = 180,000,000 sats; `/api/stress?book_btc=3000&bonds=6` → `obligation` = 180,000,000.
 - 1.28×: same call, `coverage` = 1.2795.
 - 30% drop: `/api/stress?book_btc=3000&bonds=6&price_drop=0.3` → the 6th bond `partial`, `shortfall` = 18,770,516 sats.
-- ~278 sats/STX: `/api/metrics/current` → `cliff.sip_book_scenario` = 277.88 (at current price 355.57 sats/STX, `price`, CoinGecko).
+- ~276 sats/STX: `/api/metrics/current` → `cliff.sip_book_scenario` = 276.17 (at current price 353.39 sats/STX, `price`, CoinGecko; block 967,688).
 - 171.2: `cliff.friedger_sip_inputs` = 171.23; forum.stacks.org/t/18862, post #14.
 - Block: read at block 967,686.
 
-**Before posting:** re-read `cliff.sip_book_scenario`. It moves with the STX price; it was ~269 in an earlier brief.
+**Before posting:** re-read `cliff.sip_book_scenario`. It moves with the STX price; it was ~269 in an earlier brief and ~278 on 19 Sep 08:34 UTC.
 
 ## Day 6 · Slot 1
 
