@@ -75,13 +75,13 @@ const DesktopNav = ({ navItems, visible, hasLogo }: NavbarProps) => {
         damping: 30,
       }}
       className={cn(
-        "hidden lg:flex flex-row self-center items-center justify-between py-2 mx-auto px-6 rounded-full relative z-[60] backdrop-saturate-[1.8] border border-line/60",
+        "hidden xl:flex flex-row self-center items-center justify-between py-2 mx-auto px-6 rounded-full relative z-[60] backdrop-saturate-[1.8] border border-line/60",
         visible ? "bg-background/80" : "bg-background/40"
       )}
     >
       <Link href="/" aria-label="Metacenter home"><Wordmark hasLogo={hasLogo} className="text-sm" /></Link>
       <motion.div
-        className="lg:flex flex-row flex-1 items-center justify-center space-x-1 text-sm"
+        className="flex flex-row flex-1 items-center justify-center space-x-1 text-sm whitespace-nowrap"
         animate={{
           scale: visible ? 0.9 : 1,
           justifyContent: visible ? "flex-end" : "center",
@@ -156,7 +156,7 @@ const MobileNav = ({ navItems, visible, hasLogo }: NavbarProps) => {
           damping: 30,
         }}
         className={cn(
-          "flex relative flex-col lg:hidden w-full justify-between items-center max-w-[calc(100vw-2rem)] mx-auto z-50 backdrop-saturate-[1.8] border border-solid border-line rounded-full",
+          "flex relative flex-col xl:hidden w-full justify-between items-center max-w-[calc(100vw-2rem)] mx-auto z-50 backdrop-saturate-[1.8] border border-solid border-line rounded-full",
           visible ? "bg-background/85" : "bg-background/50"
         )}
       >
