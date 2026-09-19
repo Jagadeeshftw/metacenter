@@ -41,7 +41,7 @@ export function ProvenanceTag({ kind, className }: { kind: Provenance; className
       {kind}
       <span
         role="tooltip"
-        className="pointer-events-none absolute right-0 top-full z-20 mt-2 hidden w-64 rounded-lg border border-line bg-surface px-3 py-2 text-left text-xs leading-relaxed text-foreground shadow-[0_12px_32px_var(--shadow)] group-hover:block group-focus-visible:block"
+        className="pointer-events-none absolute right-0 bottom-full z-20 mb-2 hidden w-64 rounded-lg border border-line bg-surface px-3 py-2 text-left text-xs leading-relaxed text-foreground shadow-[0_12px_32px_var(--shadow)] group-hover:block group-focus-visible:block"
       >
         <b className="font-medium">{kind}</b> · {MEANING[kind]}
       </span>
