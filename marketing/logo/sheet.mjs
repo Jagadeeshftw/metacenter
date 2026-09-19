@@ -1,4 +1,6 @@
-// Render the logo comparison sheet (marketing/logo/options.png) and per-option previews:
+// Render the logo comparison sheet (marketing/logo/options.png) and per-option previews.
+// options.png is the A–D sheet the logo was chosen from; build.mjs now defines only C, so
+// rerunning this renders C alone (keep the committed options.png as the record). Outputs:
 // favicon-16.png, favicon-32.png and avatar-400.png in each option's folder.
 //   node marketing/logo/sheet.mjs <logoDir>
 // Needs `playwright` (with CHROMIUM_PATH), `opentype.js` and `geist` resolvable from cwd.
