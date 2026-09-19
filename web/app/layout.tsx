@@ -12,11 +12,12 @@ const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono"
 export function generateMetadata(): Metadata {
   const logo = brandAssets();
   return {
-    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://metacenter.vercel.app"),
+    metadataBase: new URL(site.url),
+    alternates: { canonical: "/" },
     title: { default: "Metacenter · PoX-5 risk feed", template: "%s · Metacenter" },
     description: site.description,
     icons: logo.svg ? { icon: "/logo.svg" } : logo.png ? { icon: "/logo.png" } : undefined,
-    openGraph: { title: "Metacenter · PoX-5 risk feed", description: site.description, type: "website" },
+    openGraph: { title: "Metacenter · PoX-5 risk feed", description: site.description, type: "website", url: site.url, siteName: "Metacenter" },
     twitter: { card: "summary_large_image", title: "Metacenter · PoX-5 risk feed", description: site.description },
   };
 }

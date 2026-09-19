@@ -6,7 +6,7 @@ import { CoverageChart, PoolChart } from "@/components/dash/charts";
 import { ProvenanceTag } from "@/components/shared/provenance";
 
 export const revalidate = 60;
-export const metadata = { title: "Coverage" };
+export const metadata = { title: "Coverage", alternates: { canonical: "/dashboard/coverage" }, openGraph: { url: "/dashboard/coverage" } };
 
 export default async function CoveragePage() {
   const [cur, iv] = await Promise.all([getCurrent(), getIntervals()]);

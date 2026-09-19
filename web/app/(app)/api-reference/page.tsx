@@ -1,7 +1,7 @@
 import { PageHeader, Panel } from "@/components/dash/ui";
 import { site } from "@/lib/site";
 
-export const metadata = { title: "API" };
+export const metadata = { title: "API", alternates: { canonical: "/api-reference" }, openGraph: { url: "/api-reference" } };
 
 const ENDPOINTS = [
   { path: "/metrics/current", about: "Coverage, headroom, obligation, pending pool, reserve and hypothetical cover, payout order, the latest distribution and the cliff figures." },
@@ -17,8 +17,12 @@ export default function ApiReference() {
     <div className="flex max-w-4xl flex-col gap-6">
       <PageHeader
         title="API"
-        lead="Read-only JSON, free, no key. The same data the dashboard uses. On this site, every endpoint is also available under /api."
+        lead="Read-only JSON, free, no key. The same data the dashboard uses."
       />
+      <Panel title="Base URL">
+        <p className="num text-base">{site.apiBase}</p>
+        <p className="text-sm text-muted">Example: <a className="num text-brand underline-offset-4 hover:underline" href={`${site.apiBase}/metrics/current`}>{site.apiBase}/metrics/current</a></p>
+      </Panel>
       <Panel title="Field envelope">
         <p className="text-sm text-muted">Every metric is returned with its unit, its provenance label and its source.</p>
         <pre className="num overflow-x-auto rounded-xl bg-surface-2 p-4 text-xs leading-relaxed">{`{
@@ -33,8 +37,8 @@ export default function ApiReference() {
         <ul className="flex flex-col divide-y divide-line">
           {ENDPOINTS.map((e) => (
             <li key={e.path} className="flex flex-col gap-1 py-3">
-              <a href={`/api${e.path}`} className="num break-all text-sm text-brand underline-offset-4 hover:underline">
-                GET {e.path}
+              <a href={`${site.apiBase}${e.path}`} className="num break-all text-sm text-brand underline-offset-4 hover:underline">
+                GET {site.apiBase}{e.path}
               </a>
               <span className="text-sm text-muted">{e.about}</span>
             </li>

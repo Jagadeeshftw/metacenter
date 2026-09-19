@@ -5,7 +5,7 @@ import { PageHeader, Panel, Stat, Note, Unavailable } from "@/components/dash/ui
 import { ReserveChart } from "@/components/dash/charts";
 
 export const revalidate = 60;
-export const metadata = { title: "Reserve" };
+export const metadata = { title: "Reserve", alternates: { canonical: "/dashboard/reserve" }, openGraph: { url: "/dashboard/reserve" } };
 
 export default async function ReservePage() {
   const [cur, iv] = await Promise.all([getCurrent(), getIntervals()]);

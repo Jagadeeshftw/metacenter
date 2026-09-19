@@ -6,7 +6,7 @@ import { YieldChart } from "@/components/dash/charts";
 import { ProvenanceTag } from "@/components/shared/provenance";
 
 export const revalidate = 60;
-export const metadata = { title: "STX-only yield" };
+export const metadata = { title: "STX-only yield", alternates: { canonical: "/dashboard/yield" }, openGraph: { url: "/dashboard/yield" } };
 
 export default async function YieldPage() {
   const [cur, iv] = await Promise.all([getCurrent(), getIntervals()]);

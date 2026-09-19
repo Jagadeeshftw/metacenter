@@ -4,7 +4,7 @@ import { btc, satsExact } from "@/lib/format";
 import { PageHeader, Panel, Note } from "@/components/dash/ui";
 
 export const revalidate = 60;
-export const metadata = { title: "Bonds & payout order" };
+export const metadata = { title: "Bonds & payout order", alternates: { canonical: "/dashboard/bonds" }, openGraph: { url: "/dashboard/bonds" } };
 
 export default async function BondsPage() {
   const [cur, iv] = await Promise.all([getCurrent(), getIntervals()]);

@@ -5,7 +5,7 @@ import { ProvenanceGlyph, ProvenanceLegend } from "@/components/shared/provenanc
 import type { Provenance } from "@/lib/api";
 
 export const revalidate = 300;
-export const metadata = { title: "Methodology" };
+export const metadata = { title: "Methodology", alternates: { canonical: "/methodology" }, openGraph: { url: "/methodology" } };
 
 const R = "pox5-reader";
 const ROWS: { metric: string; formula: string; unit: string; label: Provenance; source: string; api: string }[] = [
@@ -152,6 +152,11 @@ export default async function Methodology() {
             ))}
           </ul>
           <p className="text-xs text-subtle">Testnet feed values mirror mainnet data.</p>
+          <p className="text-xs text-subtle">
+            Site <a className="num underline underline-offset-4" href={site.url}>{site.url.replace("https://", "")}</a> · API{" "}
+            <a className="num underline underline-offset-4" href={`${site.apiBase}/metrics/current`}>{site.apiBase.replace("https://", "")}</a> · source{" "}
+            <a className="underline underline-offset-4" href={site.repo}>GitHub</a>
+          </p>
         </Panel>
       </div>
     </div>

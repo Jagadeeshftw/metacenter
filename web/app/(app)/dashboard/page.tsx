@@ -7,7 +7,7 @@ import { CoverageChart, PoolChart, YieldChart } from "@/components/dash/charts";
 import { ProvenanceLegend } from "@/components/shared/provenance";
 
 export const revalidate = 60;
-export const metadata = { title: "Overview" };
+export const metadata = { title: "Overview", alternates: { canonical: "/dashboard" }, openGraph: { url: "/dashboard" } };
 
 export default async function Overview() {
   const [cur, iv] = await Promise.all([getCurrent(), getIntervals()]);

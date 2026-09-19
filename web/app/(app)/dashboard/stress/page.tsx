@@ -4,7 +4,7 @@ import { StressTest } from "@/components/dash/stress";
 import { ProvenanceTag } from "@/components/shared/provenance";
 
 export const revalidate = 60;
-export const metadata = { title: "Stress test" };
+export const metadata = { title: "Stress test", alternates: { canonical: "/dashboard/stress" }, openGraph: { url: "/dashboard/stress" } };
 
 export default async function StressPage() {
   const initial = await getStress();

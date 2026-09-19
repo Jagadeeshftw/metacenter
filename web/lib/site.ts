@@ -2,8 +2,13 @@
 // (without the @); the footer shows the X link only when it is set.
 export const X_HANDLE = "";
 
+export const SITE_URL = "https://metacenter.0xo.in";
+
 export const site = {
   name: "Metacenter",
+  url: SITE_URL,
+  // public API base for docs and integrators; proxied to the indexer
+  apiBase: `${SITE_URL}/api`,
   description:
     "Risk feed for Stacks Bitcoin Staking (PoX-5): bond coverage, the reserve, STX-only yield and stress tests, from public data.",
   repo: "https://github.com/Jagadeeshftw/metacenter",

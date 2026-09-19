@@ -13,6 +13,8 @@ Everything is computed from public data and published as:
 - a mirrored feed on testnet,
 - a public JSON API.
 
+**Live:** https://metacenter.0xo.in · **API:** https://metacenter.0xo.in/api
+
 A ship's metacentric height is its stability margin. This project measures the same thing for PoX-5: how far the reward pool can fall before bonds are short-paid.
 
 ## Provenance labels
@@ -47,7 +49,7 @@ Once per distribution interval (1,050 Bitcoin blocks, two per cycle), `calculate
 | `contracts/contracts/risk-feed-trait.clar` | The shared read interface (`get-coverage-summary`). |
 | `contracts/contracts/coverage-guard.clar` | Example consumer: returns `ok` or `paused` based on coverage and staleness. |
 | `indexer/` | Node/TS indexer and public API (Railway, Postgres). |
-| `web/` | Next.js landing page (from the Aceternity Cryptgen template, recoloured) and dashboard (Vercel). The browser only talks to the site's own domain: `/api/*` is proxied to the indexer. |
+| `web/` | Next.js landing page (from the Aceternity Cryptgen template, recoloured) and dashboard, deployed on Vercel at https://metacenter.0xo.in. The browser only talks to the site's own domain: `/api/*` is proxied to the indexer. |
 | `research/` | Phase 0 raw data and findings. `research/missing-blocks/` explains the reward-paying fraction. |
 
 ## Contracts
@@ -77,7 +79,7 @@ Once per distribution interval (1,050 Bitcoin blocks, two per cycle), `calculate
 
 ## API
 
-Base URL: `https://metacenter-indexer-production.up.railway.app`
+Base URL: `https://metacenter.0xo.in/api` (for example `https://metacenter.0xo.in/api/metrics/current`). The site proxies `/api/*` to the indexer on Railway, so browsers never call Railway directly.
 
 | Endpoint | What |
 |---|---|
