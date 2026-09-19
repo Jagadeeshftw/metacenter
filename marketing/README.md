@@ -5,7 +5,9 @@ Files only. Nothing is posted from here, and no social account is touched.
 | Path | What |
 |---|---|
 | `posts.md` | 14 post drafts (7 days, 2 per day) and 5 reply templates. Each draft lists the sources of its numbers. |
-| `clips/` | 6-second clips recorded from the live site in the dark theme, with real data. Each clip has a 1280×720 and a 1080×1080 version, H.264 at 30 fps with no audio, plus a still PNG of each size. The `.mp4` files are git-ignored; the PNG stills are committed. |
+| `clips/` | 7-second clips recorded from the live site in the dark theme, with real data: 6 s of footage with the logo watermark, then a 1 s end card. Each clip has a 1280×720 and a 1080×1080 version, H.264 at 30 fps with no audio, plus a still PNG of each size. The `.mp4` files are git-ignored; the PNG stills are committed. |
+| `brand/` | X avatar (400×400) and banner (1500×500), exported from `web/brand/mark.json` by `brand/export.mjs`, which also writes `web/app/favicon.ico`. `x-profile-preview.png` shows the avatar circle-cropped. |
+| `qa/brand/` | Logo C on the live site: header, dashboard sidebar and docs (1440, dark and light), a clip end card, and the favicon in a real browser tab. |
 | `scripts/record-clips.mjs` | Records the clips again. Run it after the mainnet deploy for clip i, and whenever figures change. |
 
 ## Clips
@@ -22,7 +24,7 @@ Files only. Nothing is posted from here, and no social account is touched.
 | h-methodology-source | A methodology row clicked through to `get-obligation-per-interval` at line 283 of the contract source |
 | i | **Not recorded yet.** Needs the mainnet deploy: the explorer page for pox5-reader, and the dashboard reading "onchain". |
 
-Recorded at Bitcoin block 967,686 (2026-09-19).
+Recorded at Bitcoin block 967,717 (2026-09-19), with logo C.
 
 ## Posts
 

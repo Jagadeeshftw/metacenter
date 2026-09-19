@@ -164,9 +164,9 @@ function encode(name, { frames, t0 }, crops, snapAt) {
     const out = path.join(OUT, `${name}-${suffix}.mp4`);
     const b = BRAND[suffix];
     const graph =
-      `[0:v]${crop},fps=${FPS},format=yuv420p,trim=duration=${DURATION},setpts=PTS-STARTPTS[main];` +
+      `[0:v]${crop},fps=${FPS},format=yuv420p,setsar=1,trim=duration=${DURATION},setpts=PTS-STARTPTS[main];` +
       `[main][1:v]overlay=W-w-28:H-h-24:format=auto[wm];` +
-      `[2:v]scale=${outW}:${outH},fps=${FPS},format=yuv420p,trim=duration=${END_CARD},setpts=PTS-STARTPTS[end];` +
+      `[2:v]scale=${outW}:${outH},fps=${FPS},format=yuv420p,setsar=1,trim=duration=${END_CARD},setpts=PTS-STARTPTS[end];` +
       `[wm][end]concat=n=2:v=1:a=0,format=yuv420p[out]`;
     execFileSync("ffmpeg", [
       "-y", "-loglevel", "error",

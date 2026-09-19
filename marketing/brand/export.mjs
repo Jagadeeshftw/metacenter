@@ -1,6 +1,8 @@
 // Export X profile assets from the single logo source (web/brand/mark.json):
 //   x-avatar-400.png   400×400, the mark centred on the dark ground (X crops it to a circle)
 //   x-banner-1500x500.png  dark, logo + one-line tagline + URL
+//   web/app/favicon.ico    16/32/48, same padding and ground as web/app/icon.tsx, for clients
+//                          that request /favicon.ico directly
 //
 //   node marketing/brand/export.mjs <outDir>
 // Needs `playwright` resolvable from cwd, CHROMIUM_PATH, and GEIST_DIR pointing at the
@@ -20,6 +22,32 @@ const svg = (size) =>
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${mark.viewBox}" width="${size}" height="${size}">${mark.svg
     .replaceAll("{ink}", C.ink)
     .replaceAll("{accent}", C.accent)}</svg>`;
+// matches markSvg({ ...BRAND.dark, pad: 3 }) in web/lib/brand.ts
+const tile = (size, pad = 3) => {
+  const [, , vw] = mark.viewBox.split(" ").map(Number);
+  const w = vw + pad * 2;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-pad} ${-pad} ${w} ${w}" width="${size}" height="${size}"><rect x="${-pad}" y="${-pad}" width="${w}" height="${w}" rx="${w * 0.22}" fill="${C.bg}"/>${mark.svg
+    .replaceAll("{ink}", C.ink)
+    .replaceAll("{accent}", C.accent)}</svg>`;
+};
+// ICO container holding PNG images (supported by every current browser)
+const ico = (pngs) => {
+  const head = Buffer.alloc(6 + 16 * pngs.length);
+  head.writeUInt16LE(1, 2);
+  head.writeUInt16LE(pngs.length, 4);
+  let offset = head.length;
+  pngs.forEach(([size, buf], i) => {
+    const e = 6 + 16 * i;
+    head.writeUInt8(size % 256, e);
+    head.writeUInt8(size % 256, e + 1);
+    head.writeUInt16LE(1, e + 4);
+    head.writeUInt16LE(32, e + 6);
+    head.writeUInt32LE(buf.length, e + 8);
+    head.writeUInt32LE(offset, e + 12);
+    offset += buf.length;
+  });
+  return Buffer.concat([head, ...pngs.map(([, buf]) => buf)]);
+};
 const font = (weight, file) =>
   GEIST ? `@font-face{font-family:Geist;font-weight:${weight};src:url("file://${path.join(GEIST, file)}")}` : "";
 const css = `${font(400, "Geist-Regular.ttf")}${font(600, "Geist-SemiBold.ttf")}
@@ -56,4 +84,14 @@ for (const [name, html, w, h] of [
   await page.close();
   console.log("wrote", path.join(OUT, name), `(mark: ${mark.id})`);
 }
+const pngs = [];
+for (const size of [16, 32, 48]) {
+  const page = await browser.newPage({ viewport: { width: size, height: size }, deviceScaleFactor: 1 });
+  await page.setContent(`<html><body style="margin:0;background:transparent">${tile(size)}</body></html>`);
+  pngs.push([size, await page.screenshot({ omitBackground: true, clip: { x: 0, y: 0, width: size, height: size } })]);
+  await page.close();
+}
+const icoPath = path.join(ROOT, "web", "app", "favicon.ico");
+fs.writeFileSync(icoPath, ico(pngs));
+console.log("wrote", icoPath, `(mark: ${mark.id}, 16/32/48)`);
 await browser.close();
