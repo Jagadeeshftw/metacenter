@@ -1,0 +1,20 @@
+---
+title: Obligation
+description: What bonds are owed per distribution interval.
+---
+
+**Now:** <Metric name="obligation" />
+
+## Definition
+
+`obligation = Σ over active bonds of shares × target-rate ÷ 10000 ÷ 50`, in sats per interval. This is exactly pox-5's per-bond target (<Pox5 lines="2266" />), summed.
+
+- `shares` are the bond's staked sats for the cycle (`get-total-shares-staked-for-cycle`).
+- A bond is active in a cycle when the cycle's calculation height falls inside its term.
+
+## Sources
+
+| Figure | Label | Source |
+|---|---|---|
+| Obligation per interval | <Tag kind="onchain" /> | <Fn name="get-obligation-per-interval" /> |
+| Per distribution | <Tag kind="mirrored" /> | Σ `target-yield` in the `bond-distribution` events |

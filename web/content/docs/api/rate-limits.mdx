@@ -1,0 +1,9 @@
+---
+title: Rate limits
+description: Fair use, caching and freshness.
+---
+
+- **No key, no enforced limit today.** Please keep to about one request per second, and cache responses.
+- **Freshness:** the indexer polls every ~10 minutes, and distributions happen once per 1,050 Bitcoin blocks (about a week). Polling more often than every minute gains nothing.
+- **Upstream:** the indexer reads Hiro's public API, which allows about 50 requests per minute per IP without a key. The indexer stays under it, so your requests never reach Hiro directly.
+- **Errors:** `400` for invalid parameters, `503` from `/stress` before the first distribution is indexed.

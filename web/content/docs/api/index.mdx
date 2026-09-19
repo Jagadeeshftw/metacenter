@@ -1,0 +1,27 @@
+---
+title: Overview & base URL
+description: A free, read-only JSON API. No key.
+---
+
+**Base URL:** `https://metacenter.0xo.in/api`
+
+The API serves the same data as the dashboard. Every metric is a field envelope (illustrative values):
+
+```json
+{ "value": 2.5, "unit": "x", "provenance": "onchain", "source": "pox5-reader::get-coverage-summary", "note": "optional" }
+```
+
+- `value` is a number or a string; large integers (sats, uSTX) are strings so they never lose precision.
+- `provenance` is one of `onchain`, `mirrored`, `hypothetical`. See [Provenance labels](/docs/concepts/provenance).
+- `source` names the contract function, event or field the value came from.
+
+## Endpoints
+
+| Endpoint | What |
+|---|---|
+| [`GET /metrics/current`](/docs/api/metrics-current) | Headline figures and the latest distribution |
+| [`GET /metrics/cycles/:n`](/docs/api/metrics-cycles) | One reward cycle |
+| [`GET /intervals`](/docs/api/intervals) | Every distribution since cycle 141 |
+| [`GET /bonds/order`](/docs/api/bonds-order) | Bond payout order |
+| [`GET /stress`](/docs/api/stress) | Hypothetical waterfall |
+| [`GET /meta`](/docs/api/meta) | Contract addresses |

@@ -1,0 +1,28 @@
+---
+title: risk-feed-trait
+description: The common read interface implemented by pox5-reader (onchain) and risk-feed (mirrored).
+---
+
+```clarity
+(define-trait risk-feed-trait (
+    (get-coverage-summary () (response {
+        period: uint,
+        period-kind: (string-ascii 8),
+        pool-sats: uint,
+        obligation-sats: uint,
+        coverage-bps: (optional uint),
+        headroom-bps: (optional uint),
+        updated-at: uint,
+        provenance: (string-ascii 12),
+    } uint))
+))
+```
+
+| Field | Meaning |
+|---|---|
+| `period`, `period-kind` | A reward cycle (`"cycle"`, pox5-reader) or a distribution interval (`"interval"`, risk-feed) |
+| `pool-sats`, `obligation-sats` | sats accrued / owed to bonds over the period |
+| `coverage-bps` | pool ÷ obligation × 10000; `none` when there are no bonds |
+| `headroom-bps` | (1 − obligation ÷ pool) × 10000; `none` when there are no bonds |
+| `updated-at` | Burn block height at which the figures were read or posted |
+| `provenance` | `"onchain"` or `"mirrored"` |

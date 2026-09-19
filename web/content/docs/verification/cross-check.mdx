@@ -1,0 +1,38 @@
+---
+title: How data is cross-checked
+description: Every distribution is recomputed independently from contract state.
+---
+
+The indexer never uses the deprecated contract-events endpoint. For each distribution it takes three steps:
+
+<Steps>
+<Step>
+
+### Find the block
+
+The calculation height of distribution *k* is fixed: `first burn height + (k + 1) × 1,050 − 1`. The indexer binary-searches Stacks blocks for the first one whose state has `last-reward-compute-height ≥` that height, reading historical state with Hiro's `call-read ?tip=`.
+
+</Step>
+<Step>
+
+### Read the event
+
+It takes the `calculate-rewards` transaction in that block and reads the exact figures from its `calculate-rewards` and `bond-distribution` print events.
+
+</Step>
+<Step>
+
+### Recompute from state
+
+It reads pox-5 state just before and just after that block:
+- the reserve delta, which must equal the deposit exactly
+- rewards-per-token × shares, for STX-only stakers and each bond
+
+</Step>
+</Steps>
+
+## Results so far
+
+<Recompute />
+
+The differences come from integer truncation in rewards-per-token: at most 1 sat per product.

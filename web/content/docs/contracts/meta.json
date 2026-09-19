@@ -1,0 +1,9 @@
+{
+ "pages": [
+  "pox5-reader",
+  "risk-feed",
+  "risk-feed-trait",
+  "coverage-guard",
+  "deployments"
+ ]
+}

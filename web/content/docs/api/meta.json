@@ -1,0 +1,12 @@
+{
+ "pages": [
+  "index",
+  "metrics-current",
+  "metrics-cycles",
+  "intervals",
+  "bonds-order",
+  "stress",
+  "meta",
+  "rate-limits"
+ ]
+}

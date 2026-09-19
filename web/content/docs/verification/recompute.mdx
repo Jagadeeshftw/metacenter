@@ -1,0 +1,32 @@
+---
+title: Recompute it yourself
+description: Check any figure against public data.
+---
+
+## Coverage for a distribution
+
+1. Get the `calculate-rewards` transaction from [`/api/intervals`](/docs/api/intervals) (`txid`).
+2. Read its print events on the explorer: `gross-accrued-rewards`, and each bond's `target-yield`.
+3. Coverage = gross ÷ Σ target-yield.
+
+## From the contract
+
+```bash
+# pox-5 reserve balance at the chain tip
+curl -X POST https://api.hiro.so/v2/contracts/call-read/SP000000000000000000002Q6VF78/pox-5/get-reserve-balance \
+  -H 'content-type: application/json' -d '{"sender":"SP000000000000000000002Q6VF78","arguments":[]}'
+
+# the same at a past block: add ?tip=<index_block_hash>
+```
+
+## With the contracts' own tests
+
+```bash
+git clone https://github.com/Jagadeeshftw/metacenter && cd metacenter/contracts
+npm install
+npm run test:fork   # pox5-reader against mainnet state at Stacks block 9,019,000
+```
+
+## Testnet mirror
+
+`risk-feed` on testnet stores the raw inputs for each distribution. `derive` is a read-only function that recomputes every metric from them. See [risk-feed](/docs/contracts/risk-feed).

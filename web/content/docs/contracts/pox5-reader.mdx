@@ -1,0 +1,40 @@
+---
+title: pox5-reader
+description: Read-only risk figures computed directly from pox-5 state on mainnet. Holds no funds, has no admin.
+---
+
+Implements [risk-feed-trait](/docs/contracts/risk-feed-trait). Every figure it returns is <Tag kind="onchain" />. It never calls pox-5's `get-rewards` / `get-new-rewards`, which abort on uint underflow if the sBTC balance is ever below staked + reserve. Function names link to their line in the source.
+
+## Read-only functions
+
+| Function | Arguments | Returns |
+|---|---|---|
+| <Fn name="get-current-cycle" /> | none | `uint`: the current reward cycle |
+| <Fn name="get-cycle-calc-heights" /> | `cycle uint` | `{ mid, end }`: the calculation heights of the cycle's two distributions |
+| <Fn name="get-intervals-computed" /> | `cycle uint` | `uint`: how many of the cycle's two distributions pox-5 has computed (assumes none was skipped) |
+| <Fn name="bond-target-per-interval" /> | `shares uint, target-rate uint` | `uint`: `shares × rate ÷ 10000 ÷ 50` (pox-5 L2266) |
+| <Fn name="get-bond-payout-order" /> | `cycle uint` | list of up to 6 `{ bond-index, stx-value-ratio, target-rate, shares, target-per-interval }` in payout order |
+| <Fn name="get-obligation-per-interval" /> | `cycle uint` | `uint` sats |
+| <Fn name="get-reserve" /> | none | `uint` sats |
+| <Fn name="get-reserve-cover-cycles" /> | `cycle uint` | `{ reserve-sats, obligation-per-cycle-sats, cover-cycles-x100 (optional), reserve-can-pay-bonds: false }` |
+| <Fn name="get-coverage-for-cycle" /> | `cycle uint` | `{ cycle, intervals-computed, pool-sats, bond-paid-sats, stx-paid-sats, obligation-sats, shortfall-sats, coverage-bps (optional), headroom-bps (optional), stx-visible }` |
+| <Fn name="get-pending-pool" /> | none | `{ pending-sats, balanced, last-compute-height }`: sBTC not yet split, never aborts |
+| <Fn name="simulate-waterfall" /> | `pool-sats uint, cycle uint` | `{ bonds: [{ bond-index, target-sats, paid-sats, status }], reserve-deposit-sats, stx-only-sats }` (<Tag kind="hypothetical" />) |
+| <Fn name="get-snapshot" /> | `distribution-index uint` | optional snapshot record |
+| <Fn name="get-coverage-summary" /> | none | `(ok { period, period-kind: "cycle", pool-sats, obligation-sats, coverage-bps, headroom-bps, updated-at, provenance: "onchain" })` |
+
+`coverage-bps` and `headroom-bps` are in basis points (2.00× is `u20000`). They are `none` when there are no bonds.
+
+## Public function
+
+| Function | Effect | Errors |
+|---|---|---|
+| <Fn name="snapshot" /> | Anyone may call it once per distribution index. It records cumulative rewards-per-token for the cycle of the latest distribution, so per-interval figures can be rebuilt on-chain. | `u100`: already recorded for this index |
+
+## Precision
+
+- The pool is rebuilt from rewards-per-token × shares. It is accurate to within ±2 sats per computed interval.
+- Each bond's rebuilt payout can read up to 1 sat under what pox-5 paid, so `shortfall-sats` ignores gaps of up to 1 sat per bond.
+- The mainnet-fork tests check all of this against real distributions.
+
+Source: [`contracts/contracts/pox5-reader.clar`](https://github.com/Jagadeeshftw/metacenter/blob/main/contracts/contracts/pox5-reader.clar)

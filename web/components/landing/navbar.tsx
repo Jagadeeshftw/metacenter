@@ -27,6 +27,7 @@ export const Navbar = ({ hasLogo }: { hasLogo: boolean }) => {
     { name: "What it measures", link: "/#measures" },
     { name: "Use it", link: "/#use" },
     { name: "Methodology", link: "/methodology" },
+    { name: "Docs", link: "/docs" },
     { name: "FAQ", link: "/#faq" },
   ];
 

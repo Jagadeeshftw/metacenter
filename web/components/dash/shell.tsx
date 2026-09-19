@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   IconApi,
+  IconBook,
   IconBook2,
   IconBuildingBank,
   IconChartDots,
@@ -31,6 +32,7 @@ const NAV = [
   { href: "/dashboard/stress", label: "Stress test", icon: IconAdjustmentsHorizontal },
   { href: "/methodology", label: "Methodology", icon: IconBook2 },
   { href: "/api-reference", label: "API", icon: IconApi },
+  { href: "/docs", label: "Docs", icon: IconBook },
 ];
 
 export type Status = { cycle: number | null; burnHeight: number | null; updated: string | null };

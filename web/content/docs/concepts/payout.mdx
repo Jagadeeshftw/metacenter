@@ -1,0 +1,50 @@
+---
+title: How PoX-5 pays out
+description: The waterfall, bond payout order and reserve, as the deployed pox-5 contract implements them.
+---
+
+Line numbers refer to the deployed pox-5 source, which is identical to stacks-core tag 4.0.1 (commit 62e03cc). A copy is in the repository at `research/pox-5.deployed.clar`.
+
+## Distributions
+
+Once per **distribution interval** (1,050 Bitcoin blocks, two per reward cycle), anyone may call `calculate-rewards`. The sBTC that reached pox-5 since the previous call is the **gross pool** for that interval. The call is booked to the reward cycle that contains its calculation height, which is the last block of the interval.
+
+## The waterfall
+
+<Steps>
+<Step>
+
+### Bonds first
+
+Each active bond is owed a **target** for the interval: `shares × target-rate ÷ 10000 ÷ 50` (<Pox5 lines="2266" />). Each bond receives `min(target, what is left)` (<Pox5 lines="2269-2272" />).
+
+</Step>
+<Step>
+
+### Reserve: 15% of the remainder
+
+After bonds, 15% of what remains goes to the reserve (<Pox5 lines="2190" />, `RESERVE_RATIO u1500`). If no STX is staked that cycle, the whole remainder goes to the reserve.
+
+</Step>
+<Step>
+
+### STX-only stakers: the rest
+
+The other 85% is shared flat per uSTX among STX-only stakers (<Pox5 lines="2191-2201" />).
+
+</Step>
+</Steps>
+
+## Bond order
+
+Bonds are paid in **descending `stx-value-ratio`**, with ties going to the **lower bond index**. The contract enforces this: a call with bonds in the wrong order fails with `ERR_INVALID_BOND_PERIOD_ORDERING` (<Pox5 lines="2285-2299" />). Within a bond, rewards are flat per staked sat (<Pox5 lines="2304-2309" />): no staker in a bond is paid before another.
+
+So when the pool is short, the bond paid last in this order is the first to be short-paid.
+
+## The reserve cannot pay bonds
+
+`transfer-from-reserve` (<Pox5 lines="2696" />) is private and nothing in the contract calls it. Paying bonds from the reserve would need a SIP. In a shortfall the reserve deposit is zero, so the reserve simply stays flat: it does not drain.
+
+<Callout title="Why this matters for the metrics">
+Metacenter never counts the reserve as protection for bonds. It shows the reserve as **hypothetical cover**: how many cycles of obligation it would equal if a SIP ever allowed it to pay out.
+</Callout>

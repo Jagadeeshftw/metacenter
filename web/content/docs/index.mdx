@@ -1,0 +1,24 @@
+---
+title: Introduction
+description: Metacenter is an open risk feed for Stacks Bitcoin Staking (PoX-5).
+---
+
+Metacenter measures how safe the PoX-5 reward flow is, from public data only, and publishes the results three ways: a dashboard, a public JSON API, and Clarity contracts that other contracts can call.
+
+<AsOf />
+
+## What it answers
+
+- **Can the reward pool pay what bonds are owed?** Coverage is <Metric name="coverage" />.
+- **How far can the pool fall before bond yield is hit?** Headroom is <Metric name="headroom" />.
+- **What backs a shortfall?** The reserve holds <Metric name="reserve" />, but the current contract cannot pay bonds from it.
+- **What do STX-only stakers earn?** <Metric name="apy" />, annualised in BTC terms.
+
+## Where to go next
+
+<Cards>
+  <Card title="How PoX-5 pays out" href="/docs/concepts/payout" description="The waterfall, bond order and reserve, with contract line references." />
+  <Card title="Provenance labels" href="/docs/concepts/provenance" description="What onchain, mirrored and hypothetical mean." />
+  <Card title="API overview" href="/docs/api" description="Base URL, endpoints and live examples." />
+  <Card title="Read coverage from a contract" href="/docs/integrate/read-coverage" description="Call the risk-feed trait from Clarity." />
+</Cards>

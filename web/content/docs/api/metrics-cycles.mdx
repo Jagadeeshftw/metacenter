@@ -1,0 +1,20 @@
+---
+title: GET /metrics/cycles/:n
+description: pox5-reader coverage for one reward cycle, the Hiro cycle record and the cycle's distributions.
+---
+
+```bash
+curl https://metacenter.0xo.in/api/metrics/cycles/143
+```
+
+| Field | Source |
+|---|---|
+| `intervals_computed`, `pool`, `obligation`, `bond_paid`, `stx_paid`, `shortfall`, `coverage`, `headroom` | <Fn name="get-coverage-for-cycle" /> (onchain) |
+| `hiro` | Hiro `/extended/v3/staking/cycles/:n` (mirrored). Note: `rewards.btc.waterfall.bonds` there is the amount paid, not owed. |
+| `intervals` | The cycle's distributions, as in [`/intervals`](/docs/api/intervals) |
+
+Returns `400` when `n` is not a non-negative integer.
+
+## Live response (excerpt)
+
+<ApiExample path="/metrics/cycles/143" pick="hiro.value.rewards" />

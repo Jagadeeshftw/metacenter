@@ -1,0 +1,28 @@
+---
+title: FAQ
+description: Short answers.
+---
+
+### Is Metacenter affiliated with Stacks, Hiro or any protocol?
+
+No. It is an independent open-source project (MIT). Forum quotes on the site are context, not endorsements.
+
+### Why are some headline figures "mirrored"?
+
+They come from the latest distribution's events. When `pox5-reader` is available on mainnet, the dashboard uses its onchain figures instead.
+
+### Why does the testnet feed show mainnet numbers?
+
+Testnet has almost no bond stake. The testnet `risk-feed` mirrors mainnet distributions, with every raw input stored so anyone can recompute them.
+
+### Can the reserve cover a shortfall?
+
+Not under the current contract. See [Reserve & hypothetical cover](/docs/metrics/reserve).
+
+### Who is short-paid first?
+
+The last bond in the payout order. See [Bond payout order](/docs/metrics/payout-order).
+
+### How often is the data updated?
+
+The indexer polls every ~10 minutes. Distributions happen once per 1,050 Bitcoin blocks.

@@ -1,0 +1,22 @@
+---
+title: GET /stress
+description: Hypothetical waterfall for one distribution interval.
+---
+
+```bash
+curl "https://metacenter.0xo.in/api/stress?commit_drop=0.3&price_drop=0.5"
+curl "https://metacenter.0xo.in/api/stress?book_btc=3000&bonds=6"
+```
+
+| Parameter | Range | Default | Meaning |
+|---|---|---|---|
+| `commit_drop` | 0–1 | 0 | Fractional cut to miner BTC commits |
+| `price_drop` | 0–1 | 0 | Fractional cut to the STX price |
+| `book_btc` | 0–21,000,000 | current book | Size of a hypothetical bond book |
+| `bonds` | 1–6 | 6 | Number of equal bonds in the hypothetical book |
+
+The base is the latest distribution at the price of that distribution. With no parameters the result equals the realised figures. Out-of-range values return `400`.
+
+## Live response (payout)
+
+<ApiExample path="/stress?book_btc=3000&bonds=6&price_drop=0.3" pick="payout.value" />

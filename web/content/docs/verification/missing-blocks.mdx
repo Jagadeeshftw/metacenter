@@ -1,0 +1,19 @@
+---
+title: Missing-blocks finding
+description: Why only about two thirds of Bitcoin blocks pay the PoX-5 reward pool.
+---
+
+In distribution 286 (Bitcoin blocks 966,350–967,399), 705 of the 1,050 blocks paid the pool, 230,952,500 sats in miner commits. The other 345 blocks paid nothing.
+
+## Why
+
+- **No sortition.** In every one of the 345 non-paying blocks, no Stacks block-commit was confirmed, so there was no sortition. Hiro's `/v3/sortitions/burn_height/{h}` shows `was_sortition: false` for all 345.
+- **Nothing is burned.** Under PoX-5, every valid commit pays exactly one output to the sBTC deposit address, including in the prepare phase (stacks-core 4.0.1, `leader_block_commit.rs:752-827`).
+- **Not new.** The same ~30% no-sortition rate existed under PoX-4: blocks 958,100–958,199 had 73 sortitions in 100 blocks.
+- **Who pays.** Five miners each commit a fixed amount. Together that is 332,500 sats per block.
+
+## What it means for the stress model
+
+`pool per interval ≈ 1,050 × paying fraction (0.66–0.72 observed) × per-block spend`. The commit-drop slider cuts that total, whether from fewer paying blocks, fewer miners or lower spend.
+
+Evidence (sortitions, commits, per-block totals): [`research/missing-blocks`](https://github.com/Jagadeeshftw/metacenter/tree/main/research/missing-blocks).

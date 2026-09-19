@@ -1,0 +1,37 @@
+---
+title: Quickstart
+description: Read the current figures in under a minute, from the dashboard, the API or a contract.
+---
+
+<Steps>
+<Step>
+
+### Open the dashboard
+
+[metacenter.0xo.in/dashboard](https://metacenter.0xo.in/dashboard) shows coverage, headroom, the bond payout order, the reserve, STX-only yield and a stress test. Hover a provenance tag to see what it means.
+
+</Step>
+<Step>
+
+### Call the API
+
+```bash
+curl https://metacenter.0xo.in/api/metrics/current
+```
+
+Every metric comes back as `{ value, unit, provenance, source }`. See [Coverage](/docs/metrics/coverage) for what each figure means.
+
+</Step>
+<Step>
+
+### Read it from a contract
+
+```clarity
+;; any contract that implements risk-feed-trait
+(contract-call? .risk-feed get-coverage-summary)
+```
+
+See [Read coverage from your contract](/docs/integrate/read-coverage) and [Deployments](/docs/contracts/deployments) for contract IDs.
+
+</Step>
+</Steps>

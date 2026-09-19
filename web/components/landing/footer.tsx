@@ -9,6 +9,7 @@ export function Footer({ hasLogo, reader, feed }: { hasLogo: boolean; reader: st
     { title: "Dashboard", href: "/dashboard" },
     { title: "Stress test", href: "/dashboard/stress" },
     { title: "Methodology", href: "/methodology" },
+    { title: "Docs", href: "/docs" },
     { title: "API reference", href: "/api-reference" },
   ];
   const contracts = [

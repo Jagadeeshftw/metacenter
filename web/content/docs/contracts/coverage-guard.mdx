@@ -1,0 +1,31 @@
+---
+title: "Example: coverage-guard"
+description: A minimal consumer that pauses when coverage is thin or the feed is stale.
+---
+
+`coverage-guard` shows how a contract can gate an action on a risk feed. For example, a levered staking vault could stop taking deposits. It is an example, not used by anything else. Simplified excerpt:
+
+```clarity
+(define-public (check (feed <risk-feed>))
+  (begin
+    (asserts! (is-eq (contract-of feed) TRUSTED_FEED) ERR_UNTRUSTED_FEED)
+    (let ((summary (try! (contract-call? feed get-coverage-summary)))
+          (age (- burn-block-height (get updated-at summary)))
+          (stale (> age (var-get max-age-blocks)))
+          (thin (match (get coverage-bps summary) c (< c MIN_COVERAGE_BPS) false)))
+      (ok { status: (if (or stale thin) "paused" "ok"),
+            coverage-bps: (get coverage-bps summary), stale: stale,
+            provenance: (get provenance summary) }))))
+```
+
+- **Paused** below 2.0× coverage (`MIN_COVERAGE_BPS u20000`), or when the feed is older than `max-age-blocks`.
+- **ok** when coverage is n/a (no bonds to protect).
+- `max-age-blocks` is owner-settable because Bitcoin block rates differ between networks. The testnet deployment uses 5,300 (about two mainnet intervals at testnet's ~4-minute blocks).
+
+| Code | Meaning |
+|---|---|
+| `u200` | Untrusted feed |
+| `u201` | Not the owner (`set-max-age-blocks`) |
+| feed errors | Passed through, e.g. `u104` no data |
+
+Full source: [`contracts/contracts/coverage-guard.clar`](https://github.com/Jagadeeshftw/metacenter/blob/main/contracts/contracts/coverage-guard.clar)

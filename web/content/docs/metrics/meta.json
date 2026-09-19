@@ -1,0 +1,12 @@
+{
+ "pages": [
+  "coverage",
+  "headroom",
+  "obligation",
+  "payout-order",
+  "reserve",
+  "stx-yield",
+  "cliff",
+  "stress"
+ ]
+}

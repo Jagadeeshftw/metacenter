@@ -1,0 +1,32 @@
+---
+title: Coverage
+description: The reward pool divided by what bonds are owed.
+---
+
+**Now:** <Metric name="coverage" />
+
+## Definition
+
+`coverage = gross pool ÷ obligation`, for one distribution interval or, on-chain, over the distributions computed so far in a cycle.
+
+- **Unit:** × (a ratio).
+- **Below 1.0×** bonds are short-paid, and STX-only stakers and the reserve get nothing.
+- **n/a** when there are no bonds (nothing is owed). Cycles 141 and 142 had no bonds.
+
+## Sources
+
+| Figure | Label | Source |
+|---|---|---|
+| Coverage for a cycle | <Tag kind="onchain" /> | <Fn name="get-coverage-for-cycle" /> → `coverage-bps` |
+| Coverage per distribution | <Tag kind="mirrored" /> | `calculate-rewards` event (`gross-accrued-rewards`) ÷ Σ `target-yield` of the `bond-distribution` events |
+
+The on-chain figure rebuilds the pool from rewards-per-token × shares. Integer truncation makes it accurate to within ±2 sats per computed interval.
+
+<Callout type="warn" title="Not Hiro's waterfall.bonds">
+Hiro's `rewards.btc.waterfall.bonds` is the amount *paid* to bonds, not the amount *owed*. In a shortfall, coverage computed from it would read 1.0×. Metacenter always uses the target.
+</Callout>
+
+## Reference lines
+
+- **1.0×**: bond yield is impaired.
+- **2.0×**: the coverage target cited in the [Bitcoin Staking SIP discussion](https://forum.stacks.org/t/introducing-the-bitcoin-staking-sip-v1-draft/18862/14).

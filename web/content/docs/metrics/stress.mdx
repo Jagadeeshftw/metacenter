@@ -1,0 +1,24 @@
+---
+title: Stress test
+description: Split one distribution under a hypothetical pool or bond book, in pox-5's payout order.
+---
+
+The stress test takes the latest distribution as its base and applies:
+
+- **Miner BTC commit drop:** cuts the pool directly.
+- **STX price drop:** cuts the pool (assuming miner bids scale with price) and lowers the price used for the APY.
+- **Book:** the current bonds, or a hypothetical book of 1–6 equal bonds (3% target, stx-value-ratios stepped 5% apart).
+
+`pool = base_pool × (1 − commit_drop) × (1 − price_drop)`, then bonds are paid in pox-5 order, 15% of the remainder goes to the reserve, and the rest to STX-only stakers.
+
+## Examples (live)
+
+- **No stress** reproduces the realised figures: <Stress q="" show={["coverage", "apy"]} />
+- **50% commit drop:** <Stress q="?commit_drop=0.5" show={["pool", "coverage", "apy"]} />
+- **3,000 BTC book, 30% price drop:** <Stress q="?book_btc=3000&bonds=6&price_drop=0.3" show={["coverage", "shortfall", "payout"]} />
+
+## What the miner-commit model rests on
+
+The pool per interval is the sum of confirmed miner commits to the sBTC deposit address. That is roughly 1,050 blocks × the paying fraction × per-block spend. See [Missing-blocks finding](/docs/verification/missing-blocks).
+
+Try it on the [dashboard](https://metacenter.0xo.in/dashboard/stress) or through [`/stress`](/docs/api/stress).

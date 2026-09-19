@@ -1,0 +1,25 @@
+---
+title: Read coverage from your contract
+description: Call get-coverage-summary on pox5-reader (mainnet) or risk-feed (testnet).
+---
+
+Both feeds implement [risk-feed-trait](/docs/contracts/risk-feed-trait), so a contract can take either as a trait argument.
+
+```clarity
+(use-trait risk-feed '<deployer>.risk-feed-trait.risk-feed-trait)
+
+(define-read-only (coverage-bps-of (summary { period: uint, period-kind: (string-ascii 8),
+    pool-sats: uint, obligation-sats: uint, coverage-bps: (optional uint),
+    headroom-bps: (optional uint), updated-at: uint, provenance: (string-ascii 12) }))
+  (get coverage-bps summary))
+
+(define-public (read (feed <risk-feed>))
+  (let ((summary (try! (contract-call? feed get-coverage-summary))))
+    (ok (coverage-bps-of summary))))
+```
+
+Replace `<deployer>` with the address from [Deployments](/docs/contracts/deployments).
+
+- Trait calls are not allowed from read-only functions in Clarity, so put the call in a public function.
+- To read pox5-reader directly from a read-only function, call it by its full contract ID instead of through the trait.
+- `coverage-bps` is `none` when there are no bonds. Decide what your contract should do in that case.

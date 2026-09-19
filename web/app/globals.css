@@ -1,5 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -151,4 +153,31 @@ input[type="range"].slider {
   html {
     scroll-behavior: auto;
   }
+}
+
+/* Fumadocs (docs site) mapped to the site palette. Covers .dark too (same specificity as the
+   preset's .dark block) and comes later, so it wins; the tokens themselves switch per theme. */
+:root,
+.dark {
+  --color-fd-background: var(--background);
+  --color-fd-foreground: var(--foreground);
+  --color-fd-muted: var(--surface-2);
+  --color-fd-muted-foreground: var(--muted);
+  --color-fd-popover: var(--surface);
+  --color-fd-popover-foreground: var(--foreground);
+  --color-fd-card: var(--surface);
+  --color-fd-card-foreground: var(--foreground);
+  --color-fd-border: var(--border);
+  --color-fd-primary: var(--brand);
+  --color-fd-primary-foreground: #ffffff;
+  --color-fd-secondary: var(--surface-2);
+  --color-fd-secondary-foreground: var(--foreground);
+  --color-fd-accent: var(--brand-soft);
+  --color-fd-accent-foreground: var(--foreground);
+  --color-fd-ring: var(--brand);
+}
+.dark #nd-sidebar {
+  --color-fd-muted: var(--surface-2);
+  --color-fd-secondary: var(--surface-2);
+  --color-fd-muted-foreground: var(--muted);
 }

@@ -1,0 +1,19 @@
+---
+title: Headroom
+description: How far the reward pool can fall before bond yield is impaired.
+---
+
+**Now:** <Metric name="headroom" />
+
+## Definition
+
+`headroom = 1 − obligation ÷ pool = 1 − 1/coverage`, as a percentage. It is 0% in a shortfall and n/a when there are no bonds.
+
+It is price-free: it says how much the pool can shrink, whatever the cause (fewer miner commits, a lower STX price, or both).
+
+## Sources
+
+| Figure | Label | Source |
+|---|---|---|
+| Headroom | <Tag kind="onchain" /> | <Fn name="get-coverage-summary" /> → `headroom-bps` |
+| Headroom per distribution | <Tag kind="mirrored" /> | `/api/intervals` → `headroom` |

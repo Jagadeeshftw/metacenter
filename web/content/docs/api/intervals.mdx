@@ -1,0 +1,14 @@
+---
+title: GET /intervals
+description: Every pox-5 distribution since cycle 141, with cross-check results.
+---
+
+```bash
+curl https://metacenter.0xo.in/api/intervals
+```
+
+Each item has the distribution index, cycle, calculation height and txid. It also has `gross_pool`, `obligation`, `bond_paid`, `shortfall`, `stx_only`, `reserve_deposit`, `reserve_balance`, `coverage`, `headroom`, `stx_only_yield`, `stx_only_apy_btc`, `price` and `cliff_price`, plus `crosscheck` and `risk_feed` publication status.
+
+## Live response (latest item)
+
+<ApiExample path="/intervals" pick="intervals" first />

@@ -1,0 +1,34 @@
+---
+title: risk-feed
+description: Publisher-gated mirror of mainnet distributions on testnet, storing raw inputs and deriving metrics on-chain.
+---
+
+`risk-feed` runs on **testnet** and its values **mirror mainnet data** (<Tag kind="mirrored" />). The publisher posts only raw inputs from each mainnet `calculate-rewards` event plus a price. The contract checks that they add up the way pox-5 splits a pool, then derives every metric itself, so anyone can recompute each figure from the stored inputs.
+
+## Functions
+
+| Function | Kind | Arguments | Returns / effect |
+|---|---|---|---|
+| `post-snapshot` | public, publisher only | `index uint`, the raw inputs tuple (cycle, calculation height, source txid, gross, bond target, bond paid, STX-only, reserve deposit, reserve balance, STX shares, price e6, price source, price timestamp) | Stores the inputs and derived metrics; prints `metacenter-snapshot` |
+| `derive` | read-only | `gross, target, paid, stx-only, reserve-balance, stx-shares, price-e6` | `{ coverage-bps, headroom-bps, shortfall-sats, reserve-cover-cycles-x100, stx-yield-sats-per-stx-e9, cliff-sats-per-stx-e6 }` |
+| `get-snapshot` | read-only | `index uint` | optional record |
+| `get-latest-index` / `get-latest-snapshot` | read-only | none | the newest distribution index / its record |
+| `get-coverage-summary` | read-only | none | trait summary, `period-kind: "interval"`, `provenance: "mirrored"` |
+| `set-publisher` / `set-owner` | public, owner only | `principal` | Rotate the publisher / transfer ownership |
+| `get-owner` / `get-publisher` | read-only | none | `principal` |
+
+## Errors
+
+| Code | Meaning |
+|---|---|
+| `u100` | Not the owner |
+| `u101` | Not the publisher |
+| `u102` | Index already posted (no overwrites) |
+| `u103` | Inputs do not add up the way pox-5 splits them |
+| `u104` | No data yet |
+
+## Consistency checks on every post
+
+- bond paid ≤ gross, and bond paid = min(gross, target)
+- reserve deposit = 15% of the remainder, or the whole remainder when no STX is staked
+- bond paid + STX-only + reserve deposit = gross

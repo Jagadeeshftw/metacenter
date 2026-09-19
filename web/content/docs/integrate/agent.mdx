@@ -1,0 +1,20 @@
+---
+title: Use the API from an agent
+description: Fetch figures with their provenance and sources, and cite them correctly.
+---
+
+```ts
+const r = await fetch("https://metacenter.0xo.in/api/metrics/current");
+const m = await r.json();
+
+// Every metric carries value, unit, provenance and source.
+const cov = m.coverage.value ?? m.latest_interval.coverage.value;
+console.log(`coverage ${cov}× (${m.coverage.provenance}), block ${m.as_of.burn_height}`);
+```
+
+## Guidance
+
+- **Keep the provenance.** Report `hypothetical` values as hypothetical, and do not present `mirrored` price-based figures as on-chain.
+- **Cite the block height** (`as_of.burn_height`) with any number you repeat.
+- **Handle nulls.** onchain fields are `null` when pox5-reader is unavailable. Fall back to `latest_interval` and say it is mirrored.
+- **Cache.** The data changes at most every ~10 minutes; see [Rate limits](/docs/api/rate-limits).

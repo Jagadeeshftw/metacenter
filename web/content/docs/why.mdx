@@ -1,0 +1,19 @@
+---
+title: Why Metacenter
+description: What PoX-5 changes for stakers, and why the numbers need to be public and checkable.
+---
+
+PoX-5 splits each distribution of the reward pool in a fixed order: bonds first, then 15% of what remains to a reserve, then STX-only stakers. That order is enforced in the contract, so the risks follow directly from it:
+
+- **Bonds can be short-paid** when the pool is smaller than what they are owed, and the last bonds in the <a href="/docs/concepts/payout#bond-order">payout order</a> absorb it first.
+- **The reserve cannot help.** It only accrues; the function that could pay out of it is private and never called (<Pox5 lines="2696" />).
+- **STX-only stakers are paid last**, so their yield moves the most when the pool shrinks.
+
+These questions came up in the public SIP discussion. Metacenter's answer is to compute the figures from contract state and events, label every figure with where it came from, and let anyone recompute it.
+
+## Principles
+
+1. **Only public data.** pox-5 state, pox-5 events, Bitcoin miner commits and a public price source.
+2. **Every number has a source.** Each figure carries a <a href="/docs/concepts/provenance">provenance label</a> and names the function, event or field it came from.
+3. **Hypotheticals are labelled.** Stress tests and what-ifs are never mixed with measured values.
+4. **If it cannot be recomputed, it is not shown.**

@@ -1,0 +1,16 @@
+---
+title: Provenance labels
+description: Every figure carries exactly one label - onchain, mirrored or hypothetical.
+---
+
+| Label | Meaning | Examples |
+|---|---|---|
+| <Tag kind="onchain" /> | Computed by the `pox5-reader` contract on mainnet from pox-5 state at call time. | Coverage for a cycle, headroom, obligation, payout order, reserve, pending pool |
+| <Tag kind="mirrored" /> | Posted by the publisher from mainnet events, the Hiro API or a price source, and stored with its raw inputs on the testnet `risk-feed`. | Per-distribution pool and obligation, STX-only yield, anything priced in sats/STX |
+| <Tag kind="hypothetical" /> | A stress test or what-if, always shown with its assumption. | Stress results, the 3,000 BTC book, cliff prices under assumed inputs |
+
+## Rules
+
+- **Exactly one label per figure.** The API returns it as the `provenance` field of every metric.
+- **Price-based figures are never onchain.** The STX/BTC price is not on-chain, so anything that uses it is mirrored or hypothetical.
+- **The dashboard prefers onchain.** When `pox5-reader` is unavailable, a headline figure falls back to the latest distribution and says `mirrored`.

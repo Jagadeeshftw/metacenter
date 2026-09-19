@@ -1,0 +1,20 @@
+---
+title: STX-only realised yield
+description: What STX-only stakers earned per STX, and the annualised BTC-terms equivalent.
+---
+
+**Latest:** <Metric name="yieldPerStx" />, or <Metric name="apy" /> a year in BTC terms.
+
+## Definition
+
+- **Per STX:** `total-stx-staker-rewards ÷ cycle-staked-ustx × 1,000,000`, in sats per STX for one distribution.
+- **APY (BTC terms):** `per-STX yield × 50 ÷ STX/BTC price`, using the price at that distribution (an hourly price nearest to the `calculate-rewards` block).
+
+Because the APY uses a price, it is <Tag kind="mirrored" />. The price source (CoinGecko, with a Coinbase fallback) and timestamp are stored with every distribution.
+
+## Sources
+
+| Figure | Label | Source |
+|---|---|---|
+| Per STX | <Tag kind="mirrored" /> | `calculate-rewards` event; testnet `risk-feed` → `stx-yield-sats-per-stx-e9` |
+| APY | <Tag kind="mirrored" /> | `/api/intervals` → `stx_only_apy_btc` |

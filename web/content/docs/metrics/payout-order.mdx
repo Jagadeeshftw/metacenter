@@ -1,0 +1,18 @@
+---
+title: Bond payout order
+description: The order pox-5 pays bonds in, and who is short-paid first.
+---
+
+pox-5 pays bonds in **descending stx-value-ratio**, ties to the **lower bond index**, and each bond receives `min(target, what is left)`. The contract enforces the order (<Pox5 lines="2285-2299" />).
+
+## Current order
+
+<ApiExample path="/bonds/order" pick="order.value" />
+
+## Sources
+
+| Figure | Label | Source |
+|---|---|---|
+| Payout order | <Tag kind="onchain" /> | <Fn name="get-bond-payout-order" /> |
+
+The [stress test](/docs/metrics/stress) applies the same order to a hypothetical pool or book, so you can see which bonds would be paid in full, in part or not at all.

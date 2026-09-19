@@ -1,0 +1,23 @@
+{
+ "title": "Metacenter",
+ "pages": [
+  "---Welcome---",
+  "index",
+  "why",
+  "quickstart",
+  "---Concepts---",
+  "...concepts",
+  "---Metrics---",
+  "...metrics",
+  "---Contracts---",
+  "...contracts",
+  "---API---",
+  "...api",
+  "---Integrate---",
+  "...integrate",
+  "---Verification---",
+  "...verification",
+  "---Resources---",
+  "...resources"
+ ]
+}
