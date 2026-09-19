@@ -1,4 +1,6 @@
-research/
-contracts/
-indexer/
+/research/
+/contracts/
+/indexer/
+/marketing/
+/demo/
 **/node_modules
