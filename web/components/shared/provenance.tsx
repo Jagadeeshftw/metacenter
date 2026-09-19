@@ -23,11 +23,28 @@ export function ProvenanceGlyph({ kind, size = 9 }: { kind: Provenance; size?: n
   );
 }
 
+const MEANING: Record<Provenance, string> = {
+  onchain: "Computed by the pox5-reader contract on mainnet from pox-5 state.",
+  mirrored: "Posted by the publisher from mainnet events, the Hiro API or a price source, with its raw inputs.",
+  hypothetical: "A stress test or what-if, shown with its assumption.",
+};
+
+// The tag explains itself on hover or keyboard focus (no animation).
 export function ProvenanceTag({ kind, className }: { kind: Provenance; className?: string }) {
   return (
-    <span className={cn("inline-flex items-center gap-1.5 text-xs text-muted", className)}>
+    <span
+      tabIndex={0}
+      aria-label={`${kind}: ${MEANING[kind]}`}
+      className={cn("group relative inline-flex cursor-help items-center gap-1.5 text-xs text-muted outline-none", className)}
+    >
       <ProvenanceGlyph kind={kind} />
       {kind}
+      <span
+        role="tooltip"
+        className="pointer-events-none absolute right-0 top-full z-20 mt-2 hidden w-64 rounded-lg border border-line bg-surface px-3 py-2 text-left text-xs leading-relaxed text-foreground shadow-[0_12px_32px_var(--shadow)] group-hover:block group-focus-visible:block"
+      >
+        <b className="font-medium">{kind}</b> · {MEANING[kind]}
+      </span>
     </span>
   );
 }
