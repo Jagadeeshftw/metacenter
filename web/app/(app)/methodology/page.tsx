@@ -3,19 +3,27 @@ import { site } from "@/lib/site";
 import { PageHeader, Panel } from "@/components/dash/ui";
 import { ProvenanceGlyph, ProvenanceLegend } from "@/components/shared/provenance";
 import type { Provenance } from "@/lib/api";
+import readerLines from "@/data/reader-lines.json";
+
+// Link a pox5-reader function name to its line in the contract source (the commit that is deployed).
+const fnUrl = (fn: string) => {
+  const line = (readerLines.lines as Record<string, number>)[fn];
+  return line ? `${site.repo}/blob/${readerLines.commit}/${readerLines.path}#L${line}` : null;
+};
+const POX5_SRC = `${site.repo}/blob/main/research/pox-5.deployed.clar`;
 
 export const revalidate = 300;
 export const metadata = { title: "Methodology", alternates: { canonical: "/methodology" }, openGraph: { url: "/methodology" } };
 
 const R = "pox5-reader";
-const ROWS: { metric: string; formula: string; unit: string; label: Provenance; source: string; api: string }[] = [
-  { metric: "Coverage (cycle)", formula: "pool ÷ obligation, over the cycle's computed distributions", unit: "×", label: "onchain", source: `${R}::get-coverage-for-cycle(cycle) → coverage-bps`, api: "/metrics/current coverage · /metrics/cycles/:n coverage" },
-  { metric: "Headroom", formula: "1 − obligation ÷ pool", unit: "%", label: "onchain", source: `${R}::get-coverage-summary → headroom-bps`, api: "/metrics/current headroom" },
-  { metric: "Obligation per interval", formula: "Σ over active bonds of shares × target-rate ÷ 10000 ÷ 50 (pox-5 L2266)", unit: "sats", label: "onchain", source: `${R}::get-obligation-per-interval(cycle)`, api: "/metrics/current obligation_per_interval" },
-  { metric: "Bond payout order", formula: "descending stx-value-ratio, ties to the lower bond index", unit: "bonds", label: "onchain", source: `${R}::get-bond-payout-order(cycle)`, api: "/bonds/order" },
-  { metric: "Reserve", formula: "pox-5 reserve-balance", unit: "sats", label: "onchain", source: `${R}::get-reserve`, api: "/metrics/current reserve" },
-  { metric: "Hypothetical cover", formula: "reserve ÷ (2 × obligation per interval)", unit: "cycles", label: "onchain", source: `${R}::get-reserve-cover-cycles(cycle)`, api: "/metrics/current reserve_cover" },
-  { metric: "Pending pool", formula: "sBTC balance − staked − reserve − accounted (never aborts)", unit: "sats", label: "onchain", source: `${R}::get-pending-pool`, api: "/metrics/current pending_pool" },
+const ROWS: { metric: string; formula: string; unit: string; label: Provenance; source: string; api: string; fn?: string }[] = [
+  { fn: "get-coverage-for-cycle", metric: "Coverage (cycle)", formula: "pool ÷ obligation, over the cycle's computed distributions", unit: "×", label: "onchain", source: `${R}::get-coverage-for-cycle(cycle) → coverage-bps`, api: "/metrics/current coverage · /metrics/cycles/:n coverage" },
+  { fn: "get-coverage-summary", metric: "Headroom", formula: "1 − obligation ÷ pool", unit: "%", label: "onchain", source: `${R}::get-coverage-summary → headroom-bps`, api: "/metrics/current headroom" },
+  { fn: "get-obligation-per-interval", metric: "Obligation per interval", formula: "Σ over active bonds of shares × target-rate ÷ 10000 ÷ 50 (pox-5 L2266)", unit: "sats", label: "onchain", source: `${R}::get-obligation-per-interval(cycle)`, api: "/metrics/current obligation_per_interval" },
+  { fn: "get-bond-payout-order", metric: "Bond payout order", formula: "descending stx-value-ratio, ties to the lower bond index", unit: "bonds", label: "onchain", source: `${R}::get-bond-payout-order(cycle)`, api: "/bonds/order" },
+  { fn: "get-reserve", metric: "Reserve", formula: "pox-5 reserve-balance", unit: "sats", label: "onchain", source: `${R}::get-reserve`, api: "/metrics/current reserve" },
+  { fn: "get-reserve-cover-cycles", metric: "Hypothetical cover", formula: "reserve ÷ (2 × obligation per interval)", unit: "cycles", label: "onchain", source: `${R}::get-reserve-cover-cycles(cycle)`, api: "/metrics/current reserve_cover" },
+  { fn: "get-pending-pool", metric: "Pending pool", formula: "sBTC balance − staked − reserve − accounted (never aborts)", unit: "sats", label: "onchain", source: `${R}::get-pending-pool`, api: "/metrics/current pending_pool" },
   { metric: "Pool per distribution", formula: "gross-accrued-rewards", unit: "sats", label: "mirrored", source: "calculate-rewards event; risk-feed gross-pool-sats", api: "/intervals gross_pool" },
   { metric: "Owed per distribution", formula: "Σ target-yield of bond-distribution events", unit: "sats", label: "mirrored", source: "bond-distribution events; risk-feed bond-target-sats", api: "/intervals obligation" },
   { metric: "Coverage per distribution", formula: "pool ÷ owed; n/a when nothing is owed", unit: "×", label: "mirrored", source: "risk-feed coverage-bps (derived on-chain from posted inputs)", api: "/intervals coverage" },
@@ -23,7 +31,7 @@ const ROWS: { metric: string; formula: string; unit: string; label: Provenance; 
   { metric: "STX-only realised yield", formula: "total-stx-staker-rewards ÷ cycle-staked-ustx × 1e6", unit: "sats/STX", label: "mirrored", source: "calculate-rewards event; risk-feed stx-yield-sats-per-stx-e9", api: "/intervals stx_only_yield" },
   { metric: "STX-only APY (BTC terms)", formula: "yield × 50 ÷ STX/BTC price at the distribution", unit: "%", label: "mirrored", source: "price: CoinGecko hourly (Coinbase STX-USD/BTC-USD fallback), stored with source and timestamp", api: "/intervals stx_only_apy_btc" },
   { metric: "Cliff price", formula: "price × obligation ÷ pool (assumes miner bids scale with price)", unit: "sats/STX", label: "mirrored", source: "risk-feed cliff-sats-per-stx-e6", api: "/metrics/current cliff.price" },
-  { metric: "Stress results", formula: "pool × (1 − commit drop) × (1 − price drop), split in pox-5 order", unit: "sats, ×, %", label: "hypothetical", source: `/stress; ${R}::simulate-waterfall for the current book`, api: "/stress" },
+  { fn: "simulate-waterfall", metric: "Stress results", formula: "pool × (1 − commit drop) × (1 − price drop), split in pox-5 order", unit: "sats, ×, %", label: "hypothetical", source: `/stress; ${R}::simulate-waterfall for the current book`, api: "/stress" },
 ];
 
 export default async function Methodology() {
@@ -68,7 +76,25 @@ export default async function Methodology() {
                       {r.label}
                     </span>
                   </td>
-                  <td className="num py-3 pr-3 text-xs">{r.source}</td>
+                  <td className="num py-3 pr-3 text-xs">
+                    {r.fn && fnUrl(r.fn) ? (
+                      <>
+                        <a className="text-brand underline-offset-4 hover:underline" href={fnUrl(r.fn)!}>
+                          {r.source}
+                        </a>
+                        {meta?.reader && (
+                          <>
+                            {" · "}
+                            <a className="text-muted underline-offset-4 hover:underline" href={site.explorer(meta.reader, "mainnet")}>
+                              mainnet contract
+                            </a>
+                          </>
+                        )}
+                      </>
+                    ) : (
+                      r.source
+                    )}
+                  </td>
                   <td className="num py-3 text-xs text-muted">{r.api}</td>
                 </tr>
               ))}
@@ -85,7 +111,9 @@ export default async function Methodology() {
           <li>15% of what remains goes to the reserve (L2190); STX-only stakers get the other 85%.</li>
           <li>The reserve never pays bonds. transfer-from-reserve (L2696) is private and never called; that needs a SIP. In a shortfall the reserve stays flat.</li>
         </ol>
-        <p className="text-xs text-subtle">Line numbers refer to the deployed source, identical to stacks-core tag 4.0.1 (commit 62e03cc).</p>
+        <p className="text-xs text-subtle">
+          Line numbers refer to the <a className="underline underline-offset-4" href={POX5_SRC}>deployed source</a>, identical to stacks-core tag 4.0.1 (commit 62e03cc).
+        </p>
       </Panel>
 
       <Panel title="The zero-yield cliff">

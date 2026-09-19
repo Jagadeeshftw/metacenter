@@ -1,0 +1,20 @@
+{
+ "commit": "2de7bebde9d16c434accef1168a178db43dd7ce0",
+ "path": "contracts/contracts/pox5-reader.clar",
+ "lines": {
+  "get-current-cycle": 51,
+  "get-cycle-calc-heights": 57,
+  "get-intervals-computed": 85,
+  "bond-target-per-interval": 99,
+  "get-bond-payout-order": 253,
+  "get-obligation-per-interval": 283,
+  "get-reserve": 291,
+  "get-reserve-cover-cycles": 298,
+  "get-coverage-for-cycle": 344,
+  "get-pending-pool": 396,
+  "simulate-waterfall": 446,
+  "get-snapshot": 485,
+  "snapshot": 491,
+  "get-coverage-summary": 539
+ }
+}
