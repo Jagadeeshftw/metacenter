@@ -6,7 +6,7 @@ Drafts only. Nothing here has been posted, and no social account has been touche
 
 **Where the numbers come from:** all figures were read from the live public API at `https://metacenter.0xo.in/api`.
 
-- Indexer poll at **Bitcoin block 967,688** (2026-09-19 09:34:31 UTC).
+- Indexer poll at **Bitcoin block 967,716** (2026-09-19 14:44:31 UTC).
 - Distribution figures are from **distribution 286**: cycle 143, calculation height 967,399.
 - Re-read them before posting. The next distribution is due after Bitcoin block 968,449, and any post can cite that one instead.
 
@@ -18,7 +18,6 @@ Drafts only. Nothing here has been posted, and no social account has been touche
 | Stacks Endowment | @StacksEndowment |
 | Hiro | @hirosystems |
 | Zest | @ZestProtocol |
-| StackingDAO | @StackingDao |
 | friedger | @friedger |
 
 **Clips** are in `marketing/clips/`: `<id>-1280x720.mp4` and `<id>-1080x1080.mp4`, plus a still `.png` of each for the fallback.
@@ -48,23 +47,18 @@ https://metacenter.0xo.in
 
 ## Day 1 · Slot 2
 
-**Status:** ready · **Clip:** none (use the `b-headroom-coverage-1280x720.png` still if an image is wanted) · **Tags:** @StackingDao (TO VERIFY)
+**Status:** ready · **Clip:** none (text) · **Tags:** none (moved from Day 3 · Slot 2)
 
 ```text
-STX-only stakers in PoX-5 are paid last: after bonds, and after 15% of the remainder goes to the reserve.
+Why did only 705 of 1,050 Bitcoin blocks in the latest PoX-5 distribution pay the reward pool?
 
-In the latest distribution that still came to 0.42 sats per STX, or 6.67% a year in BTC terms at that day's STX/BTC price.
-
-https://metacenter.0xo.in/dashboard/yield
-
-@StackingDao
+No miner commit was confirmed in the other 345, so there was no sortition. Nothing is burned under PoX-5: every commit pays the sBTC address. PoX-4 had the same ~30% gap.
 ```
 
 **Sources:**
-- 0.42 sats per STX: `/api/intervals` → distribution 286 `stx_only_yield` = 0.4202.
-- 6.67%: `stx_only_apy_btc` = 0.0667, priced at 315.01 sats/STX (`price`, CoinGecko hourly at the distribution).
-- 15%: pox-5 `RESERVE_RATIO u1500` (L107, applied at L2190).
-- Block: distribution 286, calculation height 967,399; read at block 967,686.
+- 705 / 1,050 and 345: Hiro `/extended/v1/burnchain/rewards` and `/v3/sortitions/burn_height/{h}` over blocks 966,350–967,399 (distribution 286); see `research/missing-blocks/README.md`.
+- Nothing burned: stacks-core 4.0.1 `leader_block_commit.rs:752-827`.
+- ~30% under PoX-4: 73 of 100 sortitions at blocks 958,100–958,199.
 
 ## Day 2 · Slot 1
 
@@ -120,19 +114,23 @@ Dashboard: "hypothetical cover, 5.52 cycles".
 - Block: calculation height 967,399; read at block 967,686.
 
 ## Day 3 · Slot 2
-
-**Status:** ready · **Clip:** none (text) · **Tags:** none
+**Status:** ready · **Clip:** none (use the `b-headroom-coverage-1280x720.png` still if an image is wanted) · **Tags:** none (moved from Day 1 · Slot 2; the StackingDAO tag is removed)
 
 ```text
-Why did only 705 of 1,050 Bitcoin blocks in the latest PoX-5 distribution pay the reward pool?
+Realised STX-only yield in PoX-5 distribution 286: 0.42 sats per STX, or 6.67% a year in BTC terms at that distribution's STX/BTC price.
 
-No miner commit was confirmed in the other 345, so there was no sortition. Nothing is burned under PoX-5: every commit pays the sBTC address. PoX-4 had the same ~30% gap.
+It's mirrored and price-based: sBTC paid after bonds and the 15% reserve cut, not an STX APY.
+
+https://metacenter.0xo.in/dashboard/yield
 ```
 
 **Sources:**
-- 705 / 1,050 and 345: Hiro `/extended/v1/burnchain/rewards` and `/v3/sortitions/burn_height/{h}` over blocks 966,350–967,399 (distribution 286); see `research/missing-blocks/README.md`.
-- Nothing burned: stacks-core 4.0.1 `leader_block_commit.rs:752-827`.
-- ~30% under PoX-4: 73 of 100 sortitions at blocks 958,100–958,199.
+- 0.42 sats per STX: `/api/intervals` → distribution 286 `stx_only_yield` = 0.4202.
+- 6.67%: `stx_only_apy_btc` = 0.0667, priced at 315.01 sats/STX (`price`, CoinGecko hourly at the distribution).
+- 15%: pox-5 `RESERVE_RATIO u1500` (L107, applied at L2190).
+- Block: distribution 286, calculation height 967,399.
+
+**Wording rule:** keep "realised", "in BTC terms" and "not an STX APY", so it can't be read as contradicting a liquid-stacking protocol's published STX APY.
 
 ## Day 4 · Slot 1
 
@@ -193,7 +191,7 @@ With a 30% STX price drop on top, the last bond in the payout order would be sho
 ```
 
 ```text
-2/ At today's pool, that hypothetical book puts the zero-yield cliff near 276 sats/STX (assuming miner bids track the STX price).
+2/ At today's pool, that hypothetical book puts the zero-yield cliff near 296 sats/STX (assuming miner bids track the STX price).
 
 Credit to @friedger for the original derivation: 171.2 sats/STX under the SIP's launch inputs. Both are hypothetical.
 ```
@@ -202,7 +200,7 @@ Credit to @friedger for the original derivation: 171.2 sats/STX under the SIP's 
 - 180M sats: 3,000 BTC × 3% ÷ 50 = 180,000,000 sats; `/api/stress?book_btc=3000&bonds=6` → `obligation` = 180,000,000.
 - 1.28×: same call, `coverage` = 1.2795.
 - 30% drop: `/api/stress?book_btc=3000&bonds=6&price_drop=0.3` → the 6th bond `partial`, `shortfall` = 18,770,516 sats.
-- ~276 sats/STX: `/api/metrics/current` → `cliff.sip_book_scenario` = 276.17 (at current price 353.39 sats/STX, `price`, CoinGecko; block 967,688).
+- ~296 sats/STX: `/api/metrics/current` → `cliff.sip_book_scenario` = 296.45 (at current price 379.34 sats/STX, `price`, CoinGecko; block 967,716).
 - 171.2: `cliff.friedger_sip_inputs` = 171.23; forum.stacks.org/t/18862, post #14.
 - Block: read at block 967,686.
 

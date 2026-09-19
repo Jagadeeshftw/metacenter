@@ -58,6 +58,15 @@ for (const f of FIGURES) {
 console.log(`live: block ${cur.as_of.burn_height}, distribution ${li.distribution_index}\n`);
 console.table(rows);
 if (process.argv.includes("--write")) {
+  // the D5·2 sources line cites the raw scenario value, the price it used and the block
+  const sip = n(cur.cliff.sip_book_scenario.value);
+  text = text.replace(
+    /- ~\d+ sats\/STX: `\/api\/metrics\/current` → `cliff\.sip_book_scenario` = [\d.]+ \(at current price [\d.]+ sats\/STX, `price`, CoinGecko; block [\d,]+\)\./,
+    `- ~${Math.round(sip)} sats/STX: \`/api/metrics/current\` → \`cliff.sip_book_scenario\` = ${sip.toFixed(2)} (at current price ${n(cur.price.value).toFixed(2)} sats/STX, \`price\`, CoinGecko; block ${n(cur.as_of.burn_height).toLocaleString("en-US")}).`,
+  );
+  // and the posts table in marketing/README.md names the cliff
+  const readme = path.join(path.dirname(FILE), "README.md");
+  fs.writeFileSync(readme, fs.readFileSync(readme, "utf8").replace(/~\d+ cliff/, `~${Math.round(sip)} cliff`));
   // keep the read-at timestamp in step with the block number
   text = text.replace(/(- Indexer poll at \*\*Bitcoin block [\d,]+\*\* )\([^)]*\)/, `$1(${cur.as_of.taken_at.replace("T", " ").slice(0, 19)} UTC)`);
   fs.writeFileSync(FILE, text);
