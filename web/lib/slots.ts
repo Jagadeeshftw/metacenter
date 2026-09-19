@@ -1,7 +1,7 @@
 // Build chart slots from API intervals. Every tooltip line keeps its provenance and unit.
 import type { Interval } from "./api";
 import type { Slot } from "@/components/dash/chart";
-import { pct, sats, satsExact, times, satsPerStx } from "./format";
+import { pct, sats, satsM, satsExact, times, satsPerStx } from "./format";
 
 const src = (i: Interval) => `calculate-rewards tx ${i.txid.slice(0, 10)}…${i.txid.slice(-6)}`;
 
@@ -32,8 +32,8 @@ export function coverageSlots(ivs: Interval[]): Slot[] {
     tip: [
       { label: "Coverage", value: i.coverage.value === null ? "n/a (no bonds)" : times(i.coverage.value), provenance: "mirrored" },
       { label: "Headroom", value: pct(i.headroom.value), provenance: "mirrored" },
-      { label: "Pool", value: sats(i.gross_pool.value), provenance: "mirrored" },
-      { label: "Owed", value: sats(i.obligation.value), provenance: "mirrored" },
+      { label: "Pool", value: satsM(i.gross_pool.value), provenance: "mirrored" },
+      { label: "Owed", value: satsM(i.obligation.value), provenance: "mirrored" },
     ],
     source: src(i),
   }));
@@ -48,7 +48,7 @@ export function yieldSlots(ivs: Interval[]): Slot[] {
     tip: [
       { label: "APY (BTC terms)", value: pct(i.stx_only_apy_btc.value, 2), provenance: "mirrored" },
       { label: "Per STX", value: `${(i.stx_only_yield.value ?? 0).toFixed(4)} sats`, provenance: "mirrored" },
-      { label: "STX-only total", value: sats(i.stx_only.value), provenance: "mirrored" },
+      { label: "STX-only total", value: satsM(i.stx_only.value), provenance: "mirrored" },
       { label: "Price", value: satsPerStx(i.price.value), provenance: "mirrored" },
     ],
     source: `${src(i)} · price ${i.price.source}`,

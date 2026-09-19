@@ -15,3 +15,7 @@ phase0.md
 # deployer keys never live in the repo
 *.key
 secrets/
+
+# demo recordings (large binaries, kept locally)
+demo/*.mp4
+demo/*.webm
