@@ -6,24 +6,24 @@ Drafts only. Nothing here has been posted, and no social account has been touche
 
 **Where the numbers come from:** all figures were read from the live public API at `https://metacenter.0xo.in/api`.
 
-- Indexer poll at **Bitcoin block 967,716** (2026-09-19 14:44:31 UTC).
+- Indexer poll at **Bitcoin block 967,720** (2026-09-19 15:44:31 UTC).
 - Distribution figures are from **distribution 286**: cycle 143, calculation height 967,399.
 - Re-read them before posting. The next distribution is due after Bitcoin block 968,449, and any post can cite that one instead.
 
-**Handles:** every handle is marked **TO VERIFY**; none has been checked. The candidates are:
+**Handles:** "VERIFIED" means the organisation's own website links to the handle (checked 2026-09-19; X itself was not opened).
 
-| Organisation | Candidate handle |
-|---|---|
-| Stacks | @Stacks |
-| Stacks Endowment | @StacksEndowment |
-| Hiro | @hirosystems |
-| Zest | @ZestProtocol |
-| friedger | @friedger |
+| Organisation | Handle | Status |
+|---|---|---|
+| Stacks | @Stacks | VERIFIED (stacks.co) |
+| Stacks Endowment | @StacksEndowment | VERIFIED (stacksendowment.co) |
+| Hiro | @hirosystems | VERIFIED (hiro.so) |
+| Zest | @ZestProtocol | VERIFIED (zestprotocol.com) |
+| friedger | @friedger | TO VERIFY (not linked from his GitHub, site or forum profile) |
 
 **Clips** are in `marketing/clips/`: `<id>-1280x720.mp4` and `<id>-1080x1080.mp4`, plus a still `.png` of each for the fallback.
 
 **Status key:**
-- **ready**: can be posted once handles are verified.
+- **ready**: can be posted now (check the @friedger tag first).
 - **waits for mainnet**: needs pox5-reader deployed on mainnet.
 - **waits for submission**: needs your confirmation that the grant application is submitted.
 
@@ -31,7 +31,7 @@ Drafts only. Nothing here has been posted, and no social account has been touche
 
 ## Day 1 · Slot 1 (launch)
 
-**Status:** ready · **Clip:** a-landing-hero · **Tags:** @Stacks, @StacksEndowment (TO VERIFY)
+**Status:** ready · **Clip:** a-landing-hero · **Tags:** @Stacks, @StacksEndowment (VERIFIED)
 
 ```text
 Metacenter is live: a risk feed for Stacks Bitcoin Staking (PoX-5).
@@ -148,7 +148,7 @@ Bonds are paid in descending stx-value-ratio, ties to the lower bond index (pox-
 
 ## Day 4 · Slot 2
 
-**Status:** ready · **Clip:** none (text) · **Tags:** @ZestProtocol (TO VERIFY)
+**Status:** ready · **Clip:** none (text) · **Tags:** @ZestProtocol (VERIFIED)
 
 ```text
 Contracts can read Metacenter too: one trait, get-coverage-summary.
@@ -191,7 +191,7 @@ With a 30% STX price drop on top, the last bond in the payout order would be sho
 ```
 
 ```text
-2/ At today's pool, that hypothetical book puts the zero-yield cliff near 296 sats/STX (assuming miner bids track the STX price).
+2/ At today's pool, that hypothetical book puts the zero-yield cliff near 293 sats/STX (assuming miner bids track the STX price).
 
 Credit to @friedger for the original derivation: 171.2 sats/STX under the SIP's launch inputs. Both are hypothetical.
 ```
@@ -200,7 +200,7 @@ Credit to @friedger for the original derivation: 171.2 sats/STX under the SIP's 
 - 180M sats: 3,000 BTC × 3% ÷ 50 = 180,000,000 sats; `/api/stress?book_btc=3000&bonds=6` → `obligation` = 180,000,000.
 - 1.28×: same call, `coverage` = 1.2795.
 - 30% drop: `/api/stress?book_btc=3000&bonds=6&price_drop=0.3` → the 6th bond `partial`, `shortfall` = 18,770,516 sats.
-- ~296 sats/STX: `/api/metrics/current` → `cliff.sip_book_scenario` = 296.45 (at current price 379.34 sats/STX, `price`, CoinGecko; block 967,716).
+- ~293 sats/STX: `/api/metrics/current` → `cliff.sip_book_scenario` = 293.46 (at current price 375.52 sats/STX, `price`, CoinGecko; block 967,720).
 - 171.2: `cliff.friedger_sip_inputs` = 171.23; forum.stacks.org/t/18862, post #14.
 - Block: read at block 967,686.
 
@@ -208,7 +208,7 @@ Credit to @friedger for the original derivation: 171.2 sats/STX under the SIP's 
 
 ## Day 6 · Slot 1
 
-**Status:** ready · **Clip:** h-methodology-source · **Tags:** @hirosystems (TO VERIFY)
+**Status:** ready · **Clip:** h-methodology-source · **Tags:** @hirosystems (VERIFIED)
 
 ```text
 Every Metacenter number links to its source: a contract function, a mainnet event or an API field. The data comes from pox-5 through the Hiro API, and the public API is open, no key needed.
@@ -247,7 +247,7 @@ pox5-reader is live on Stacks mainnet: a read-only contract that computes PoX-5 
 
 ## Day 7 · Slot 2
 
-**Status:** waits for mainnet and waits for submission · **Clip:** a-landing-hero · **Tags:** @Stacks, @StacksEndowment (TO VERIFY)
+**Status:** waits for mainnet and waits for submission · **Clip:** a-landing-hero · **Tags:** @Stacks, @StacksEndowment (VERIFIED)
 
 ```text
 We've applied to the Stacks Endowment Q3 2026 grants with Metacenter: an open risk feed for Bitcoin Staking, with a mainnet reader contract, a public API and a dashboard.

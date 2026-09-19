@@ -4,6 +4,7 @@ Files only. Nothing is posted from here, and no social account is touched.
 
 | Path | What |
 |---|---|
+| `POSTING-GUIDE.md` | The posts in posting order, ready to copy-paste: clip to attach, handles (VERIFIED or TO VERIFY), status, date and slot. |
 | `posts.md` | 14 post drafts (7 days, 2 per day) and 5 reply templates. Each draft lists the sources of its numbers. |
 | `clips/` | 7-second clips recorded from the live site in the dark theme, with real data: 6 s of footage with the logo watermark, then a 1 s end card. Each clip has a 1280×720 and a 1080×1080 version, H.264 at 30 fps with no audio, plus a still PNG of each size. The `.mp4` files are git-ignored; the PNG stills are committed. |
 | `brand/` | X avatar (400×400) and banner (1500×500), exported from `web/brand/mark.json` by `brand/export.mjs`, which also writes `web/app/favicon.ico`. `x-profile-preview.png` shows the avatar circle-cropped. |
@@ -28,7 +29,7 @@ Recorded at Bitcoin block 967,717 (2026-09-19), with logo C.
 
 ## Posts
 
-| Post | Clip | Tags (TO VERIFY) | Status |
+| Post | Clip | Tags | Status |
 |---|---|---|---|
 | D1 · 1: launch | a | @Stacks @StacksEndowment | ready |
 | D1 · 2: 705 of 1,050 blocks paid, nothing burned | none | none | ready |
@@ -39,7 +40,7 @@ Recorded at Bitcoin block 967,717 (2026-09-19), with logo C.
 | D4 · 1: payout order enforced (L2285–2299) | f | none | ready |
 | D4 · 2: contracts can read it (coverage-guard) | none | @ZestProtocol | ready |
 | D5 · 1: stress, 50% commit drop → 8.34× | d | none | ready |
-| D5 · 2: 3,000 BTC hypothetical, ~296 cliff, friedger 171.2 (thread) | e | @friedger | ready |
+| D5 · 2: 3,000 BTC hypothetical, ~293 cliff, friedger 171.2 (thread) | e | @friedger (TO VERIFY) | ready |
 | D6 · 1: methodology and open API | h | @hirosystems | ready |
 | D6 · 2: every distribution recomputed within 2 sats | c or still h | none | ready |
 | D7 · 1: pox5-reader live on mainnet | i | none | waits for mainnet |
