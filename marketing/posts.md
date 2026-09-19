@@ -18,7 +18,7 @@ Drafts only. Nothing here has been posted, and no social account has been touche
 | Stacks Endowment | @StacksEndowment | VERIFIED (stacksendowment.co) |
 | Hiro | @hirosystems | VERIFIED (hiro.so) |
 | Zest | @ZestProtocol | VERIFIED (zestprotocol.com) |
-| friedger | @friedger | TO VERIFY (not linked from his GitHub, site or forum profile) |
+| friedger | @friedger | TO VERIFY (not linked from the GitHub, personal site or forum profile) |
 
 **Clips** are in `marketing/clips/`: `<id>-1280x720.mp4` and `<id>-1080x1080.mp4`, plus a still `.png` of each for the fallback.
 

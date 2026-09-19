@@ -16,7 +16,7 @@ Copy-paste order for the 14 launch posts. Nothing in this repo posts anything; y
 | @StacksEndowment | VERIFIED | linked from stacksendowment.co (`x.com/StacksEndowment`) |
 | @hirosystems | VERIFIED | linked from hiro.so (`twitter.com/hirosystems`) |
 | @ZestProtocol | VERIFIED | linked from zestprotocol.com (`twitter.com/zestprotocol`) |
-| @friedger | TO VERIFY | not linked from github.com/friedger, friedger.de or his forum.stacks.org profile |
+| @friedger | TO VERIFY | not linked from github.com/friedger, friedger.de or the forum.stacks.org profile |
 
 "VERIFIED" means the organisation's own website links to that handle. X was not opened.
 
