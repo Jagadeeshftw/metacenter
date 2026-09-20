@@ -79,6 +79,11 @@ plan:
       path: contracts/coverage-guard.clar
       clarity-version: 6
     - transaction-type: emulated-contract-publish
+      contract-name: coverage-guard-cached
+      emulated-sender: SP1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRCBGD7R
+      path: contracts/coverage-guard-cached.clar
+      clarity-version: 6
+    - transaction-type: emulated-contract-publish
       contract-name: pox5-reader
       emulated-sender: SP1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRCBGD7R
       path: contracts/pox5-reader.clar

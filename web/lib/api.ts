@@ -77,6 +77,7 @@ export type Meta = {
   feed: string;
   trait: { mainnet: string | null; testnet: string };
   guard: string;
+  guard_mainnet: string | null;
   repo: string;
 };
 

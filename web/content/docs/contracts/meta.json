@@ -4,6 +4,7 @@
   "risk-feed",
   "risk-feed-trait",
   "coverage-guard",
+  "coverage-guard-cached",
   "deployments"
  ]
 }

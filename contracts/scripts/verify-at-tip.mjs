@@ -31,7 +31,8 @@ fs.writeFileSync(
   "Clarinet.tip.toml",
   manifest.replace(
     /\[contracts\.risk-feed\]/,
-    '[contracts.coverage-cache]\npath = "contracts/coverage-cache.clar"\nepoch = "4.0"\n\n[contracts.risk-feed]',
+    '[contracts.coverage-cache]\npath = "contracts/coverage-cache.clar"\nepoch = "4.0"\n\n' +
+      '[contracts.coverage-guard-cached]\npath = "contracts/coverage-guard-cached.clar"\nepoch = "4.0"\n\n[contracts.risk-feed]',
   ),
 );
 console.log(`fork pinned at Stacks block ${info.stacks_tip_height} (Bitcoin ${info.burn_block_height}), index hash ${block.index_block_hash}\n`);

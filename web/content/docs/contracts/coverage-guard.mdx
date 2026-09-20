@@ -3,6 +3,8 @@ title: "Example: coverage-guard"
 description: A minimal consumer that pauses when coverage is thin or the feed is stale.
 ---
 
+This one is on testnet, reading the publisher-posted `risk-feed`. The mainnet example, reading pox5-reader's own figures through `coverage-cache`, is [coverage-guard-cached](/docs/contracts/coverage-guard-cached).
+
 `coverage-guard` shows how a contract can gate an action on a risk feed. For example, a levered staking vault could stop taking deposits. It is an example, not used by anything else. Simplified excerpt:
 
 ```clarity

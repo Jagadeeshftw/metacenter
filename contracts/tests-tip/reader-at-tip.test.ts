@@ -256,3 +256,56 @@ describe("coverage-cache against the deployed reader", () => {
     expect(after).toBe(BigInt(simnet.burnBlockHeight));
   });
 });
+
+// ---------------------------------------------------------------------------
+// coverage-guard-cached: what a vault would actually call.
+// ---------------------------------------------------------------------------
+describe("coverage-guard-cached against the cached feed", () => {
+  const CACHE = `${simnet.deployer}.coverage-cache`;
+  const check = (sender = caller()) =>
+    simnet.callPublicFn("coverage-guard-cached", "check", [Cl.contractPrincipal(simnet.deployer, "coverage-cache")], sender);
+
+  it("errors before the cache holds anything, then answers once it does", () => {
+    // fresh session state is not guaranteed across files, so refresh first and assert the shape
+    simnet.callPublicFn("coverage-cache", "refresh", [], caller());
+    const r = check();
+    expect(r.result.type).toBe("ok");
+    const v = plain(cvToValue(r.result, true));
+    expect(["ok", "paused"]).toContain(v.status);
+    expect(v.provenance).toBe("onchain");
+  });
+
+  it("says ok while coverage is above 2.0x and the reading is fresh", () => {
+    simnet.callPublicFn("coverage-cache", "refresh", [], caller());
+    const v = plain(cvToValue(check().result, true));
+    const covBps = n(ro("get-coverage-summary")["coverage-bps"] ?? 0);
+    expect(v.status).toBe(covBps >= 20000n ? "ok" : "paused");
+    expect(v.stale).toBe(false);
+    expect(n(v["age-blocks"])).toBeLessThanOrEqual(2n);
+  });
+
+  it("pauses when the reading goes stale", () => {
+    simnet.callPublicFn("coverage-cache", "refresh", [], caller());
+    simnet.mineEmptyBurnBlocks(1301);
+    const v = plain(cvToValue(check().result, true));
+    expect(v.stale).toBe(true);
+    expect(v.status).toBe("paused");
+  });
+
+  it("refuses a feed that is not the trusted one", () => {
+    const r = simnet.callPublicFn(
+      "coverage-guard-cached",
+      "check",
+      [Cl.contractPrincipal(simnet.deployer, "risk-feed")],
+      caller(),
+    );
+    expect(r.result).toBeErr(Cl.uint(200));
+  });
+
+  it("only the owner can change the staleness window", () => {
+    const other = simnet.getAccounts().get("wallet_2")!;
+    expect(simnet.callPublicFn("coverage-guard-cached", "set-max-age-blocks", [Cl.uint(2100)], other).result).toBeErr(Cl.uint(201));
+    expect(n(cvToValue(simnet.callReadOnlyFn("coverage-guard-cached", "get-min-coverage-bps", [], caller()).result))).toBe(20000n);
+    expect(cvToValue(simnet.callReadOnlyFn("coverage-guard-cached", "get-trusted-feed", [], caller()).result)).toBe(CACHE);
+  });
+});

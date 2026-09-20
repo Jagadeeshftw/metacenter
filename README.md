@@ -67,6 +67,7 @@ The site is on Vercel, the API and indexer on Railway with a Postgres volume tha
 | pox5-reader | mainnet | [`SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.pox5-reader`](https://explorer.hiro.so/txid/SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.pox5-reader?chain=mainnet) |
 | risk-feed-trait | mainnet | [`SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.risk-feed-trait`](https://explorer.hiro.so/txid/SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.risk-feed-trait?chain=mainnet) |
 | coverage-cache | mainnet | [`SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.coverage-cache`](https://explorer.hiro.so/txid/SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.coverage-cache?chain=mainnet) |
+| coverage-guard-cached (example consumer) | mainnet | [`SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.coverage-guard-cached`](https://explorer.hiro.so/txid/SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.coverage-guard-cached?chain=mainnet) |
 | risk-feed-trait | testnet | `ST24MYZSDF0TAVZ452R2TJY3RCQAVT3KR0FJHYCAJ.risk-feed-trait` |
 | risk-feed | testnet | `ST24MYZSDF0TAVZ452R2TJY3RCQAVT3KR0FJHYCAJ.risk-feed` |
 | coverage-guard | testnet | `ST24MYZSDF0TAVZ452R2TJY3RCQAVT3KR0FJHYCAJ.coverage-guard` |

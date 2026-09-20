@@ -85,6 +85,7 @@ export async function Deployments() {
     { name: "coverage-cache", net: "mainnet" as const, id: meta?.cache ?? null },
     { name: "risk-feed", net: "testnet" as const, id: meta?.feed ?? null },
     { name: "risk-feed-trait", net: "testnet" as const, id: meta?.trait.testnet ?? null },
+    { name: "coverage-guard-cached (example consumer)", net: "mainnet" as const, id: meta?.guard_mainnet ?? null },
     { name: "coverage-guard", net: "testnet" as const, id: meta?.guard ?? null },
     { name: "pox-5 (read by pox5-reader)", net: "mainnet" as const, id: meta?.pox5 ?? "SP000000000000000000002Q6VF78.pox-5" },
   ];

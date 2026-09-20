@@ -3,7 +3,7 @@ title: Gate a vault on headroom
 description: Pause an action when headroom or coverage gets thin, or the feed goes stale.
 ---
 
-The pattern in [coverage-guard](/docs/contracts/coverage-guard), adapted to headroom:
+A live example any vault can copy is on mainnet: [coverage-guard-cached](/docs/contracts/coverage-guard-cached) reads `coverage-cache` through the trait and answers `ok` or `paused`. The same pattern, adapted to headroom:
 
 ```clarity
 (define-constant MIN_HEADROOM_BPS u5000) ;; pause when the pool could fall less than 50%

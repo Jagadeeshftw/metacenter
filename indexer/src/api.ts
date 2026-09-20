@@ -146,6 +146,7 @@ export async function buildApi() {
       feed: config.feedContract,
       trait: { mainnet: config.readerContract ? `${config.readerContract.split(".")[0]}.risk-feed-trait` : null, testnet: `${feedAddress}.risk-feed-trait` },
       guard: `${feedAddress}.coverage-guard`,
+      guard_mainnet: config.readerContract ? `${config.readerContract.split(".")[0]}.coverage-guard-cached` : null,
       feed_network: "testnet",
       repo: "https://github.com/Jagadeeshftw/metacenter",
     };
