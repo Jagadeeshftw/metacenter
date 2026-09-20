@@ -9,6 +9,8 @@ Files only. Nothing is posted from here, and no social account is touched.
 | `clips/` | 7-second clips recorded from the live site in the dark theme, with real data: 6 s of footage with the logo watermark, then a 1 s end card. Each clip has a 1280×720 and a 1080×1080 version, H.264 at 30 fps with no audio, plus a still PNG of each size. The `.mp4` files are git-ignored; the PNG stills are committed. |
 | `brand/` | X avatar (400×400) and banner (1500×500), exported from `web/brand/mark.json` by `brand/export.mjs`, which also writes `web/app/favicon.ico`. `x-profile-preview.png` shows the avatar circle-cropped. |
 | `qa/brand/` | Logo C on the live site: header, dashboard sidebar and docs (1440, dark and light), a clip end card, and the favicon in a real browser tab. |
+| `clips/announce/` | Two announcement clips: a title card, real footage from the live site, then the end card with the handle. 7.0 s each, as 1080×1080 and 1280×720 MP4, a 720×720 GIF at 15 fps, and a PNG of the end card. Every file here is git-ignored; `scripts/record-announce.mjs` rebuilds them. |
+| `scripts/record-announce.mjs` | Records the announcement clips. Re-run it whenever the logo, the handle or the live figures change. |
 | `scripts/record-clips.mjs` | Records the clips again. Run it after the mainnet deploy for clip i, and whenever figures change. |
 
 ## Clips

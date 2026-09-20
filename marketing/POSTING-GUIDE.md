@@ -6,6 +6,7 @@ Copy-paste order for the 14 launch posts. Nothing in this repo posts anything; y
 - **Before each posting day**, run `node marketing/scripts/refresh-posts.mjs`. If it shows CHANGED, run it with `--write` and copy the text from `posts.md`. The next distribution (287) is due after Bitcoin block 968,449, around 24 Sep; after that, the distribution figures change.
 - **Post text** is inside each `text` block, exactly as it should appear on X: plain text, no formatting. Copy everything inside the block.
 - **Clips** are local files: `.mp4` files are git-ignored, so re-record them with `marketing/scripts/record-clips.mjs` on a fresh checkout. Attach the 1080×1080 version by default; the 1280×720 version is the alternative.
+- **The two announcement clips** in `marketing/clips/announce/` (D7·1 and D7·2) carry a title card and an end card with `@metacenterbtc`. Everything in that folder is git-ignored; `marketing/scripts/record-announce.mjs` rebuilds it.
 - **Dates** assume Day 1 is Saturday 19 Sep 2026; shift them if Day 1 moves. Slot 1 is the first post of the day and Slot 2 the second. The two Day 7 posts have no fixed date: each goes out when its trigger happens (see below).
 
 **Handles:**
@@ -215,7 +216,8 @@ All five so far (282–286) match the event within 2 sats, and the reserve chang
 ## Day 7 · Slot 1: pox5-reader on mainnet (post the same day the mainnet deploy lands)
 
 **Status:** ready. **Trigger:** the mainnet deploy, which landed on 20 Sep 2026 (Stacks block 9,029,707, Bitcoin 967,790).
-**Clip:** `marketing/clips/i-mainnet-reader-1080x1080.mp4` (alternative: `marketing/clips/i-mainnet-reader-1280x720.mp4`)
+**Clip:** `marketing/clips/announce/mainnet-live-1080x1080.mp4`
+**Alternatives:** `marketing/clips/announce/mainnet-live-720.gif` (GIF), `marketing/clips/announce/mainnet-live-1280x720.mp4` (16:9), or the plain screen recording `marketing/clips/i-mainnet-reader-1080x1080.mp4`
 **Tags:** none
 
 When this goes out, pin it in place of D1·1.
@@ -230,7 +232,8 @@ https://metacenter.0xo.in/dashboard
 ## Day 7 · Slot 2: grant application (post on your submission, planned 23 Sep evening IST)
 
 **Status:** waits for submission. **Trigger:** your grant submission, planned for the evening of 23 Sep IST. Post it after submitting. The text mentions a mainnet reader contract, so if the deploy hasn't landed by then, use the variant below.
-**Clip:** `marketing/clips/a-landing-hero-1080x1080.mp4` (alternative: `marketing/clips/a-landing-hero-1280x720.mp4`)
+**Clip:** `marketing/clips/announce/applied-1080x1080.mp4`
+**Alternatives:** `marketing/clips/announce/applied-720.gif` (GIF), `marketing/clips/announce/applied-1280x720.mp4` (16:9), or `marketing/clips/a-landing-hero-1080x1080.mp4`
 **Tags:** @Stacks VERIFIED, @StacksEndowment VERIFIED
 
 Say "applied" only, never "awarded". Post only after you have submitted.
@@ -271,5 +274,5 @@ https://metacenter.0xo.in
 | D5·2 3,000 BTC thread (2 parts) | e-stress-3000btc-book | Wed 23 Sep · 2 | ready, untagged (price-based: check; @friedger TO VERIFY) |
 | D6·1 methodology and API | h-methodology-source | Thu 24 Sep · 1 | ready |
 | D6·2 recompute check | c-coverage-history | Thu 24 Sep · 2 | ready |
-| D7·1 pox5-reader on mainnet | i | deploy landed 20 Sep; post when you're ready | ready |
-| D7·2 grant application | a-landing-hero | on your submission (planned 23 Sep evening IST) | waits for submission |
+| D7·1 pox5-reader on mainnet | announce/mainnet-live (i as fallback) | deploy landed 20 Sep; post when you're ready | ready |
+| D7·2 grant application | announce/applied | on your submission (planned 23 Sep evening IST) | waits for submission |
