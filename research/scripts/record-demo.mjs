@@ -49,11 +49,10 @@ const center = async (loc) => {
 // 1. Landing, with its motion (~20 s)
 await page.goto(SITE, { waitUntil: "networkidle" });
 await glide(720, 450, 10);
-await wait(3000);
-await scrollBy(700, 1600); await wait(1800);   // hero panel, public-data strip
-await scrollBy(1000, 1800); await wait(2500);  // bento: orbit, block grid, tests
-await scrollBy(1300, 2000); await wait(1500);  // questions it answers
-await scrollBy(1400, 2000); await wait(1500);  // three ways to use it
+await wait(1600);
+await scrollBy(700, 1100); await wait(1000);   // hero panel, public-data strip
+await scrollBy(1000, 1300); await wait(1600);  // bento: orbit, block grid, tests
+await scrollBy(2700, 1900); await wait(1200);  // questions it answers, then how to use it
 // 2. Dashboard overview via the navbar button (~8 s)
 const openBtn = page.getByRole("link", { name: "Open dashboard" }).first();
 await glide(...(await center(openBtn)));
@@ -61,20 +60,24 @@ await wait(500);
 await openBtn.click();
 await page.waitForURL("**/dashboard");
 await page.waitForLoadState("networkidle");
-await wait(3500);
-await scrollBy(500, 1200); await wait(2500);
+await wait(2500);
+// the headline cards read "onchain": hover the tag for its meaning
+const covTag = page.locator("section[aria-label='Headline figures'] [role='tooltip']").nth(1).locator("..");
+await glide(...(await center(covTag)));
+await wait(2500);
+await scrollBy(500, 1000); await wait(1600);
 // 3. Coverage: tooltips with provenance tags (~12 s)
 await page.goto(`${SITE}/dashboard/coverage`, { waitUntil: "networkidle" });
 await wait(1500);
 const covChart = page.locator("svg[aria-label^='Coverage per distribution']").first();
 let [cx, cy] = await center(covChart);
 const cb = await covChart.boundingBox();
-await glide(cb.x + cb.width * 0.2, cy, 20); await wait(1800);   // n/a band (no bonds)
-await glide(cb.x + cb.width * 0.82, cb.y + cb.height * 0.3, 25); await wait(3000); // 286 point
+await glide(cb.x + cb.width * 0.2, cy, 20); await wait(1200);   // n/a band (no bonds)
+await glide(cb.x + cb.width * 0.82, cb.y + cb.height * 0.3, 25); await wait(2200); // 286 point
 const poolChart = page.locator("svg[aria-label^='Gross reward pool']").first();
 await poolChart.scrollIntoViewIfNeeded(); await wait(600);
 const pb = await poolChart.boundingBox();
-await glide(pb.x + pb.width * 0.84, pb.y + pb.height * 0.6, 25); await wait(3000);
+await glide(pb.x + pb.width * 0.84, pb.y + pb.height * 0.6, 25); await wait(1800);
 // 4. Stress test: commit drop, price drop, 3,000 BTC book (~18 s)
 await page.goto(`${SITE}/dashboard/stress`, { waitUntil: "networkidle" });
 await wait(1500);
@@ -93,24 +96,32 @@ const drag = async (i, pctTarget) => {
     await wait(45);
   }
 };
-await drag(0, 30); await wait(2200);
-await drag(1, 40); await wait(2500);
+await drag(0, 30); await wait(1800);
+await drag(1, 40); await wait(1800);
 const hyp = page.getByRole("radio", { name: "Hypothetical" });
 await glide(...(await center(hyp)));
-await hyp.click(); await wait(2500);
-await scrollBy(450, 1200); await wait(3000);
+await hyp.click(); await wait(2000);
+await scrollBy(450, 1000); await wait(2000);
 // 5. Bond payout order (~6 s)
 await page.goto(`${SITE}/dashboard/bonds`, { waitUntil: "networkidle" });
-await wait(4500);
-// 6. Methodology: a row that links to a contract function (~10 s)
+await wait(2500);
+// 6. The contracts on mainnet, with explorer links (~9 s)
+await page.goto(`${SITE}/docs/contracts/deployments`, { waitUntil: "networkidle" });
+await wait(1500);
+const readerLink = page.getByRole("link", { name: /pox5-reader$/ }).first();
+await readerLink.scrollIntoViewIfNeeded();
+await glide(...(await center(readerLink)));
+await wait(2800);
+await scrollBy(250, 700); await wait(1200);
+// 7. Methodology: a row that links to a contract function (~10 s)
 await page.goto(`${SITE}/methodology`, { waitUntil: "networkidle" });
 await wait(1500);
 const fnLink = page.getByRole("link", { name: /get-obligation-per-interval/ }).first();
 await glide(...(await center(fnLink)));
-await wait(2000);
+await wait(1500);
 await fnLink.click();
 await page.waitForLoadState("domcontentloaded");
-await wait(5000);
+await wait(2600);
 
 const video = page.video();
 await ctx.close();

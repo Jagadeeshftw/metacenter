@@ -7,4 +7,4 @@ description: Contract IDs on mainnet and testnet, read live from /api/meta.
 
 - The testnet `risk-feed` values mirror mainnet data.
 - An earlier example deployment, `vault-guard`, is superseded by `coverage-guard`.
-- Source for every contract is in [`contracts/contracts`](https://github.com/Jagadeeshftw/metacenter/tree/main/contracts/contracts). The testnet deployments are byte-identical to it.
+- Source for every contract is in [`contracts/contracts`](https://github.com/Jagadeeshftw/metacenter/tree/main/contracts/contracts). Every deployment, mainnet and testnet, is byte-identical to it (`contracts/scripts/verify-at-tip.mjs` checks the mainnet reader against the repo before each run).
