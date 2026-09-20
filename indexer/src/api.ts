@@ -26,6 +26,10 @@ const f = (value: unknown, unit: string, provenance: Provenance, source: string,
   ...(note ? { note } : {}),
 });
 
+// health thresholds: the poll runs every 10 minutes, and the keeper refreshes the cache at least
+// every 1,100 burn blocks (about a week), so these leave room for one missed run.
+const POLL_STALE_S = Number(process.env.HEALTH_POLL_STALE_S ?? 45 * 60);
+const CACHE_STALE_BLOCKS = Number(process.env.HEALTH_CACHE_STALE_BLOCKS ?? 1200);
 const READER_MISSING = "pox5-reader is not deployed on mainnet yet";
 // Hiro's /v2/contracts/call-read allows 500,000 of read length; a contract-call? into pox-5 loads
 // that contract, about 569k. So the reader is on mainnet but these functions cannot be called
@@ -147,9 +151,100 @@ export async function buildApi() {
     };
   });
 
-  app.get("/health", async () => {
+  // Health for uptime monitors and for a reader who wants to know how fresh the numbers are.
+  // 503 only when the service cannot serve data at all (the database is unreachable); anything
+  // else answers 200 with status "ok" or "degraded" and says which check is unhappy, so a
+  // keyword monitor on "\"status\":\"ok\"" catches degradation too.
+  app.get("/health", async (_req, reply) => {
+    const started = Date.now();
+    const checks: Record<string, unknown> = {};
+    const problems: string[] = [];
+    const age = (t: string | Date | null | undefined) =>
+      t == null ? null : Math.max(0, Math.round((Date.now() - new Date(t).getTime()) / 1000));
+
+    // database
+    let dbOk = false;
+    try {
+      const t = Date.now();
+      await pool.query("SELECT 1");
+      dbOk = true;
+      checks.database = { ok: true, latency_ms: Date.now() - t };
+    } catch (e: any) {
+      checks.database = { ok: false, error: String(e?.message ?? e).slice(0, 200) };
+      problems.push("database unreachable");
+    }
+
+    if (!dbOk) {
+      reply.code(503);
+      return { status: "down", checks, problems, checked_at: new Date().toISOString(), took_ms: Date.now() - started };
+    }
+
+    // indexer poll
     const live = await latestLive();
-    return { ok: true, last_poll: live?.taken_at ?? null, burn_height: live?.burn_height ?? null };
+    const pollAge = age(live?.taken_at);
+    checks.indexer_poll = {
+      ok: pollAge != null && pollAge <= POLL_STALE_S,
+      last_poll: live?.taken_at ?? null,
+      age_seconds: pollAge,
+      stale_after_seconds: POLL_STALE_S,
+      burn_height: live?.burn_height ?? null,
+    };
+    if (pollAge == null) problems.push("no poll recorded yet");
+    else if (pollAge > POLL_STALE_S) problems.push(`last indexer poll was ${pollAge}s ago`);
+
+    // distributions indexed
+    const last = (await pool.query("SELECT distribution_index, calculation_height, crosscheck_ok FROM intervals ORDER BY distribution_index DESC LIMIT 1")).rows[0];
+    const lastCalc = Number(live?.pox5?.["get-last-reward-compute-height"] ?? 0);
+    const behind = last && lastCalc > Number(last.calculation_height);
+    checks.distributions = {
+      ok: !!last && !behind,
+      latest_indexed: last?.distribution_index ?? null,
+      calculation_height: last ? Number(last.calculation_height) : null,
+      chain_last_compute_height: lastCalc || null,
+      crosscheck_ok: last?.crosscheck_ok ?? null,
+    };
+    if (!last) problems.push("no distribution indexed");
+    else if (behind) problems.push(`pox-5 computed a distribution at ${lastCalc} that is not indexed yet`);
+
+    // coverage-cache freshness, in burn blocks behind the tip
+    const cache = live?.reader?.cache ?? null;
+    const tip = Number(live?.burn_height ?? 0);
+    const cacheAge = cache?.updated_at && tip ? tip - Number(cache.updated_at) : null;
+    checks.coverage_cache = {
+      ok: cacheAge == null ? config.cacheContract == null : cacheAge <= CACHE_STALE_BLOCKS,
+      contract: config.cacheContract ?? null,
+      updated_at_burn_height: cache?.updated_at ?? null,
+      blocks_behind_tip: cacheAge,
+      stale_after_blocks: CACHE_STALE_BLOCKS,
+    };
+    if (cacheAge != null && cacheAge > CACHE_STALE_BLOCKS) problems.push(`coverage-cache is ${cacheAge} burn blocks behind`);
+
+    // keeper
+    const keeper = await keeperStatus();
+    const keeperAge = age(keeper?.checked_at ?? null);
+    checks.keeper = keeper
+      ? {
+          ok: !keeper.low_balance && (keeperAge == null || keeperAge <= POLL_STALE_S),
+          address: keeper.address,
+          balance_ustx: keeper.balance_ustx,
+          low_balance: keeper.low_balance,
+          last_action: keeper.last ?? null,
+          pending: keeper.pending ?? null,
+          checked_age_seconds: keeperAge,
+        }
+      : { ok: true, enabled: false };
+    if (keeper?.low_balance) problems.push("keeper balance below the alert threshold");
+
+    checks.reader = { ok: config.readerContract != null, contract: config.readerContract ?? null };
+    if (!config.readerContract) problems.push("pox5-reader not configured");
+
+    return {
+      status: problems.length === 0 ? "ok" : "degraded",
+      problems,
+      checks,
+      checked_at: new Date().toISOString(),
+      took_ms: Date.now() - started,
+    };
   });
 
   app.get("/metrics/current", async () => {

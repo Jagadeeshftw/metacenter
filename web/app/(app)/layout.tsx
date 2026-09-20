@@ -1,5 +1,5 @@
 import { AppShell } from "@/components/dash/shell";
-import { getCurrent, getIntervals } from "@/lib/api";
+import { freshness, getCurrent, getIntervals } from "@/lib/api";
 import { timestamp } from "@/lib/format";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -7,7 +7,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const cycle = cur?.cycle.value ?? iv?.intervals.at(-1)?.cycle ?? null;
   return (
     <AppShell
-      status={{ cycle: cycle === null ? null : Number(cycle), burnHeight: cur?.as_of.burn_height ?? null, updated: cur ? timestamp(cur.as_of.taken_at) : null }}
+      status={{
+        cycle: cycle === null ? null : Number(cycle),
+        burnHeight: cur?.as_of.burn_height ?? null,
+        updated: cur ? timestamp(cur.as_of.taken_at) : null,
+        stale: freshness(cur?.as_of.taken_at).stale,
+      }}
     >
       {children}
     </AppShell>

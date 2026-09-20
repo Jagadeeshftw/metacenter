@@ -35,7 +35,13 @@ const NAV = [
   { href: "/docs", label: "Docs", icon: IconBook },
 ];
 
-export type Status = { cycle: number | null; burnHeight: number | null; updated: string | null };
+export type Status = {
+  cycle: number | null;
+  burnHeight: number | null;
+  updated: string | null;
+  /** true when the indexer has not polled recently: the figures shown are the last published. */
+  stale?: boolean;
+};
 
 export function AppShell({ children, status }: { children: React.ReactNode; status: Status }) {
   const [collapsed, setCollapsed] = useState(false);
@@ -111,6 +117,12 @@ export function AppShell({ children, status }: { children: React.ReactNode; stat
           </div>
           <ThemeToggle />
         </header>
+        {status.stale && (
+          <div className="flex items-center gap-2 border-b border-amber-500/30 bg-amber-500/10 px-4 py-2 text-xs text-amber-200 sm:hidden">
+            <span className="h-2 w-2 shrink-0 rounded-full bg-amber-400" aria-hidden="true" />
+            Data as of block {status.burnHeight?.toLocaleString("en-US") ?? "—"} · refreshing
+          </div>
+        )}
         <main className="flex-1 px-4 py-6 md:px-8 md:py-8">{children}</main>
         <footer className="border-t border-line px-4 py-5 text-xs text-subtle md:px-8">
           Testnet feed values mirror mainnet data · every number links to its source on the Methodology page
@@ -165,6 +177,15 @@ function StatusBar({ status }: { status: Status }) {
       <span className="hidden truncate text-muted md:inline">
         Last updated <b className="num font-medium text-foreground">{status.updated ?? "—"}</b>
       </span>
+      {status.stale && (
+        <span
+          className="hidden shrink-0 items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-amber-200 sm:inline-flex"
+          title="The indexer has not reported a new poll recently. These are the last figures it published, with the Bitcoin block they were read at."
+        >
+          <span className="h-2 w-2 rounded-full bg-amber-400" aria-hidden="true" />
+          Data as of block {status.burnHeight?.toLocaleString("en-US") ?? "—"} · refreshing
+        </span>
+      )}
     </div>
   );
 }

@@ -1,0 +1,783 @@
+{
+  "captured_at": "2026-09-20T22:54:48.222Z",
+  "api": "https://metacenter.0xo.in/api",
+  "responses": {
+    "/metrics/current": {
+      "as_of": {
+        "taken_at": "2026-09-20T22:54:13.547Z",
+        "burn_height": 967909,
+        "stacks_height": 9035078
+      },
+      "cycle": {
+        "value": 143,
+        "unit": "reward cycle",
+        "provenance": "onchain",
+        "source": "SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.pox5-reader::get-current-cycle"
+      },
+      "coverage": {
+        "value": 16.678,
+        "unit": "x",
+        "provenance": "onchain",
+        "source": "SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.pox5-reader::get-coverage-summary (cycle 143, realised so far) via coverage-cache::refresh at burn height 967793",
+        "note": "pox5-reader computed this from pox-5 state in a mainnet transaction; coverage-cache stores its answer so the public API can read it"
+      },
+      "headroom": {
+        "value": 0.94,
+        "unit": "fraction",
+        "provenance": "onchain",
+        "source": "SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.pox5-reader::get-coverage-summary: headroom-bps via coverage-cache::refresh at burn height 967793",
+        "note": "pool can fall this much before bond yield is impaired (1 - 1/coverage). pox5-reader computed this from pox-5 state in a mainnet transaction; coverage-cache stores its answer so the public API can read it"
+      },
+      "obligation_per_interval": {
+        "value": "13810222",
+        "unit": "sats",
+        "provenance": "onchain",
+        "source": "SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.pox5-reader::get-obligation-per-interval(u143) via coverage-cache::refresh at burn height 967793",
+        "note": "pox5-reader computed this from pox-5 state in a mainnet transaction; coverage-cache stores its answer so the public API can read it"
+      },
+      "pending_pool": {
+        "value": "87881831",
+        "unit": "sats",
+        "provenance": "onchain",
+        "source": "SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.pox5-reader::get-pending-pool via coverage-cache::refresh at burn height 967793",
+        "note": "sBTC received since the last distribution, not yet split. pox5-reader computed this from pox-5 state in a mainnet transaction; coverage-cache stores its answer so the public API can read it"
+      },
+      "reserve": {
+        "value": "152669889",
+        "unit": "sats",
+        "provenance": "onchain",
+        "source": "SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.pox5-reader::get-reserve"
+      },
+      "reserve_cover": {
+        "value": 5.52,
+        "unit": "cycles",
+        "provenance": "onchain",
+        "source": "SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.pox5-reader::get-reserve-cover-cycles(u143) via coverage-cache::refresh at burn height 967793",
+        "note": "Hypothetical cover — reserve cannot currently pay out (requires SIP). pox5-reader computed this from pox-5 state in a mainnet transaction; coverage-cache stores its answer so the public API can read it"
+      },
+      "reserve_state": {
+        "value": "not drawing",
+        "unit": "state",
+        "provenance": "mirrored",
+        "source": "mainnet pox-5 calculate-rewards event, tx 0x4a0218d7b13de29ae47015e72345876d362c47159216675d40d03cd09ad1cc5d: reserve-deposit",
+        "note": "pox-5 never pays bonds from the reserve; in a shortfall the deposit is zero and the reserve stays flat"
+      },
+      "payout_order": {
+        "value": [
+          {
+            "bond_index": 1,
+            "stx_value_ratio": "310237",
+            "target_rate_bps": "300",
+            "shares_sats": "23017037628",
+            "target_per_interval_sats": "13810222"
+          }
+        ],
+        "unit": "bonds",
+        "provenance": "onchain",
+        "source": "SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.pox5-reader::get-bond-payout-order(u143) via coverage-cache::refresh at burn height 967793",
+        "note": "descending stx-value-ratio, ties to the lower bond index. pox5-reader computed this from pox-5 state in a mainnet transaction; coverage-cache stores its answer so the public API can read it"
+      },
+      "latest_interval": {
+        "distribution_index": 286,
+        "cycle": 143,
+        "calculation_height": 967399,
+        "txid": "0x4a0218d7b13de29ae47015e72345876d362c47159216675d40d03cd09ad1cc5d",
+        "gross_pool": {
+          "value": "230327835",
+          "unit": "sats",
+          "provenance": "mirrored",
+          "source": "mainnet pox-5 calculate-rewards event, tx 0x4a0218d7b13de29ae47015e72345876d362c47159216675d40d03cd09ad1cc5d: gross-accrued-rewards"
+        },
+        "obligation": {
+          "value": "13810222",
+          "unit": "sats",
+          "provenance": "mirrored",
+          "source": "mainnet pox-5 calculate-rewards event, tx 0x4a0218d7b13de29ae47015e72345876d362c47159216675d40d03cd09ad1cc5d: sum of bond-distribution target-yield"
+        },
+        "bond_paid": {
+          "value": "13810222",
+          "unit": "sats",
+          "provenance": "mirrored",
+          "source": "mainnet pox-5 calculate-rewards event, tx 0x4a0218d7b13de29ae47015e72345876d362c47159216675d40d03cd09ad1cc5d: total-bond-rewards"
+        },
+        "shortfall": {
+          "value": "0",
+          "unit": "sats",
+          "provenance": "mirrored",
+          "source": "obligation - bond_paid"
+        },
+        "stx_only": {
+          "value": "184039972",
+          "unit": "sats",
+          "provenance": "mirrored",
+          "source": "mainnet pox-5 calculate-rewards event, tx 0x4a0218d7b13de29ae47015e72345876d362c47159216675d40d03cd09ad1cc5d: total-stx-staker-rewards"
+        },
+        "reserve_deposit": {
+          "value": "32477641",
+          "unit": "sats",
+          "provenance": "mirrored",
+          "source": "mainnet pox-5 calculate-rewards event, tx 0x4a0218d7b13de29ae47015e72345876d362c47159216675d40d03cd09ad1cc5d: reserve-deposit"
+        },
+        "reserve_balance": {
+          "value": "152669889",
+          "unit": "sats",
+          "provenance": "mirrored",
+          "source": "mainnet pox-5 calculate-rewards event, tx 0x4a0218d7b13de29ae47015e72345876d362c47159216675d40d03cd09ad1cc5d: reserve-balance"
+        },
+        "coverage": {
+          "value": 16.67806896949231,
+          "unit": "x",
+          "provenance": "mirrored",
+          "source": "gross_pool / obligation"
+        },
+        "headroom": {
+          "value": 0.9400410202266696,
+          "unit": "fraction",
+          "provenance": "mirrored",
+          "source": "1 - obligation / gross_pool"
+        },
+        "stx_only_yield": {
+          "value": 0.42017725171522796,
+          "unit": "sats per STX per interval",
+          "provenance": "mirrored",
+          "source": "mainnet pox-5 calculate-rewards event, tx 0x4a0218d7b13de29ae47015e72345876d362c47159216675d40d03cd09ad1cc5d: total-stx-staker-rewards / cycle-staked-ustx * 1e6"
+        },
+        "stx_only_apy_btc": {
+          "value": 0.06669233657204557,
+          "unit": "fraction per year",
+          "provenance": "mirrored",
+          "source": "stx_only_yield * 50 / price (coingecko:market_chart/range @ 1789642800)"
+        },
+        "price": {
+          "value": 315.011644,
+          "unit": "sats per STX",
+          "provenance": "mirrored",
+          "source": "coingecko:market_chart/range @ 1789642800"
+        },
+        "cliff_price": {
+          "value": 18.88777679095958,
+          "unit": "sats per STX",
+          "provenance": "mirrored",
+          "source": "price * obligation / gross_pool",
+          "note": "assumes miner BTC bids scale linearly with the STX price"
+        },
+        "crosscheck": {
+          "ok": true,
+          "note": "diff vs event (sats): gross -2, reserve 0, stx -1, bonds -1",
+          "method": "recomputed from pox-5 state before/after the calculate-rewards block (call-read ?tip=)",
+          "tip_before": "0xc48f342fb05e99f51b63e8c0e147d60938267def701df0837d860c49fda76b86",
+          "tip_after": "0xa77f5c39ea2408ee39ecb114d72b8bbf74c51aa7862979901e7c15eb31a867dc"
+        },
+        "risk_feed": {
+          "contract": "ST24MYZSDF0TAVZ452R2TJY3RCQAVT3KR0FJHYCAJ.risk-feed",
+          "network": "testnet",
+          "txid": "0x85123d47f097520925db200ee137a9d71d6b7dde638e9367fa9887f6700466df",
+          "status": "confirmed",
+          "note": "testnet feed values mirror mainnet data"
+        }
+      },
+      "price": {
+        "value": 400.825093,
+        "unit": "sats per STX",
+        "provenance": "mirrored",
+        "source": "coingecko:simple/price @ 1789944770"
+      },
+      "cliff": {
+        "headline": {
+          "value": 0.94,
+          "unit": "fraction",
+          "provenance": "onchain",
+          "source": "SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.pox5-reader::get-coverage-summary: headroom-bps via coverage-cache::refresh at burn height 967793",
+          "note": "pool can fall this much before bond yield is impaired. pox5-reader computed this from pox-5 state in a mainnet transaction; coverage-cache stores its answer so the public API can read it"
+        },
+        "price": {
+          "value": 18.88777679095958,
+          "unit": "sats per STX",
+          "provenance": "mirrored",
+          "source": "price at distribution 286 * its obligation / its gross pool",
+          "note": "assumes miner BTC bids scale linearly with the STX price"
+        },
+        "sip_book_scenario": {
+          "value": 246.1799544115022,
+          "unit": "sats per STX",
+          "provenance": "hypothetical",
+          "source": "price at distribution 286 * 180,000,000 sats (3,000 BTC * 3% / 50) / its gross pool",
+          "note": "SIP launch book: 3,000 BTC at 3% target (forum.stacks.org/t/18862, post #14); assumes miner BTC bids scale linearly with the STX price"
+        },
+        "inputs": {
+          "distribution_index": 286,
+          "price": {
+            "value": 315.011644,
+            "unit": "sats per STX",
+            "provenance": "mirrored",
+            "source": "coingecko:market_chart/range @ 1789642800 (price at distribution 286)"
+          },
+          "gross_pool": {
+            "value": "230327835",
+            "unit": "sats",
+            "provenance": "mirrored",
+            "source": "mainnet pox-5 calculate-rewards event, tx 0x4a0218d7b13de29ae47015e72345876d362c47159216675d40d03cd09ad1cc5d: gross-accrued-rewards"
+          },
+          "obligation": {
+            "value": "13810222",
+            "unit": "sats",
+            "provenance": "mirrored",
+            "source": "mainnet pox-5 calculate-rewards event, tx 0x4a0218d7b13de29ae47015e72345876d362c47159216675d40d03cd09ad1cc5d: sum of bond-distribution target-yield"
+          },
+          "sip_book_obligation": {
+            "value": "180000000",
+            "unit": "sats",
+            "provenance": "hypothetical",
+            "source": "3,000 BTC * 3% / 50"
+          }
+        },
+        "friedger_sip_inputs": {
+          "value": 171.23287671232876,
+          "unit": "sats per STX",
+          "provenance": "hypothetical",
+          "source": "3,000 BTC * 3% / (1,000 STX/block * 52,560 blocks/year)",
+          "note": "friedger's figure under SIP launch inputs (forum.stacks.org/t/18862, post #14)"
+        }
+      }
+    },
+    "/intervals": {
+      "count": 5,
+      "intervals": [
+        {
+          "distribution_index": 282,
+          "cycle": 141,
+          "calculation_height": 963199,
+          "txid": "0xfeedce2f594786b7b18359ba62b1cb11faef3e7cadd43d833e0bfa0507f7cc6e",
+          "gross_pool": {
+            "value": "162018760",
+            "unit": "sats",
+            "provenance": "mirrored",
+            "source": "mainnet pox-5 calculate-rewards event, tx 0xfeedce2f594786b7b18359ba62b1cb11faef3e7cadd43d833e0bfa0507f7cc6e: gross-accrued-rewards"
+          },
+          "obligation": {
+            "value": "0",
+            "unit": "sats",
+            "provenance": "mirrored",
+            "source": "mainnet pox-5 calculate-rewards event, tx 0xfeedce2f594786b7b18359ba62b1cb11faef3e7cadd43d833e0bfa0507f7cc6e: sum of bond-distribution target-yield"
+          },
+          "bond_paid": {
+            "value": "0",
+            "unit": "sats",
+            "provenance": "mirrored",
+            "source": "mainnet pox-5 calculate-rewards event, tx 0xfeedce2f594786b7b18359ba62b1cb11faef3e7cadd43d833e0bfa0507f7cc6e: total-bond-rewards"
+          },
+          "shortfall": {
+            "value": "0",
+            "unit": "sats",
+            "provenance": "mirrored",
+            "source": "obligation - bond_paid"
+          },
+          "stx_only": {
+            "value": "137715946",
+            "unit": "sats",
+            "provenance": "mirrored",
+            "source": "mainnet pox-5 calculate-rewards event, tx 0xfeedce2f594786b7b18359ba62b1cb11faef3e7cadd43d833e0bfa0507f7cc6e: total-stx-staker-rewards"
+          },
+          "reserve_deposit": {
+            "value": "24302814",
+            "unit": "sats",
+            "provenance": "mirrored",
+            "source": "mainnet pox-5 calculate-rewards event, tx 0xfeedce2f594786b7b18359ba62b1cb11faef3e7cadd43d833e0bfa0507f7cc6e: reserve-deposit"
+          },
+          "reserve_balance": {
+            "value": "24302814",
+            "unit": "sats",
+            "provenance": "mirrored",
+            "source": "mainnet pox-5 calculate-rewards event, tx 0xfeedce2f594786b7b18359ba62b1cb11faef3e7cadd43d833e0bfa0507f7cc6e: reserve-balance"
+          },
+          "coverage": {
+            "value": null,
+            "unit": "x",
+            "provenance": "mirrored",
+            "source": "gross_pool / obligation",
+            "note": "n/a: no bonds"
+          },
+          "headroom": {
+            "value": null,
+            "unit": "fraction",
+            "provenance": "mirrored",
+            "source": "1 - obligation / gross_pool",
+            "note": "n/a: no bonds"
+          },
+          "stx_only_yield": {
+            "value": 0.350915540939867,
+            "unit": "sats per STX per interval",
+            "provenance": "mirrored",
+            "source": "mainnet pox-5 calculate-rewards event, tx 0xfeedce2f594786b7b18359ba62b1cb11faef3e7cadd43d833e0bfa0507f7cc6e: total-stx-staker-rewards / cycle-staked-ustx * 1e6"
+          },
+          "stx_only_apy_btc": {
+            "value": 0.09580957863106113,
+            "unit": "fraction per year",
+            "provenance": "mirrored",
+            "source": "stx_only_yield * 50 / price (coingecko:market_chart/range @ 1787158800)"
+          },
+          "price": {
+            "value": 183.131763,
+            "unit": "sats per STX",
+            "provenance": "mirrored",
+            "source": "coingecko:market_chart/range @ 1787158800"
+          },
+          "cliff_price": {
+            "value": null,
+            "unit": "sats per STX",
+            "provenance": "mirrored",
+            "source": "price * obligation / gross_pool",
+            "note": "assumes miner BTC bids scale linearly with the STX price"
+          },
+          "crosscheck": {
+            "ok": true,
+            "note": "diff vs event (sats): gross -1, reserve 0, stx -1, bonds 0",
+            "method": "recomputed from pox-5 state before/after the calculate-rewards block (call-read ?tip=)",
+            "tip_before": "0x3fe58d7aa045dac5c1b56433aaa5babf1703e1d2a0d31fb7d16b967e5868d68d",
+            "tip_after": "0x82a16440ae0562c8398499e7744c2212a857509cd148264bb6d541a96236c85f"
+          },
+          "risk_feed": {
+            "contract": "ST24MYZSDF0TAVZ452R2TJY3RCQAVT3KR0FJHYCAJ.risk-feed",
+            "network": "testnet",
+            "txid": "0x95d7d18479f7d940ccaaef73513a201366b8c80506cbbdb917ab758be0140de6",
+            "status": "confirmed",
+            "note": "testnet feed values mirror mainnet data"
+          }
+        },
+        {
+          "distribution_index": 283,
+          "cycle": 141,
+          "calculation_height": 964249,
+          "txid": "0xad67bc938187620f684806ba8573326888d1f5a0b9636d83859a561e81aad05f",
+          "gross_pool": {
+            "value": "188232684",
+            "unit": "sats",
+            "provenance": "mirrored",
+            "source": "mainnet pox-5 calculate-rewards event, tx 0xad67bc938187620f684806ba8573326888d1f5a0b9636d83859a561e81aad05f: gross-accrued-rewards"
+          },
+          "obligation": {
+            "value": "0",
+            "unit": "sats",
+            "provenance": "mirrored",
+            "source": "mainnet pox-5 calculate-rewards event, tx 0xad67bc938187620f684806ba8573326888d1f5a0b9636d83859a561e81aad05f: sum of bond-distribution target-yield"
+          },
+          "bond_paid": {
+            "value": "0",
+            "unit": "sats",
+            "provenance": "mirrored",
+            "source": "mainnet pox-5 calculate-rewards event, tx 0xad67bc938187620f684806ba8573326888d1f5a0b9636d83859a561e81aad05f: total-bond-rewards"
+          },
+          "shortfall": {
+            "value": "0",
+            "unit": "sats",
+            "provenance": "mirrored",
+            "source": "obligation - bond_paid"
+          },
+          "stx_only": {
+            "value": "159997782",
+            "unit": "sats",
+            "provenance": "mirrored",
+            "source": "mainnet pox-5 calculate-rewards event, tx 0xad67bc938187620f684806ba8573326888d1f5a0b9636d83859a561e81aad05f: total-stx-staker-rewards"
+          },
+          "reserve_deposit": {
+            "value": "28234902",
+            "unit": "sats",
+            "provenance": "mirrored",
+            "source": "mainnet pox-5 calculate-rewards event, tx 0xad67bc938187620f684806ba8573326888d1f5a0b9636d83859a561e81aad05f: reserve-deposit"
+          },
+          "reserve_balance": {
+            "value": "52537716",
+            "unit": "sats",
+            "provenance": "mirrored",
+            "source": "mainnet pox-5 calculate-rewards event, tx 0xad67bc938187620f684806ba8573326888d1f5a0b9636d83859a561e81aad05f: reserve-balance"
+          },
+          "coverage": {
+            "value": null,
+            "unit": "x",
+            "provenance": "mirrored",
+            "source": "gross_pool / obligation",
+            "note": "n/a: no bonds"
+          },
+          "headroom": {
+            "value": null,
+            "unit": "fraction",
+            "provenance": "mirrored",
+            "source": "1 - obligation / gross_pool",
+            "note": "n/a: no bonds"
+          },
+          "stx_only_yield": {
+            "value": 0.4076921362447665,
+            "unit": "sats per STX per interval",
+            "provenance": "mirrored",
+            "source": "mainnet pox-5 calculate-rewards event, tx 0xad67bc938187620f684806ba8573326888d1f5a0b9636d83859a561e81aad05f: total-stx-staker-rewards / cycle-staked-ustx * 1e6"
+          },
+          "stx_only_apy_btc": {
+            "value": 0.06245292062584763,
+            "unit": "fraction per year",
+            "provenance": "mirrored",
+            "source": "stx_only_yield * 50 / price (coingecko:market_chart/range @ 1787810400)"
+          },
+          "price": {
+            "value": 326.399576,
+            "unit": "sats per STX",
+            "provenance": "mirrored",
+            "source": "coingecko:market_chart/range @ 1787810400"
+          },
+          "cliff_price": {
+            "value": null,
+            "unit": "sats per STX",
+            "provenance": "mirrored",
+            "source": "price * obligation / gross_pool",
+            "note": "assumes miner BTC bids scale linearly with the STX price"
+          },
+          "crosscheck": {
+            "ok": true,
+            "note": "diff vs event (sats): gross -1, reserve 0, stx -1, bonds 0",
+            "method": "recomputed from pox-5 state before/after the calculate-rewards block (call-read ?tip=)",
+            "tip_before": "0x0bc55155511f5c551dc22226e58eebf1f6b3ce5bbbe1764fa4aa571fef584b81",
+            "tip_after": "0x30dbe15aef487c3f38b057a1751ba2c526ae983f32d5457cad3b6b5f7d5d96e4"
+          },
+          "risk_feed": {
+            "contract": "ST24MYZSDF0TAVZ452R2TJY3RCQAVT3KR0FJHYCAJ.risk-feed",
+            "network": "testnet",
+            "txid": "0xaa64363f6dfde9f2a8f262165e15fa4b4f5e1749bb0b801245fe0dff556d3626",
+            "status": "confirmed",
+            "note": "testnet feed values mirror mainnet data"
+          }
+        },
+        {
+          "distribution_index": 284,
+          "cycle": 142,
+          "calculation_height": 965299,
+          "txid": "0x94fa52a02c7992d00d9c701c8050d64f9e31b18f1b2e79b59f9e9ac6b5d06f9b",
+          "gross_pool": {
+            "value": "217098316",
+            "unit": "sats",
+            "provenance": "mirrored",
+            "source": "mainnet pox-5 calculate-rewards event, tx 0x94fa52a02c7992d00d9c701c8050d64f9e31b18f1b2e79b59f9e9ac6b5d06f9b: gross-accrued-rewards"
+          },
+          "obligation": {
+            "value": "0",
+            "unit": "sats",
+            "provenance": "mirrored",
+            "source": "mainnet pox-5 calculate-rewards event, tx 0x94fa52a02c7992d00d9c701c8050d64f9e31b18f1b2e79b59f9e9ac6b5d06f9b: sum of bond-distribution target-yield"
+          },
+          "bond_paid": {
+            "value": "0",
+            "unit": "sats",
+            "provenance": "mirrored",
+            "source": "mainnet pox-5 calculate-rewards event, tx 0x94fa52a02c7992d00d9c701c8050d64f9e31b18f1b2e79b59f9e9ac6b5d06f9b: total-bond-rewards"
+          },
+          "shortfall": {
+            "value": "0",
+            "unit": "sats",
+            "provenance": "mirrored",
+            "source": "obligation - bond_paid"
+          },
+          "stx_only": {
+            "value": "184533569",
+            "unit": "sats",
+            "provenance": "mirrored",
+            "source": "mainnet pox-5 calculate-rewards event, tx 0x94fa52a02c7992d00d9c701c8050d64f9e31b18f1b2e79b59f9e9ac6b5d06f9b: total-stx-staker-rewards"
+          },
+          "reserve_deposit": {
+            "value": "32564747",
+            "unit": "sats",
+            "provenance": "mirrored",
+            "source": "mainnet pox-5 calculate-rewards event, tx 0x94fa52a02c7992d00d9c701c8050d64f9e31b18f1b2e79b59f9e9ac6b5d06f9b: reserve-deposit"
+          },
+          "reserve_balance": {
+            "value": "85102463",
+            "unit": "sats",
+            "provenance": "mirrored",
+            "source": "mainnet pox-5 calculate-rewards event, tx 0x94fa52a02c7992d00d9c701c8050d64f9e31b18f1b2e79b59f9e9ac6b5d06f9b: reserve-balance"
+          },
+          "coverage": {
+            "value": null,
+            "unit": "x",
+            "provenance": "mirrored",
+            "source": "gross_pool / obligation",
+            "note": "n/a: no bonds"
+          },
+          "headroom": {
+            "value": null,
+            "unit": "fraction",
+            "provenance": "mirrored",
+            "source": "1 - obligation / gross_pool",
+            "note": "n/a: no bonds"
+          },
+          "stx_only_yield": {
+            "value": 0.4377565563684829,
+            "unit": "sats per STX per interval",
+            "provenance": "mirrored",
+            "source": "mainnet pox-5 calculate-rewards event, tx 0x94fa52a02c7992d00d9c701c8050d64f9e31b18f1b2e79b59f9e9ac6b5d06f9b: total-stx-staker-rewards / cycle-staked-ustx * 1e6"
+          },
+          "stx_only_apy_btc": {
+            "value": 0.0645964611521451,
+            "unit": "fraction per year",
+            "provenance": "mirrored",
+            "source": "stx_only_yield * 50 / price (coingecko:market_chart/range @ 1788433200)"
+          },
+          "price": {
+            "value": 338.839426,
+            "unit": "sats per STX",
+            "provenance": "mirrored",
+            "source": "coingecko:market_chart/range @ 1788433200"
+          },
+          "cliff_price": {
+            "value": null,
+            "unit": "sats per STX",
+            "provenance": "mirrored",
+            "source": "price * obligation / gross_pool",
+            "note": "assumes miner BTC bids scale linearly with the STX price"
+          },
+          "crosscheck": {
+            "ok": true,
+            "note": "diff vs event (sats): gross -1, reserve 0, stx -1, bonds 0",
+            "method": "recomputed from pox-5 state before/after the calculate-rewards block (call-read ?tip=)",
+            "tip_before": "0x0c04dc207710f583e777fe09c88ef21214f4de77c18b2725f40d6302efd93bd6",
+            "tip_after": "0x84baebf5725f1fe9a5aca95ccde2d1e2464ec4072f762c841e42df6695adc80f"
+          },
+          "risk_feed": {
+            "contract": "ST24MYZSDF0TAVZ452R2TJY3RCQAVT3KR0FJHYCAJ.risk-feed",
+            "network": "testnet",
+            "txid": "0xcde9f1e990d8556e34de8d053445e31572a4c0a9c675d12e38bc94905b23120c",
+            "status": "confirmed",
+            "note": "testnet feed values mirror mainnet data"
+          }
+        },
+        {
+          "distribution_index": 285,
+          "cycle": 142,
+          "calculation_height": 966349,
+          "txid": "0x252b558994e82003da52bee4e86cf138570cef440e53dda3c4571b00da52060b",
+          "gross_pool": {
+            "value": "233931905",
+            "unit": "sats",
+            "provenance": "mirrored",
+            "source": "mainnet pox-5 calculate-rewards event, tx 0x252b558994e82003da52bee4e86cf138570cef440e53dda3c4571b00da52060b: gross-accrued-rewards"
+          },
+          "obligation": {
+            "value": "0",
+            "unit": "sats",
+            "provenance": "mirrored",
+            "source": "mainnet pox-5 calculate-rewards event, tx 0x252b558994e82003da52bee4e86cf138570cef440e53dda3c4571b00da52060b: sum of bond-distribution target-yield"
+          },
+          "bond_paid": {
+            "value": "0",
+            "unit": "sats",
+            "provenance": "mirrored",
+            "source": "mainnet pox-5 calculate-rewards event, tx 0x252b558994e82003da52bee4e86cf138570cef440e53dda3c4571b00da52060b: total-bond-rewards"
+          },
+          "shortfall": {
+            "value": "0",
+            "unit": "sats",
+            "provenance": "mirrored",
+            "source": "obligation - bond_paid"
+          },
+          "stx_only": {
+            "value": "198842120",
+            "unit": "sats",
+            "provenance": "mirrored",
+            "source": "mainnet pox-5 calculate-rewards event, tx 0x252b558994e82003da52bee4e86cf138570cef440e53dda3c4571b00da52060b: total-stx-staker-rewards"
+          },
+          "reserve_deposit": {
+            "value": "35089785",
+            "unit": "sats",
+            "provenance": "mirrored",
+            "source": "mainnet pox-5 calculate-rewards event, tx 0x252b558994e82003da52bee4e86cf138570cef440e53dda3c4571b00da52060b: reserve-deposit"
+          },
+          "reserve_balance": {
+            "value": "120192248",
+            "unit": "sats",
+            "provenance": "mirrored",
+            "source": "mainnet pox-5 calculate-rewards event, tx 0x252b558994e82003da52bee4e86cf138570cef440e53dda3c4571b00da52060b: reserve-balance"
+          },
+          "coverage": {
+            "value": null,
+            "unit": "x",
+            "provenance": "mirrored",
+            "source": "gross_pool / obligation",
+            "note": "n/a: no bonds"
+          },
+          "headroom": {
+            "value": null,
+            "unit": "fraction",
+            "provenance": "mirrored",
+            "source": "1 - obligation / gross_pool",
+            "note": "n/a: no bonds"
+          },
+          "stx_only_yield": {
+            "value": 0.4716997681446709,
+            "unit": "sats per STX per interval",
+            "provenance": "mirrored",
+            "source": "mainnet pox-5 calculate-rewards event, tx 0x252b558994e82003da52bee4e86cf138570cef440e53dda3c4571b00da52060b: total-stx-staker-rewards / cycle-staked-ustx * 1e6"
+          },
+          "stx_only_apy_btc": {
+            "value": 0.06911476715730043,
+            "unit": "fraction per year",
+            "provenance": "mirrored",
+            "source": "stx_only_yield * 50 / price (coingecko:market_chart/range @ 1789038000)"
+          },
+          "price": {
+            "value": 341.243838,
+            "unit": "sats per STX",
+            "provenance": "mirrored",
+            "source": "coingecko:market_chart/range @ 1789038000"
+          },
+          "cliff_price": {
+            "value": null,
+            "unit": "sats per STX",
+            "provenance": "mirrored",
+            "source": "price * obligation / gross_pool",
+            "note": "assumes miner BTC bids scale linearly with the STX price"
+          },
+          "crosscheck": {
+            "ok": true,
+            "note": "diff vs event (sats): gross -1, reserve 0, stx -1, bonds 0",
+            "method": "recomputed from pox-5 state before/after the calculate-rewards block (call-read ?tip=)",
+            "tip_before": "0x907f655a18c304e6d3aa5f91f1c3fcdac228b484d2fec19200771c43d583b530",
+            "tip_after": "0xe3f7c410571dcfd65133279db3c33cb347419e7d11196204c70e860ff192fcf7"
+          },
+          "risk_feed": {
+            "contract": "ST24MYZSDF0TAVZ452R2TJY3RCQAVT3KR0FJHYCAJ.risk-feed",
+            "network": "testnet",
+            "txid": "0x9e1ac5c854a9be1cd71247d6316df0f4f9a9a04561f8d0b1b3ab54e439333c7a",
+            "status": "confirmed",
+            "note": "testnet feed values mirror mainnet data"
+          }
+        },
+        {
+          "distribution_index": 286,
+          "cycle": 143,
+          "calculation_height": 967399,
+          "txid": "0x4a0218d7b13de29ae47015e72345876d362c47159216675d40d03cd09ad1cc5d",
+          "gross_pool": {
+            "value": "230327835",
+            "unit": "sats",
+            "provenance": "mirrored",
+            "source": "mainnet pox-5 calculate-rewards event, tx 0x4a0218d7b13de29ae47015e72345876d362c47159216675d40d03cd09ad1cc5d: gross-accrued-rewards"
+          },
+          "obligation": {
+            "value": "13810222",
+            "unit": "sats",
+            "provenance": "mirrored",
+            "source": "mainnet pox-5 calculate-rewards event, tx 0x4a0218d7b13de29ae47015e72345876d362c47159216675d40d03cd09ad1cc5d: sum of bond-distribution target-yield"
+          },
+          "bond_paid": {
+            "value": "13810222",
+            "unit": "sats",
+            "provenance": "mirrored",
+            "source": "mainnet pox-5 calculate-rewards event, tx 0x4a0218d7b13de29ae47015e72345876d362c47159216675d40d03cd09ad1cc5d: total-bond-rewards"
+          },
+          "shortfall": {
+            "value": "0",
+            "unit": "sats",
+            "provenance": "mirrored",
+            "source": "obligation - bond_paid"
+          },
+          "stx_only": {
+            "value": "184039972",
+            "unit": "sats",
+            "provenance": "mirrored",
+            "source": "mainnet pox-5 calculate-rewards event, tx 0x4a0218d7b13de29ae47015e72345876d362c47159216675d40d03cd09ad1cc5d: total-stx-staker-rewards"
+          },
+          "reserve_deposit": {
+            "value": "32477641",
+            "unit": "sats",
+            "provenance": "mirrored",
+            "source": "mainnet pox-5 calculate-rewards event, tx 0x4a0218d7b13de29ae47015e72345876d362c47159216675d40d03cd09ad1cc5d: reserve-deposit"
+          },
+          "reserve_balance": {
+            "value": "152669889",
+            "unit": "sats",
+            "provenance": "mirrored",
+            "source": "mainnet pox-5 calculate-rewards event, tx 0x4a0218d7b13de29ae47015e72345876d362c47159216675d40d03cd09ad1cc5d: reserve-balance"
+          },
+          "coverage": {
+            "value": 16.67806896949231,
+            "unit": "x",
+            "provenance": "mirrored",
+            "source": "gross_pool / obligation"
+          },
+          "headroom": {
+            "value": 0.9400410202266696,
+            "unit": "fraction",
+            "provenance": "mirrored",
+            "source": "1 - obligation / gross_pool"
+          },
+          "stx_only_yield": {
+            "value": 0.42017725171522796,
+            "unit": "sats per STX per interval",
+            "provenance": "mirrored",
+            "source": "mainnet pox-5 calculate-rewards event, tx 0x4a0218d7b13de29ae47015e72345876d362c47159216675d40d03cd09ad1cc5d: total-stx-staker-rewards / cycle-staked-ustx * 1e6"
+          },
+          "stx_only_apy_btc": {
+            "value": 0.06669233657204557,
+            "unit": "fraction per year",
+            "provenance": "mirrored",
+            "source": "stx_only_yield * 50 / price (coingecko:market_chart/range @ 1789642800)"
+          },
+          "price": {
+            "value": 315.011644,
+            "unit": "sats per STX",
+            "provenance": "mirrored",
+            "source": "coingecko:market_chart/range @ 1789642800"
+          },
+          "cliff_price": {
+            "value": 18.88777679095958,
+            "unit": "sats per STX",
+            "provenance": "mirrored",
+            "source": "price * obligation / gross_pool",
+            "note": "assumes miner BTC bids scale linearly with the STX price"
+          },
+          "crosscheck": {
+            "ok": true,
+            "note": "diff vs event (sats): gross -2, reserve 0, stx -1, bonds -1",
+            "method": "recomputed from pox-5 state before/after the calculate-rewards block (call-read ?tip=)",
+            "tip_before": "0xc48f342fb05e99f51b63e8c0e147d60938267def701df0837d860c49fda76b86",
+            "tip_after": "0xa77f5c39ea2408ee39ecb114d72b8bbf74c51aa7862979901e7c15eb31a867dc"
+          },
+          "risk_feed": {
+            "contract": "ST24MYZSDF0TAVZ452R2TJY3RCQAVT3KR0FJHYCAJ.risk-feed",
+            "network": "testnet",
+            "txid": "0x85123d47f097520925db200ee137a9d71d6b7dde638e9367fa9887f6700466df",
+            "status": "confirmed",
+            "note": "testnet feed values mirror mainnet data"
+          }
+        }
+      ]
+    },
+    "/meta": {
+      "pox5": "SP000000000000000000002Q6VF78.pox-5",
+      "reader": "SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.pox5-reader",
+      "cache": "SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.coverage-cache",
+      "keeper": {
+        "address": "SPKD48VPM45ACPEV9WKSF07SP1MJD4Q03ENCKC0X",
+        "balance_ustx": "2850000",
+        "low_balance": false,
+        "alert_below_ustx": "1000000",
+        "fee_ustx": "150000",
+        "checked_at": "2026-09-20T22:54:21.721Z",
+        "pending": null,
+        "last": {
+          "at": "2026-09-20T04:53:50.905Z",
+          "why": "reading is 2 burn blocks old",
+          "kind": "refresh",
+          "txid": "0x41ba9ac58cf4d031d785bc12c73e797ecf69fdc615a4d405b6ce254477c314e7",
+          "status": "success"
+        }
+      },
+      "reader_network": "mainnet",
+      "feed": "ST24MYZSDF0TAVZ452R2TJY3RCQAVT3KR0FJHYCAJ.risk-feed",
+      "trait": {
+        "mainnet": "SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.risk-feed-trait",
+        "testnet": "ST24MYZSDF0TAVZ452R2TJY3RCQAVT3KR0FJHYCAJ.risk-feed-trait"
+      },
+      "guard": "ST24MYZSDF0TAVZ452R2TJY3RCQAVT3KR0FJHYCAJ.coverage-guard",
+      "feed_network": "testnet",
+      "repo": "https://github.com/Jagadeeshftw/metacenter"
+    }
+  },
+  "burn_height": 967909
+}

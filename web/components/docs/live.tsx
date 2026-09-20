@@ -1,7 +1,7 @@
 // Live figures for the docs. Every value here is read from the same public API as the
 // dashboard at render time (revalidated every 60 s) and shown with its provenance label and
 // the Bitcoin block it was read at. Nothing that changes is hardcoded in the MDX.
-import { getCurrent, getIntervals, getMeta, getStress } from "@/lib/api";
+import { getCurrent, getIntervals, getMeta, getPath, getStress } from "@/lib/api";
 import { btc, int, pct, satsExact, satsPerStx, times, timestamp } from "@/lib/format";
 import { headline } from "@/lib/view";
 import { site } from "@/lib/site";
@@ -126,10 +126,7 @@ function trim(value: unknown, depth = 0): unknown {
 
 /** A live request/response example from the public API. */
 export async function ApiExample({ path, pick, first }: { path: string; pick?: string; first?: boolean }) {
-  const [res, cur] = await Promise.all([
-    fetch(site.apiOrigin + path, { next: { revalidate: 60 } }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
-    getCurrent(),
-  ]);
+  const [res, cur] = await Promise.all([getPath<unknown>(path), getCurrent()]);
   if (!res) return <Unavailable />;
   let body: unknown = res;
   if (pick) body = pick.split(".").reduce<unknown>((o, k) => (o as Record<string, unknown>)?.[k], res);

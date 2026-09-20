@@ -1,6 +1,7 @@
 // Server-side data access. Every value keeps the API's field envelope, so the UI can
 // always show where a number came from.
 import { site } from "./site";
+import fallback from "@/data/fallback.json";
 
 export type Provenance = "onchain" | "mirrored" | "hypothetical";
 export type Field<T = number | string | null> = {
@@ -114,15 +115,41 @@ export type CycleHiro = {
   participants: { stakers: { stx_only: number; bonds: number }; signers: number | null };
 };
 
+// Last good response per path, for as long as this server instance lives.
+const lastGood = new Map<string, unknown>();
+// And a committed snapshot, so even a cold instance renders real figures when the API is down.
+const seeded = (fallback.responses ?? {}) as Record<string, unknown>;
+
+/**
+ * Fetch an API path. If the API (or its database) is unreachable, fall back to the last good
+ * response this instance saw, then to the committed snapshot. The figures then carry an older
+ * `as_of` block, which is what the UI shows: a page is never blank and never a stack trace.
+ */
 async function get<T>(path: string, revalidate = 60): Promise<T | null> {
   try {
-    const r = await fetch(site.apiOrigin + path, { next: { revalidate } });
-    if (!r.ok) return null;
-    return (await r.json()) as T;
+    // a hanging API must not hang the page: give up and use the cached copy
+    const r = await fetch(site.apiOrigin + path, { next: { revalidate }, signal: AbortSignal.timeout(6000) });
+    if (r.ok) {
+      const body = (await r.json()) as T;
+      lastGood.set(path, body);
+      return body;
+    }
   } catch {
-    return null;
+    // fall through to the cached copies
   }
+  return ((lastGood.get(path) ?? seeded[path]) as T) ?? null;
 }
+
+/** How old the figures are, so the UI can say so. */
+export function freshness(takenAt: string | null | undefined): { ageSeconds: number | null; stale: boolean } {
+  if (!takenAt) return { ageSeconds: null, stale: true };
+  const ageSeconds = Math.max(0, Math.round((Date.now() - new Date(takenAt).getTime()) / 1000));
+  // the indexer polls every 10 minutes; past 25 the figures are not being refreshed
+  return { ageSeconds, stale: ageSeconds > 25 * 60 };
+}
+
+/** Any API path, with the same timeout and fallbacks. Used by the live docs examples. */
+export const getPath = <T,>(path: string, revalidate = 60) => get<T>(path, revalidate);
 
 export const getCurrent = () => get<Current>("/metrics/current");
 export const getIntervals = () => get<{ count: number; intervals: Interval[] }>("/intervals");
