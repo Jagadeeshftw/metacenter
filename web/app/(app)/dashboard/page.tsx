@@ -44,7 +44,7 @@ export default async function Overview() {
         <Stat
           label="Pending pool (not yet split)"
           value={h.pending.value === null ? "—" : sats(h.pending.value)}
-          detail={h.pending.value === null ? "Needs pox5-reader on mainnet (deploy pending)." : "sBTC received since the last distribution"}
+          detail={h.pending.value === null ? "pox5-reader is on mainnet, but this read-only is over Hiro's public read-length cap." : "sBTC received since the last distribution"}
           provenance={h.pending.provenance}
           source={h.pending.source}
         />

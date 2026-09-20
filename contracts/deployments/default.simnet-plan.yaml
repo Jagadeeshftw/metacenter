@@ -4,43 +4,43 @@ network: simnet
 genesis:
   wallets:
   - name: deployer
-    address: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+    address: SP1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRCBGD7R
     balance: '100000000000000'
     sbtc-balance: '1000000000'
   - name: faucet
-    address: STNHKEPYEPJ8ET55ZZ0M5A34J0R3N5FM2CMMMAZ6
+    address: SPNHKEPYEPJ8ET55ZZ0M5A34J0R3N5FM2C69MJD9
     balance: '100000000000000'
     sbtc-balance: '1000000000'
   - name: wallet_1
-    address: ST1SJ3DTE5DN7X54YDH5D64R3BCB6A2AG2ZQ8YPD5
+    address: SP1SJ3DTE5DN7X54YDH5D64R3BCB6A2AG2XG1V316
     balance: '100000000000000'
     sbtc-balance: '1000000000'
   - name: wallet_2
-    address: ST2CY5V39NHDPWSXMW9QDT3HC3GD6Q6XX4CFRK9AG
+    address: SP2CY5V39NHDPWSXMW9QDT3HC3GD6Q6XX4CH94GRJ
     balance: '100000000000000'
     sbtc-balance: '1000000000'
   - name: wallet_3
-    address: ST2JHG361ZXG51QTKY2NQCVBPPRRE2KZB1HR05NNC
+    address: SP2JHG361ZXG51QTKY2NQCVBPPRRE2KZB1J5QKA2F
     balance: '100000000000000'
     sbtc-balance: '1000000000'
   - name: wallet_4
-    address: ST2NEB84ASENDXKYGJPQW86YXQCEFEX2ZQPG87ND
+    address: SP2NEB84ASENDXKYGJPQW86YXQCEFEX2ZPB1S2EP
     balance: '100000000000000'
     sbtc-balance: '1000000000'
   - name: wallet_5
-    address: ST2REHHS5J3CERCRBEPMGH7921Q6PYKAADT7JP2VB
+    address: SP2REHHS5J3CERCRBEPMGH7921Q6PYKAADR2V8W5C
     balance: '100000000000000'
     sbtc-balance: '1000000000'
   - name: wallet_6
-    address: ST3AM1A56AK2C1XAFJ4115ZSV26EB49BVQ10MGCS0
+    address: SP3AM1A56AK2C1XAFJ4115ZSV26EB49BVQ3JJEPMJ
     balance: '100000000000000'
     sbtc-balance: '1000000000'
   - name: wallet_7
-    address: ST3PF13W7Z0RRM42A8VZRVFQ75SV1K26RXEP8YGKJ
+    address: SP3PF13W7Z0RRM42A8VZRVFQ75SV1K26RXFA1W3C2
     balance: '100000000000000'
     sbtc-balance: '1000000000'
   - name: wallet_8
-    address: ST3NBRSFKX28FQ2ZJ1MAKX58HKHSDGNV5N7R21XCP
+    address: SP3NBRSFKX28FQ2ZJ1MAKX58HKHSDGNV5N6R5192Q
     balance: '100000000000000'
     sbtc-balance: '1000000000'
   contracts:
@@ -65,22 +65,22 @@ plan:
     transactions:
     - transaction-type: emulated-contract-publish
       contract-name: risk-feed-trait
-      emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+      emulated-sender: SP1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRCBGD7R
       path: contracts/risk-feed-trait.clar
       clarity-version: 6
     - transaction-type: emulated-contract-publish
       contract-name: coverage-guard
-      emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+      emulated-sender: SP1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRCBGD7R
       path: contracts/coverage-guard.clar
       clarity-version: 6
     - transaction-type: emulated-contract-publish
       contract-name: pox5-reader
-      emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+      emulated-sender: SP1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRCBGD7R
       path: contracts/pox5-reader.clar
       clarity-version: 6
     - transaction-type: emulated-contract-publish
       contract-name: risk-feed
-      emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+      emulated-sender: SP1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRCBGD7R
       path: contracts/risk-feed.clar
       clarity-version: 6
     epoch: '4.0'

@@ -26,6 +26,11 @@ const f = (value: unknown, unit: string, provenance: Provenance, source: string,
 });
 
 const READER_MISSING = "pox5-reader is not deployed on mainnet yet";
+// Hiro's /v2/contracts/call-read allows 500,000 of read length; a contract-call? into pox-5 loads
+// that contract, about 569k. So the reader is on mainnet but these functions cannot be called
+// through the public API, and the figure falls back to its mirrored source.
+const READER_CAPPED =
+  "pox5-reader is deployed on mainnet, but this read-only cannot be called through the public Hiro API: reading pox-5 costs about 569k of read length, over the 500,000 cap. It is checked against live mainnet state by contracts/scripts/verify-at-tip.mjs.";
 const PRICE_ASSUMPTION = "assumes miner BTC bids scale linearly with the STX price";
 const RESERVE_NOTE = "reserve cannot currently pay out (requires SIP)";
 const SIP_BOOK_NOTE =
@@ -155,8 +160,12 @@ export async function buildApi() {
     const iv = last ? intervalView(last) : null;
     const reserveDeposit = last ? BigInt(last.reserve_deposit_sats) : null;
 
-    const onchain = (value: unknown, unit: string, fn: string, note?: string) =>
-      r ? f(value, unit, "onchain", reader(fn), note) : f(null, unit, "onchain", reader(fn), READER_MISSING);
+    const readerErrors = (r?.errors ?? {}) as Record<string, string>;
+    const onchain = (value: unknown, unit: string, fn: string, note?: string) => {
+      if (!r) return f(null, unit, "onchain", reader(fn), READER_MISSING);
+      if (value == null && readerErrors[fn.split("(")[0].trim()]) return f(null, unit, "onchain", reader(fn), READER_CAPPED);
+      return f(value, unit, "onchain", reader(fn), note);
+    };
 
     const pNow = price ? Number(price.sats_per_stx) : null;
     const pDist = last?.price_sats_per_stx == null ? null : Number(last.price_sats_per_stx);
@@ -212,11 +221,13 @@ export async function buildApi() {
     if (config.readerContract) {
       const live = await latestLive();
       const ttl = live && n < live.current_cycle - 1 ? 24 * 3600_000 : 10 * 60_000;
-      cov = await cached(`cov:${n}`, ttl, () => callRead(config.readerContract!, "get-coverage-for-cycle", [Cl.uint(n)]));
+      cov = await cached(`cov:${n}`, ttl, () =>
+        callRead(config.readerContract!, "get-coverage-for-cycle", [Cl.uint(n)]).catch(() => null),
+      );
     }
     const src = reader(`get-coverage-for-cycle(u${n})`);
     const oc = (v: unknown, unit: string, note?: string) =>
-      cov ? f(v, unit, "onchain", src, note) : f(null, unit, "onchain", src, READER_MISSING);
+      cov ? f(v, unit, "onchain", src, note) : f(null, unit, "onchain", src, config.readerContract ? READER_CAPPED : READER_MISSING);
     return {
       cycle: n,
       intervals_computed: oc(cov?.["intervals-computed"], "intervals"),

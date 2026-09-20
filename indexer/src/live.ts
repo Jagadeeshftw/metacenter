@@ -1,5 +1,5 @@
 // Per-poll reads: Hiro v3 staking cycles, pox5-reader (mainnet) and direct pox-5 state.
-import { Cl } from "@stacks/transactions";
+import { Cl, type ClarityValue } from "@stacks/transactions";
 import { config } from "./config.js";
 import { hiro, callRead } from "./hiro.js";
 import { pool } from "./db.js";
@@ -20,23 +20,40 @@ export async function syncCycles(currentCycle: number) {
   }
 }
 
-/** pox5-reader reads, exactly what the contract returns. */
+/**
+ * pox5-reader reads, exactly what the contract returns.
+ *
+ * Best-effort per call. Hiro's /v2/contracts/call-read allows 500,000 of read length and every
+ * contract-call? into pox-5 loads that contract (~569k), so the reader functions that read pox-5
+ * are refused by the public endpoint. Those come back null with the reason in `errors`, and the
+ * figure stays on its mirrored source instead of the whole poll failing. The same functions are
+ * checked against live mainnet state by contracts/scripts/verify-at-tip.mjs.
+ */
 export async function readReader(cycle: number) {
   const R = config.readerContract;
   if (!R) return null;
   const u = Cl.uint;
-  return {
-    contract: R,
-    "get-current-cycle": await callRead(R, "get-current-cycle"),
-    [`get-coverage-for-cycle(u${cycle})`]: await callRead(R, "get-coverage-for-cycle", [u(cycle)]),
-    [`get-coverage-for-cycle(u${cycle - 1})`]: await callRead(R, "get-coverage-for-cycle", [u(cycle - 1)]),
-    [`get-obligation-per-interval(u${cycle})`]: await callRead(R, "get-obligation-per-interval", [u(cycle)]),
-    [`get-reserve-cover-cycles(u${cycle})`]: await callRead(R, "get-reserve-cover-cycles", [u(cycle)]),
-    [`get-bond-payout-order(u${cycle})`]: await callRead(R, "get-bond-payout-order", [u(cycle)]),
-    "get-reserve": await callRead(R, "get-reserve"),
-    "get-pending-pool": await callRead(R, "get-pending-pool"),
-    "get-coverage-summary": await callRead(R, "get-coverage-summary"),
+  const errors: Record<string, string> = {};
+  const call = async (fn: string, args: ClarityValue[] = []) => {
+    try {
+      return await callRead(R, fn, args);
+    } catch (e) {
+      errors[fn] = (e as Error).message.slice(0, 200);
+      return null;
+    }
   };
+  const out: Record<string, unknown> = { contract: R };
+  out["get-current-cycle"] = await call("get-current-cycle");
+  out[`get-coverage-for-cycle(u${cycle})`] = await call("get-coverage-for-cycle", [u(cycle)]);
+  out[`get-coverage-for-cycle(u${cycle - 1})`] = await call("get-coverage-for-cycle", [u(cycle - 1)]);
+  out[`get-obligation-per-interval(u${cycle})`] = await call("get-obligation-per-interval", [u(cycle)]);
+  out[`get-reserve-cover-cycles(u${cycle})`] = await call("get-reserve-cover-cycles", [u(cycle)]);
+  out[`get-bond-payout-order(u${cycle})`] = await call("get-bond-payout-order", [u(cycle)]);
+  out["get-reserve"] = await call("get-reserve");
+  out["get-pending-pool"] = await call("get-pending-pool");
+  out["get-coverage-summary"] = await call("get-coverage-summary");
+  if (Object.keys(errors).length > 0) out.errors = errors;
+  return out;
 }
 
 /** Direct pox-5 reads, kept for cross-checks and for the period before the reader is deployed. */

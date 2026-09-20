@@ -36,7 +36,7 @@ if (!pending) {
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ sender: POX5.split(".")[0], arguments: [] }),
   }).then((r) => r.json());
-  pending = { value: r.okay ? uintFromHex(r.result).toString() : null, how: "direct read of pox-5 get-new-rewards (pox5-reader not deployed yet)" };
+  pending = { value: r.okay ? uintFromHex(r.result).toString() : null, how: `direct read of pox-5 get-new-rewards (${meta?.reader ? "pox5-reader::get-pending-pool is over Hiro's public read-length cap" : "pox5-reader not deployed yet"})` };
 }
 
 const countTests = (dir) =>

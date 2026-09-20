@@ -56,12 +56,14 @@ Once per distribution interval (1,050 Bitcoin blocks, two per cycle), `calculate
 
 | Contract | Network | Address |
 |---|---|---|
-| pox5-reader | mainnet | _pending deploy_ |
+| pox5-reader | mainnet | [`SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.pox5-reader`](https://explorer.hiro.so/txid/SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.pox5-reader?chain=mainnet) |
+| risk-feed-trait | mainnet | [`SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.risk-feed-trait`](https://explorer.hiro.so/txid/SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.risk-feed-trait?chain=mainnet) |
 | risk-feed-trait | testnet | `ST24MYZSDF0TAVZ452R2TJY3RCQAVT3KR0FJHYCAJ.risk-feed-trait` |
 | risk-feed | testnet | `ST24MYZSDF0TAVZ452R2TJY3RCQAVT3KR0FJHYCAJ.risk-feed` |
 | coverage-guard | testnet | `ST24MYZSDF0TAVZ452R2TJY3RCQAVT3KR0FJHYCAJ.coverage-guard` |
 
 - Testnet feed values mirror mainnet data.
+- Nine of pox5-reader's thirteen read-onlys cannot be called through Hiro's public `/v2/contracts/call-read`: each `contract-call?` into pox-5 loads that contract, about 569k of read length, over the endpoint's 500,000 cap. There is no such limit inside a transaction or a fork, so `contracts/scripts/verify-at-tip.mjs` checks them against live mainnet state, and `contracts/scripts/verify-mainnet.mjs` records which ones the public endpoint refuses.
 - `ST24…vault-guard` on testnet is an earlier deployment of the example, superseded by `coverage-guard`.
 
 ### Error codes

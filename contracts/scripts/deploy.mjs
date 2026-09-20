@@ -1,10 +1,15 @@
 // Deploy Metacenter contracts with a key file kept outside the repo.
 //
-//   node scripts/deploy.mjs <mainnet|testnet> <key-file> <contract> [<contract> ...]
+//   node scripts/deploy.mjs <mainnet|testnet> <key-file> [--fee <uSTX>] <contract> [<contract> ...]
 //
 // Key file: JSON { address, privateKey } (see ~/.metacenter/). Contracts are
 // deployed in the given order as Clarity 6, each waiting for confirmation.
 // Contracts that already exist at the deployer address are skipped.
+//
+// --fee sets the fee in uSTX for every deploy in the run. Without it the node's
+// own estimate is used, which for a large contract can come back at hundreds of
+// STX when the fee percentiles are skewed by a few expensive transactions; check
+// /v2/fees/transaction and pass a fee above its low tier instead.
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -16,7 +21,10 @@ import {
   PostConditionMode,
 } from "@stacks/transactions";
 
-const [network, keyFile, ...contracts] = process.argv.slice(2);
+const argv = process.argv.slice(2);
+const fi = argv.indexOf("--fee");
+const fee = fi >= 0 ? BigInt(argv.splice(fi, 2)[1]) : undefined;
+const [network, keyFile, ...contracts] = argv;
 if (!["mainnet", "testnet"].includes(network) || !keyFile || contracts.length === 0) {
   console.error("usage: node scripts/deploy.mjs <mainnet|testnet> <key-file> <contract>...");
   process.exit(1);
@@ -56,6 +64,7 @@ for (const name of contracts) {
     senderKey: key.privateKey,
     network,
     nonce,
+    ...(fee === undefined ? {} : { fee }),
     clarityVersion: ClarityVersion.Clarity6,
     postConditionMode: PostConditionMode.Deny,
   });
