@@ -33,7 +33,16 @@ Restore, in order of preference:
 | API | `https://metacenter.0xo.in/api/metrics/current` | HTTP 200 and the keyword `as_of` |
 | Health | `https://metacenter.0xo.in/api/health` | the keyword `"status":"ok"` — its absence also catches `degraded` |
 
-Five-minute interval is enough: the indexer polls every ten minutes and the health endpoint only calls a figure stale after 45.
+Five-minute interval is enough: the indexer polls every ten minutes and the health endpoint only calls a figure stale after 45. Alerts go to email.
+
+### The health monitor depends on exact bytes
+
+The health monitor matches the raw string `"status":"ok"` — no space after the colon, lowercase, double-quoted, and `status` as the first key of the response. That is a contract with the monitor, not a formatting detail:
+
+- Renaming the field, wrapping the response, pretty-printing the JSON, or adding a space after the colon would leave the endpoint working while the monitor alerted forever. Nobody would trust it after the second false alarm.
+- `indexer/src/health.test.ts` fails if any of that changes: it injects a request and asserts the exact byte sequence, that the body is minified, that `status` is the first key, and that the value is one of `ok`, `degraded`, `down`. The tests were checked against deliberate mutations (field rename, pretty-printing) and fail on both.
+
+If the response shape genuinely has to change, change the UptimeRobot keyword in the same sitting, and update this section.
 
 ## The keeper
 

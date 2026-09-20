@@ -22,6 +22,8 @@ It returns **503 only when the database is unreachable**. Anything else answers 
 
 <ApiExample path="/health" />
 
+The exact shape is deliberate: an uptime monitor watches for the byte sequence `"status":"ok"`, so the field name, its position and the minified formatting are covered by tests that fail if anyone tidies them.
+
 ## What a visitor sees when something is down
 
 | Failure | Result |
