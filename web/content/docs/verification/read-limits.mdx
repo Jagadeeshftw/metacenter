@@ -1,0 +1,43 @@
+---
+title: Read limits and coverage-cache
+description: Why most pox5-reader read-onlys cannot be called through a public node, and how the figures stay onchain.
+---
+
+`pox5-reader` computes its figures by reading `pox-5`. Every `contract-call?` into that contract loads it, which costs about **569,000 of read length**. A public Hiro node allows **500,000** on `/v2/contracts/call-read`, so those calls are refused:
+
+```json
+{
+  "okay": false,
+  "cause": "RuntimeCheck(CostBalanceExceeded(ExecutionCost { read_length: 569372, ... }, ExecutionCost { read_length: 500000, ... }))"
+}
+```
+
+This is a limit on the read-only HTTP endpoint, not on the chain or on the contract. In a transaction the budget is far larger: the `coverage-cache::refresh` that produced today's figures used 8.5M of read length and confirmed normally. Contracts calling `pox5-reader` on-chain, such as [coverage-guard](/docs/contracts/coverage-guard), are unaffected.
+
+## What is affected
+
+| Callable through a public node | Refused (reads pox-5) |
+|---|---|
+| `get-current-cycle`, `get-reserve`, `bond-target-per-interval`, `get-snapshot` | `get-coverage-summary`, `get-coverage-for-cycle`, `get-cycle-calc-heights`, `get-intervals-computed`, `get-bond-payout-order`, `get-obligation-per-interval`, `get-reserve-cover-cycles`, `get-pending-pool`, `simulate-waterfall` |
+
+## coverage-cache
+
+`coverage-cache::refresh` calls `pox5-reader` inside a transaction and stores what it answered. Reading the stored copy touches only that contract, so a public node serves it. The values are the reader's own, so they keep the <Tag kind="onchain" /> label, and each one is shown with the burn height of the refresh that recorded it.
+
+`refresh` is permissionless and takes no arguments. A caller chooses only *when* a reading is taken, never what it says. The contract holds no funds and can move none.
+
+<Deployments />
+
+## The keeper
+
+A keeper in the indexer calls `pox5-reader::snapshot` once per distribution index, and `coverage-cache::refresh` when a distribution is computed, the cycle rolls over, or the stored reading is about a week old. It runs with its own key, funded for fees only. Anyone else can call either function at any time; the keeper has no privileged position.
+
+## Checking it yourself
+
+- `node contracts/scripts/verify-mainnet.mjs` calls what a public node allows, computes the same figures independently from `pox-5`, and lists which functions the endpoint refuses.
+- `node contracts/scripts/verify-at-tip.mjs` checks the deployed source against the repo, then runs the full suite against a fork of mainnet pinned at the current chain tip, with every expected value fetched from `pox-5` at that same tip. That covers the functions a public node cannot call.
+- Or read the stored copy directly:
+
+<ApiExample path="/metrics/current" pick="coverage" />
+
+The `source` names the reader function, the cache refresh and the burn height it ran at.

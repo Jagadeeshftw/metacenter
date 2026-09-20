@@ -25,8 +25,9 @@ import { pool } from "./db.js";
 const STALE_BURN_BLOCKS = Number(process.env.KEEPER_STALE_BURN_BLOCKS ?? 1100);
 
 type Pending = { kind: string; txid: string };
+type State = { pending?: Pending; address?: string; balance?: string; low?: boolean; checked_at?: string; last?: unknown };
 
-const getState = async (): Promise<{ pending?: Pending }> => {
+const getState = async (): Promise<State> => {
   const r = await pool.query("SELECT v FROM kv WHERE k = 'keeper'");
   return r.rows[0]?.v ?? {};
 };
@@ -34,6 +35,22 @@ const setState = (v: unknown) =>
   pool.query("INSERT INTO kv (k, v, updated_at) VALUES ('keeper', $1, now()) ON CONFLICT (k) DO UPDATE SET v = $1, updated_at = now()", [
     JSON.stringify(v),
   ]);
+
+/** What the keeper last did, for /meta. */
+export async function keeperStatus() {
+  if (!config.keeperKey) return null;
+  const s = await getState();
+  return {
+    address: s.address ?? getAddressFromPrivateKey(config.keeperKey, "mainnet"),
+    balance_ustx: s.balance ?? null,
+    low_balance: s.low ?? null,
+    alert_below_ustx: config.keeperAlertBalanceUstx.toString(),
+    fee_ustx: config.keeperFeeUstx.toString(),
+    checked_at: s.checked_at ?? null,
+    pending: s.pending ?? null,
+    last: s.last ?? null,
+  };
+}
 
 /** Run at most one keeper transaction per poll, and never while one is pending. */
 export async function runKeeper(log = console.log) {
@@ -51,6 +68,9 @@ export async function runKeeper(log = console.log) {
 
   const address = getAddressFromPrivateKey(keeperKey, "mainnet");
   const balance = BigInt((await hiro<any>(`/extended/v1/address/${address}/stx`)).balance ?? "0");
+  const low = balance < config.keeperAlertBalanceUstx;
+  await setState({ ...(await getState()), address, balance: balance.toString(), low, checked_at: new Date().toISOString() });
+  if (low) log(`keeper: LOW BALANCE ${address} has ${balance} uSTX (alert below ${config.keeperAlertBalanceUstx}); top it up`);
   if (balance < config.keeperMinBalanceUstx) {
     log(`keeper: ${address} has ${balance} uSTX, below KEEPER_MIN_BALANCE_USTX; skipping`);
     return;

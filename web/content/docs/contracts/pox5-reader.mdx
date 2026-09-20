@@ -31,6 +31,10 @@ Implements [risk-feed-trait](/docs/contracts/risk-feed-trait). Every figure it r
 |---|---|---|
 | <Fn name="snapshot" /> | Anyone may call it once per distribution index. It records cumulative rewards-per-token for the cycle of the latest distribution, so per-interval figures can be rebuilt on-chain. | `u100`: already recorded for this index |
 
+## Calling it off-chain
+
+Most of these read-onlys read `pox-5`, which costs about 569k of read length: over the 500,000 a public Hiro node allows on `/v2/contracts/call-read`. [`coverage-cache`](/docs/verification/read-limits) stores the reader's answers from a transaction so the public API can serve them, and the figures keep the <Tag kind="onchain" /> label.
+
 ## Precision
 
 - The pool is rebuilt from rewards-per-token × shares. It is accurate to within ±2 sats per computed interval.

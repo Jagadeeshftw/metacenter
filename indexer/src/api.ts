@@ -4,6 +4,7 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import { Cl } from "@stacks/transactions";
 import { config } from "./config.js";
+import { keeperStatus } from "./keeper.js";
 import { pool } from "./db.js";
 import { callRead } from "./hiro.js";
 import {
@@ -136,6 +137,7 @@ export async function buildApi() {
       pox5: config.pox5,
       reader: config.readerContract ?? null,
       cache: config.cacheContract ?? null,
+      keeper: await keeperStatus(),
       reader_network: "mainnet",
       feed: config.feedContract,
       trait: { mainnet: config.readerContract ? `${config.readerContract.split(".")[0]}.risk-feed-trait` : null, testnet: `${feedAddress}.risk-feed-trait` },

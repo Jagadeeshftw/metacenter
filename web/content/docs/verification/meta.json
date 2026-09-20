@@ -2,6 +2,7 @@
  "pages": [
   "cross-check",
   "missing-blocks",
-  "recompute"
+  "recompute",
+  "read-limits"
  ]
 }
