@@ -64,6 +64,11 @@ plan:
   - id: 0
     transactions:
     - transaction-type: emulated-contract-publish
+      contract-name: coverage-cache
+      emulated-sender: SP1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRCBGD7R
+      path: contracts/coverage-cache.clar
+      clarity-version: 6
+    - transaction-type: emulated-contract-publish
       contract-name: risk-feed-trait
       emulated-sender: SP1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRCBGD7R
       path: contracts/risk-feed-trait.clar

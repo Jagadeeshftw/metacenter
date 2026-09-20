@@ -58,12 +58,15 @@ Once per distribution interval (1,050 Bitcoin blocks, two per cycle), `calculate
 |---|---|---|
 | pox5-reader | mainnet | [`SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.pox5-reader`](https://explorer.hiro.so/txid/SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.pox5-reader?chain=mainnet) |
 | risk-feed-trait | mainnet | [`SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.risk-feed-trait`](https://explorer.hiro.so/txid/SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.risk-feed-trait?chain=mainnet) |
+| coverage-cache | mainnet | [`SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.coverage-cache`](https://explorer.hiro.so/txid/SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.coverage-cache?chain=mainnet) |
 | risk-feed-trait | testnet | `ST24MYZSDF0TAVZ452R2TJY3RCQAVT3KR0FJHYCAJ.risk-feed-trait` |
 | risk-feed | testnet | `ST24MYZSDF0TAVZ452R2TJY3RCQAVT3KR0FJHYCAJ.risk-feed` |
 | coverage-guard | testnet | `ST24MYZSDF0TAVZ452R2TJY3RCQAVT3KR0FJHYCAJ.coverage-guard` |
 
 - Testnet feed values mirror mainnet data.
-- Nine of pox5-reader's thirteen read-onlys cannot be called through Hiro's public `/v2/contracts/call-read`: each `contract-call?` into pox-5 loads that contract, about 569k of read length, over the endpoint's 500,000 cap. There is no such limit inside a transaction or a fork, so `contracts/scripts/verify-at-tip.mjs` checks them against live mainnet state, and `contracts/scripts/verify-mainnet.mjs` records which ones the public endpoint refuses.
+- Nine of pox5-reader's thirteen read-onlys cannot be called through Hiro's public `/v2/contracts/call-read`: each `contract-call?` into pox-5 loads that contract, about 569k of read length, over the endpoint's 500,000 cap. A transaction has no such limit, so `coverage-cache::refresh` calls pox5-reader on-chain and stores its answers, and the public API reads the stored copy. The figures stay `onchain`, sourced to the refresh transaction and the burn height it ran at.
+- `contracts/scripts/verify-at-tip.mjs` checks the reader and the cache against live mainnet state (a fork at the chain tip, expectations fetched from pox-5 at the same tip). `contracts/scripts/verify-mainnet.mjs` calls what the public endpoint allows and records which functions it refuses.
+- The keeper in the indexer calls `pox5-reader::snapshot` once per distribution index and `coverage-cache::refresh` when a distribution lands, the cycle rolls over, or the reading is about a week old. Both calls are permissionless and take no arguments, so the keeper chooses only when a reading is taken. It runs with its own key (`SPKD48VPM45ACPEV9WKSF07SP1MJD4Q03ENCKC0X`), funded with fees only.
 - `ST24…vault-guard` on testnet is an earlier deployment of the example, superseded by `coverage-guard`.
 
 ### Error codes

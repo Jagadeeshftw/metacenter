@@ -4,6 +4,7 @@ import { syncDistributions } from "./distributions.js";
 import { syncCycles, takeLiveSnapshot } from "./live.js";
 import { currentPrice, fillMissingPrices } from "./price.js";
 import { publishPending } from "./publisher.js";
+import { runKeeper } from "./keeper.js";
 import { buildApi } from "./api.js";
 
 const log = (...a: unknown[]) => console.log(new Date().toISOString(), ...a);
@@ -31,6 +32,7 @@ async function poll() {
     await step("missing prices", fillMissingPrices);
     if (cycle) await step("cycles", () => syncCycles(cycle));
     await step("publish", () => publishPending(log));
+    await step("keeper", () => runKeeper(log));
   } finally {
     running = false;
     log(`poll done in ${Math.round((Date.now() - t0) / 1000)}s`);
@@ -46,7 +48,9 @@ async function main() {
   }
   const app = await buildApi();
   await app.listen({ port: config.port, host: "0.0.0.0" });
-  log(`api listening on ${config.port}; reader ${config.readerContract ?? "(not deployed)"}; feed ${config.feedContract}; publisher ${config.publisherKey ? "on" : "off"}`);
+  log(
+    `api listening on ${config.port}; reader ${config.readerContract ?? "(not deployed)"}; cache ${config.cacheContract ?? "(none)"}; feed ${config.feedContract}; publisher ${config.publisherKey ? "on" : "off"}; keeper ${config.keeperKey ? "on" : "off"}`,
+  );
   void poll();
   setInterval(poll, config.pollMs);
 }

@@ -1,6 +1,6 @@
 # Metacenter: application facts
 
-Generated 2026-09-20 03:54 UTC by `research/scripts/application-facts.mjs` from public data. Rerun it to refresh.
+Generated 2026-09-20 04:49 UTC by `research/scripts/application-facts.mjs` from public data. Rerun it to refresh.
 
 ## Links
 
@@ -29,15 +29,15 @@ The testnet feed mirrors mainnet data. Every distribution below is posted there 
 
 ## Headline numbers
 
-The indexer last polled at Bitcoin block **967,790** (2026-09-20T03:52:56.411Z). Figures that come from the latest distribution are as of that distribution, **286**: cycle 143, calculation height 967,399.
+The indexer last polled at Bitcoin block **967,793** (2026-09-20T04:47:46.507Z). Figures that come from the latest distribution are as of that distribution, **286**: cycle 143, calculation height 967,399.
 
 | Figure | Value |
 |---|---|
-| Coverage | 16.68× _(mirrored, distribution 286)_. 230,327,835 sats pool ÷ 13,810,222 sats owed |
-| Headroom | 94.0% _(mirrored)_. The pool can fall this far before bond yield is impaired |
+| Coverage | 16.68× _(onchain)_. 230,327,835 sats pool ÷ 13,810,222 sats owed |
+| Headroom | 94.0% _(onchain)_. The pool can fall this far before bond yield is impaired |
 | Reserve | 152,669,889 sats _(onchain)_ |
 | Hypothetical cover | 5.52 cycles. The reserve cannot pay out without a SIP |
-| Pending pool | 87,178,937 sats, via direct read of pox-5 get-new-rewards (pox5-reader::get-pending-pool is over Hiro's public read-length cap), at the Bitcoin tip 967,790 (Stacks 9,029,772) |
+| Pending pool | 87,530,663 sats, via pox5-reader::get-pending-pool _(onchain)_, at the Bitcoin tip 967,794 (Stacks 9,029,998) |
 | STX-only realised yield | 6.67% a year in BTC terms _(mirrored)_. 0.4202 sats/STX in distribution 286, priced at 315.01 sats/STX (coingecko:market_chart/range @ 1789642800) |
 | Cliff price | 18.9 sats/STX _(mirrored; price at distribution 286 × obligation ÷ pool; assumes miner bids scale with STX price)_ |
 | Cliff, 3,000 BTC book | ≈ 246.2 sats/STX _(hypothetical; price at distribution 286, 315.01 sats/STX, × 180,000,000 sats ÷ its pool 230,327,835 sats)_ |

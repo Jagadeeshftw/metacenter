@@ -72,6 +72,7 @@ export type Current = {
 export type Meta = {
   pox5: string;
   reader: string | null;
+  cache: string | null;
   feed: string;
   trait: { mainnet: string | null; testnet: string };
   guard: string;

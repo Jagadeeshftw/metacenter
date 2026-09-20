@@ -82,6 +82,7 @@ export async function Deployments() {
   const rows = [
     { name: "pox5-reader", net: "mainnet" as const, id: meta?.reader ?? null },
     { name: "risk-feed-trait", net: "mainnet" as const, id: meta?.trait.mainnet ?? null },
+    { name: "coverage-cache", net: "mainnet" as const, id: meta?.cache ?? null },
     { name: "risk-feed", net: "testnet" as const, id: meta?.feed ?? null },
     { name: "risk-feed-trait", net: "testnet" as const, id: meta?.trait.testnet ?? null },
     { name: "coverage-guard", net: "testnet" as const, id: meta?.guard ?? null },

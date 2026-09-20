@@ -198,3 +198,61 @@ describe("pox5-reader against mainnet state at the tip", () => {
     expect(simnet.callPublicFn("pox5-reader", "snapshot", [], caller()).result).toBeErr(Cl.uint(100));
   });
 });
+
+// ---------------------------------------------------------------------------
+// coverage-cache: the same figures, stored by a transaction so they can be read off-chain.
+// ---------------------------------------------------------------------------
+describe("coverage-cache against the deployed reader", () => {
+  const cache = (fn: string, args: ClarityValue[] = []) =>
+    plain(cvToValue(simnet.callReadOnlyFn("coverage-cache", fn, args, caller()).result, true));
+
+  it("has nothing before the first refresh, and errors on the trait read", () => {
+    expect(cache("get-extras")).toBeNull();
+    expect(cache("get-updated-at")).toBeNull();
+    expect(simnet.callReadOnlyFn("coverage-cache", "get-coverage-summary", [], caller()).result).toBeErr(Cl.uint(200));
+  });
+
+  it("refresh stores exactly what pox5-reader answers", () => {
+    const r = simnet.callPublicFn("coverage-cache", "refresh", [], caller());
+    expect(r.result.type).toBe("ok");
+
+    const summary = ro("get-coverage-summary");
+    const stored = cache("get-coverage-summary");
+    expect(n(stored.period)).toBe(n(summary.period));
+    expect(stored["period-kind"]).toBe(summary["period-kind"]);
+    expect(n(stored["pool-sats"])).toBe(n(summary["pool-sats"]));
+    expect(n(stored["obligation-sats"])).toBe(n(summary["obligation-sats"]));
+    expect(stored["coverage-bps"] == null ? null : n(stored["coverage-bps"])).toEqual(
+      summary["coverage-bps"] == null ? null : n(summary["coverage-bps"]),
+    );
+    expect(stored["headroom-bps"] == null ? null : n(stored["headroom-bps"])).toEqual(
+      summary["headroom-bps"] == null ? null : n(summary["headroom-bps"]),
+    );
+    // the label stays pox5-reader's own
+    expect(stored.provenance).toBe("onchain");
+
+    const extras = cache("get-extras");
+    const cover = ro("get-reserve-cover-cycles", [Cl.uint(cycle)]);
+    const pending = ro("get-pending-pool");
+    expect(n(extras.cycle)).toBe(cycle);
+    expect(n(extras["intervals-computed"])).toBe(n(ro("get-intervals-computed", [Cl.uint(cycle)])));
+    expect(n(extras["obligation-per-interval-sats"])).toBe(obligation);
+    expect(n(extras["reserve-sats"])).toBe(n(cover["reserve-sats"]));
+    expect(extras["reserve-can-pay-bonds"]).toBe(false);
+    expect(n(extras["pending-sats"])).toBe(n(pending["pending-sats"]));
+    expect(extras["pending-balanced"]).toBe(pending.balanced);
+    expect(n(extras["last-compute-height"])).toBe(n(pending["last-compute-height"]));
+    expect(extras.bonds.map((b: any) => n(b["bond-index"]))).toEqual(bonds.map((b) => b.idx));
+    expect(extras.bonds.map((b: any) => n(b["target-per-interval"]))).toEqual(bonds.map((b) => b.target));
+  });
+
+  it("is permissionless and overwrites, and records the burn height it was read at", () => {
+    const other = simnet.getAccounts().get("wallet_2")!;
+    simnet.mineEmptyBurnBlocks(3);
+    const before = n(cache("get-updated-at"));
+    expect(simnet.callPublicFn("coverage-cache", "refresh", [], other).result.type).toBe("ok");
+    const after = n(cache("get-updated-at"));
+    expect(after).toBeGreaterThan(before);
+    expect(after).toBe(BigInt(simnet.burnBlockHeight));
+  });
+});

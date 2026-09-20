@@ -25,9 +25,10 @@ export async function syncCycles(currentCycle: number) {
  *
  * Best-effort per call. Hiro's /v2/contracts/call-read allows 500,000 of read length and every
  * contract-call? into pox-5 loads that contract (~569k), so the reader functions that read pox-5
- * are refused by the public endpoint. Those come back null with the reason in `errors`, and the
- * figure stays on its mirrored source instead of the whole poll failing. The same functions are
- * checked against live mainnet state by contracts/scripts/verify-at-tip.mjs.
+ * are refused by the public endpoint. For those, coverage-cache holds pox5-reader's own answers,
+ * stored by a transaction, and reading the cache touches no pox-5: the values are the reader's,
+ * with the burn height they were recorded at. Anything still missing comes back null with the
+ * reason in `errors`, and the figure falls back to its mirrored source.
  */
 export async function readReader(cycle: number) {
   const R = config.readerContract;
@@ -52,8 +53,56 @@ export async function readReader(cycle: number) {
   out["get-reserve"] = await call("get-reserve");
   out["get-pending-pool"] = await call("get-pending-pool");
   out["get-coverage-summary"] = await call("get-coverage-summary");
+
+  // Fill what the endpoint refused from coverage-cache, and say which fields came from there.
+  const C = config.cacheContract;
+  if (C && Object.keys(errors).length > 0) {
+    const cached = await readCache(C);
+    if (cached) {
+      const { summary, extras } = cached;
+      const viaCache: Record<string, number> = {};
+      const fill = (key: string, fn: string, value: unknown) => {
+        if (out[key] == null && value != null) {
+          out[key] = value;
+          viaCache[fn] = Number(summary?.updated_at ?? extras?.["updated-at"] ?? 0);
+          delete errors[fn];
+        }
+      };
+      if (summary) fill("get-coverage-summary", "get-coverage-summary", summary.response);
+      if (extras && Number(extras.cycle) === cycle) {
+        fill(`get-obligation-per-interval(u${cycle})`, "get-obligation-per-interval", extras["obligation-per-interval-sats"]);
+        fill(`get-bond-payout-order(u${cycle})`, "get-bond-payout-order", extras.bonds);
+        fill(`get-reserve-cover-cycles(u${cycle})`, "get-reserve-cover-cycles", {
+          "reserve-sats": extras["reserve-sats"],
+          "obligation-per-cycle-sats": String(2n * BigInt(extras["obligation-per-interval-sats"])),
+          "cover-cycles-x100": extras["reserve-cover-cycles-x100"],
+          "reserve-can-pay-bonds": extras["reserve-can-pay-bonds"],
+        });
+        fill("get-pending-pool", "get-pending-pool", {
+          "pending-sats": extras["pending-sats"],
+          balanced: extras["pending-balanced"],
+          "last-compute-height": extras["last-compute-height"],
+        });
+      }
+      out.cache = { contract: C, updated_at: Number(extras?.["updated-at"] ?? 0), cycle: extras ? Number(extras.cycle) : null };
+      if (Object.keys(viaCache).length > 0) out.via_cache = viaCache;
+    }
+  }
   if (Object.keys(errors).length > 0) out.errors = errors;
   return out;
+}
+
+/** coverage-cache reads: cheap, so the public endpoint serves them. */
+async function readCache(contract: string) {
+  try {
+    const summary = await callRead(contract, "get-coverage-summary");
+    const extras = await callRead(contract, "get-extras");
+    if (summary?.err !== undefined) return { summary: null, extras };
+    // the API reads this in its {ok: ...} response shape, as it comes back from the reader
+    return { summary: { response: summary, updated_at: summary?.ok?.["updated-at"] }, extras };
+  } catch {
+    return null;
+  }
 }
 
 /** Direct pox-5 reads, kept for cross-checks and for the period before the reader is deployed. */

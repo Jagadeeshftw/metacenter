@@ -25,7 +25,15 @@ const manifest = fs
   .replace(/^name = .*/m, 'name = "metacenter-tip"')
   .replace(/initial_height = \d+/, `initial_height = ${info.stacks_tip_height}`)
   .replace(/^# Mainnet fork pinned.*\n(#.*\n)*/m, `# Mainnet fork at the tip when this was written: Stacks ${info.stacks_tip_height} (Bitcoin ${info.burn_block_height}).\n`);
-fs.writeFileSync("Clarinet.tip.toml", manifest);
+// coverage-cache calls the deployed mainnet reader, so it only makes sense at a tip after the
+// deploy; tests-fork stays pinned before it and leaves the cache out.
+fs.writeFileSync(
+  "Clarinet.tip.toml",
+  manifest.replace(
+    /\[contracts\.risk-feed\]/,
+    '[contracts.coverage-cache]\npath = "contracts/coverage-cache.clar"\nepoch = "4.0"\n\n[contracts.risk-feed]',
+  ),
+);
 console.log(`fork pinned at Stacks block ${info.stacks_tip_height} (Bitcoin ${info.burn_block_height}), index hash ${block.index_block_hash}\n`);
 
 execFileSync("npx", ["vitest", "run", "--config", "vitest.tip.config.ts"], {

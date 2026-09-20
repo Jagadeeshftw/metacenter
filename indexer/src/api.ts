@@ -29,6 +29,8 @@ const READER_MISSING = "pox5-reader is not deployed on mainnet yet";
 // Hiro's /v2/contracts/call-read allows 500,000 of read length; a contract-call? into pox-5 loads
 // that contract, about 569k. So the reader is on mainnet but these functions cannot be called
 // through the public API, and the figure falls back to its mirrored source.
+const CACHE_NOTE =
+  "pox5-reader computed this from pox-5 state in a mainnet transaction; coverage-cache stores its answer so the public API can read it";
 const READER_CAPPED =
   "pox5-reader is deployed on mainnet, but this read-only cannot be called through the public Hiro API: reading pox-5 costs about 569k of read length, over the 500,000 cap. It is checked against live mainnet state by contracts/scripts/verify-at-tip.mjs.";
 const PRICE_ASSUMPTION = "assumes miner BTC bids scale linearly with the STX price";
@@ -133,6 +135,7 @@ export async function buildApi() {
     return {
       pox5: config.pox5,
       reader: config.readerContract ?? null,
+      cache: config.cacheContract ?? null,
       reader_network: "mainnet",
       feed: config.feedContract,
       trait: { mainnet: config.readerContract ? `${config.readerContract.split(".")[0]}.risk-feed-trait` : null, testnet: `${feedAddress}.risk-feed-trait` },
@@ -161,9 +164,16 @@ export async function buildApi() {
     const reserveDeposit = last ? BigInt(last.reserve_deposit_sats) : null;
 
     const readerErrors = (r?.errors ?? {}) as Record<string, string>;
+    const viaCache = (r?.via_cache ?? {}) as Record<string, number>;
     const onchain = (value: unknown, unit: string, fn: string, note?: string) => {
       if (!r) return f(null, unit, "onchain", reader(fn), READER_MISSING);
-      if (value == null && readerErrors[fn.split("(")[0].trim()]) return f(null, unit, "onchain", reader(fn), READER_CAPPED);
+      const base = fn.split("(")[0].trim();
+      // recorded by pox5-reader in a mainnet transaction, read back from coverage-cache
+      if (viaCache[base] !== undefined) {
+        const via = `${config.cacheContract}::refresh at burn height ${viaCache[base]}, calling ${reader(fn)}`;
+        return f(value, unit, "onchain", via, note ? `${note}. ${CACHE_NOTE}` : CACHE_NOTE);
+      }
+      if (value == null && readerErrors[base]) return f(null, unit, "onchain", reader(fn), READER_CAPPED);
       return f(value, unit, "onchain", reader(fn), note);
     };
 
