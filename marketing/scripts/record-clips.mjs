@@ -16,6 +16,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const SITE = "https://metacenter.0xo.in";
+const READER = process.env.READER_CONTRACT ?? "SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.pox5-reader";
 let W = 1280, H = 720;
 const DPR = 2, DURATION = 6, FPS = 30;
 const argv = process.argv.slice(2);
@@ -411,6 +412,32 @@ await clip(
     await page.waitForTimeout(600);
   },
   { width: 960, height: 540 },
+);
+
+// i. the reader on mainnet: explorer page, then the dashboard reading "onchain"
+await clip(
+  "i-mainnet-reader",
+  async (page) => {
+    await page.goto(`https://explorer.hiro.so/txid/${READER}?chain=mainnet`, { waitUntil: "domcontentloaded" });
+    // the explorer renders the contract view client-side; wait for the name, then settle
+    await page.getByText("pox5-reader", { exact: false }).first().waitFor({ timeout: 20000 }).catch(() => {});
+    await page.waitForTimeout(2500);
+    return { x: 0, y: 0, width: W, height: H };
+  },
+  async (page, snap) => {
+    await page.waitForTimeout(1800);
+    await page.goto(`${SITE}/dashboard`, { waitUntil: "domcontentloaded" });
+    await settle(page);
+    const cards = page.locator("section[aria-label='Headline figures'] > div");
+    await scrollTo(page, cards.nth(0), 170);
+    await page.waitForTimeout(600);
+    // hover the coverage card's provenance tag: "onchain, computed by pox5-reader"
+    const tag = page.locator("section[aria-label='Headline figures'] [role='tooltip']").nth(1).locator("..");
+    await glide(page, ...centerOf(await box(tag)), 900);
+    await page.waitForTimeout(1500);
+    await snap();
+    await page.waitForTimeout(700);
+  },
 );
 
 fs.rmSync(BRAND_DIR, { recursive: true, force: true });

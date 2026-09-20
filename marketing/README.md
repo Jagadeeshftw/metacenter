@@ -23,9 +23,9 @@ Files only. Nothing is posted from here, and no social account is touched.
 | f-bond-payout-order | Bond payout order panel |
 | g-reserve | Reserve with "hypothetical cover: reserve cannot currently pay out (requires SIP)" |
 | h-methodology-source | A methodology row clicked through to `get-obligation-per-interval` at line 283 of the contract source |
-| i | **Not recorded yet.** Needs the mainnet deploy: the explorer page for pox5-reader, and the dashboard reading "onchain". |
+| i-mainnet-reader | The explorer page for pox5-reader on mainnet, then the dashboard headline cards reading "onchain" |
 
-Recorded at Bitcoin block 967,717 (2026-09-19), with logo C.
+Clips a–h recorded at Bitcoin block 967,717 (2026-09-19); clip i at 967,794 (2026-09-20, after the mainnet deploy). All with logo C.
 
 ## Posts
 
@@ -43,7 +43,7 @@ Recorded at Bitcoin block 967,717 (2026-09-19), with logo C.
 | D5 · 2: 3,000 BTC hypothetical, ~246 cliff, friedger 171.2 (thread) | e | none (untagged; @friedger TO VERIFY) | ready |
 | D6 · 1: methodology and open API | h | @hirosystems | ready |
 | D6 · 2: every distribution recomputed within 2 sats | c or still h | none | ready |
-| D7 · 1: pox5-reader live on mainnet | i | none | waits for mainnet (post the same day as the deploy) |
+| D7 · 1: pox5-reader live on mainnet | i | none | ready (deploy landed 20 Sep) |
 | D7 · 2: applied to Stacks Endowment Q3 grants | a | @Stacks @StacksEndowment | waits for submission (planned 23 Sep evening IST) |
 
 ## Re-recording

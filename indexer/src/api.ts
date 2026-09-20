@@ -167,10 +167,11 @@ export async function buildApi() {
     const viaCache = (r?.via_cache ?? {}) as Record<string, number>;
     const onchain = (value: unknown, unit: string, fn: string, note?: string) => {
       if (!r) return f(null, unit, "onchain", reader(fn), READER_MISSING);
-      const base = fn.split("(")[0].trim();
+      const base = fn.split("(")[0].split(":")[0].trim(); // "get-coverage-summary: headroom-bps" -> the function
       // recorded by pox5-reader in a mainnet transaction, read back from coverage-cache
       if (viaCache[base] !== undefined) {
-        const via = `${config.cacheContract}::refresh at burn height ${viaCache[base]}, calling ${reader(fn)}`;
+        // the reader's own function, named in full; the cache contract id is in /meta
+        const via = `${reader(fn)} via coverage-cache::refresh at burn height ${viaCache[base]}`;
         return f(value, unit, "onchain", via, note ? `${note}. ${CACHE_NOTE}` : CACHE_NOTE);
       }
       if (value == null && readerErrors[base]) return f(null, unit, "onchain", reader(fn), READER_CAPPED);
