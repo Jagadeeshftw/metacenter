@@ -19,6 +19,7 @@ import {
 import { config } from "./config.js";
 import { hiro, callRead } from "./hiro.js";
 import { pool } from "./db.js";
+import { refreshReasons } from "./model.js";
 
 // A refresh is due when the figures can have changed: a new distribution was computed, the cycle
 // rolled over, or the stored reading is this old. pox-5 computes twice a cycle, about weekly.
@@ -116,12 +117,11 @@ async function whatIsDue(): Promise<{ contract: string; fn: string; why: string 
   const cycle = Number(await callRead(config.pox5, "current-pox-reward-cycle"));
   const lastCalc = Number(await callRead(config.pox5, "get-last-reward-compute-height"));
   const burnHeight = Number((await hiro<any>("/v2/info")).burn_block_height);
-  const reasons = [
-    Number(extras.cycle) !== cycle && `cycle ${extras.cycle} -> ${cycle}`,
-    Number(extras["last-compute-height"]) !== lastCalc && `a distribution was computed at ${lastCalc}`,
-    burnHeight - Number(extras["updated-at"]) >= STALE_BURN_BLOCKS &&
-      `reading is ${burnHeight - Number(extras["updated-at"])} burn blocks old`,
-  ].filter(Boolean) as string[];
+  const reasons = refreshReasons(
+    { cycle: Number(extras.cycle), lastComputeHeight: Number(extras["last-compute-height"]), updatedAt: Number(extras["updated-at"]) },
+    { cycle, lastComputeHeight: lastCalc, burnHeight },
+    STALE_BURN_BLOCKS,
+  );
   if (reasons.length > 0) return { contract: cache, fn: "refresh", why: reasons.join("; ") };
   return null;
 }

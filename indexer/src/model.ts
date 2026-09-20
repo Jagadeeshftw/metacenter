@@ -70,3 +70,22 @@ export const cliffSatsPerStx = (price: number, pool: bigint, obligation: bigint)
 /** friedger's cliff under SIP launch inputs: annual obligation / (STX per block * blocks per year). */
 export const friedgerCliff = (bookBtc = 3000, rate = 0.03, stxPerBlock = 1000, blocksPerYear = 52560) =>
   (bookBtc * rate * 1e8) / (stxPerBlock * blocksPerYear);
+
+/**
+ * Why a refresh is due, given the stored reading and the chain. Pure, so it can be tested:
+ * the figures change when a distribution is computed or the cycle rolls over, and a reading
+ * older than STALE_BURN_BLOCKS is refreshed even if nothing moved.
+ */
+export function refreshReasons(
+  stored: { cycle: number; lastComputeHeight: number; updatedAt: number },
+  chain: { cycle: number; lastComputeHeight: number; burnHeight: number },
+  staleBurnBlocks: number,
+): string[] {
+  const age = chain.burnHeight - stored.updatedAt;
+  return [
+    stored.cycle !== chain.cycle && `cycle ${stored.cycle} -> ${chain.cycle}`,
+    stored.lastComputeHeight !== chain.lastComputeHeight && `a distribution was computed at ${chain.lastComputeHeight}`,
+    age >= staleBurnBlocks && `reading is ${age} burn blocks old`,
+  ].filter(Boolean) as string[];
+}
+
