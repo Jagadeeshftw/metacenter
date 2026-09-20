@@ -1,0 +1,40 @@
+---
+title: Health and degradation
+description: What this service does when a piece of it is down, and how to check its state yourself.
+---
+
+Every figure here comes from public data, so nothing is lost if this service is unavailable: you can always recompute it from `pox-5` and the Hiro API. Still, a risk feed that goes blank is not much use, so the site is built to keep serving and to say plainly how fresh what you are reading is.
+
+## Health endpoint
+
+`GET` [`/api/health`](https://metacenter.0xo.in/api/health) answers `ok`, `degraded` or `down`, with the detail behind each:
+
+| Check | What it means |
+|---|---|
+| `database` | the indexer's Postgres answered, and how fast |
+| `indexer_poll` | when the indexer last read the chain; stale after 45 minutes (it polls every 10) |
+| `distributions` | the latest distribution indexed, its calculation height, whether its recompute matched, and whether `pox-5` has computed a newer one that is not indexed yet |
+| `coverage_cache` | how many burn blocks behind the tip the stored reading is; stale after 1,200 (the keeper refreshes at least every 1,100) |
+| `keeper` | its address, balance, last action and any pending transaction |
+| `reader` | which `pox5-reader` contract is configured |
+
+It returns **503 only when the database is unreachable**. Anything else answers 200 with `status` and a `problems` list, so a monitor watching for the keyword `"status":"ok"` sees degradation as well as an outage.
+
+<ApiExample path="/health" />
+
+## What a visitor sees when something is down
+
+| Failure | Result |
+|---|---|
+| API returns errors, or its database is down | Pages still render, with the last figures the site received and a "Data as of block N · refreshing" marker |
+| API hangs | Every request to it gives up after 6 seconds and the cached figures are used; pages serve in milliseconds |
+| Both, on a cold server | A snapshot committed in the repository (`web/data/fallback.json`) is used, again marked with the block it was read at |
+| Something else fails | An error page that links to the health endpoint and to these instructions. Never a blank page or a stack trace |
+
+The marker matters more than the fallback: a figure is only meaningful with the block it was read at, which is why every page shows one whether the service is healthy or not.
+
+These paths are exercised deliberately, not assumed. The API is pointed at a stub that errors, and separately at one that never answers, and the pages are then checked and screenshotted at desktop and phone widths.
+
+## If this service disappeared entirely
+
+The contracts stay where they are, and they are the source: `pox5-reader` computes coverage, headroom and the payout order from `pox-5` state, and `coverage-cache` holds its latest answers on mainnet. Both are public and callable by anyone, so any figure on this site can be reproduced from the chain alone. See [Recompute it yourself](/docs/verification/recompute) and [Read limits and coverage-cache](/docs/verification/read-limits).

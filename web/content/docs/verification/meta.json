@@ -3,6 +3,7 @@
   "cross-check",
   "missing-blocks",
   "recompute",
-  "read-limits"
+  "read-limits",
+  "uptime"
  ]
 }

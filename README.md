@@ -54,25 +54,11 @@ Once per distribution interval (1,050 Bitcoin blocks, two per cycle), `calculate
 
 ## Running it
 
-| Piece | Where | Restart | State |
-|---|---|---|---|
-| Site (`web/`) | Vercel, `metacenter.0xo.in` | Vercel serves the last successful build; a failed build never replaces a working one | none; pages are rebuilt from the API every 60 s |
-| API and indexer (`indexer/`) | Railway service `metacenter-indexer` | `ON_FAILURE`, up to 10 retries, with `/health` as the deploy health check (`indexer/railway.json`) | none in the container |
-| Database | Railway Postgres, volume `postgres-volume` at `/var/lib/postgresql/data` | Railway restarts the service; the volume is not touched | all indexed history |
+The site is on Vercel, the API and indexer on Railway with a Postgres volume that indexer redeploys never touch. If the database is lost, the history rebuilds itself from public chain data.
 
-**A redeploy does not lose history.** The indexer and Postgres are separate services: redeploying the indexer replaces its container only, and the database keeps its volume. The schema is applied at every start and is idempotent.
-
-**If the database is lost entirely, the history rebuilds itself from public chain data.** Nothing in it is private or hand-entered: `syncDistributions` walks every distribution index from the first PoX-5 cycle, binary-searches Stacks blocks for the one whose state first shows that `last-reward-compute-height` (`call-read ?tip=`), reads the `calculate-rewards` events from that transaction, and recomputes each figure from state before and after the block. That is how the current rows were built in the first place, against an empty database. Prices are re-fetched per distribution from CoinGecko, with Coinbase as a fallback.
-
-Restore, in order of preference:
-
-1. **Let it rebuild.** Start the indexer against an empty database. It re-indexes every distribution and cross-checks each one; the API reports `"status": "degraded"` until the first poll lands.
-2. **Restore a Railway backup.** The Postgres service keeps automated backups in the Railway dashboard (Service → Backups). Use this to skip the re-index.
-3. **Restore a dump** taken with `railway ssh --service Postgres -- pg_dump -Fc railway > metacenter.dump`, replayed with `pg_restore`. The database host is internal to Railway, so both run through `railway ssh`.
-
-**When the API is down**, the site keeps serving: `web/lib/api.ts` falls back to the last good response and then to `web/data/fallback.json`, a committed snapshot, and the dashboard shows "Data as of block N · refreshing". Refresh the snapshot with `node web/scripts/snapshot-fallback.mjs`.
-
-**Health:** `https://metacenter.0xo.in/api/health` returns `status: ok | degraded | down`, with per-check detail (database, indexer poll age, latest distribution indexed, coverage-cache staleness in burn blocks, keeper balance and last action). It answers 503 only when the database is unreachable.
+- Health: [`/api/health`](https://metacenter.0xo.in/api/health) — `ok`, `degraded` or `down`, with per-check detail.
+- When the API is unreachable the site keeps serving the last known figures and says "Data as of block N · refreshing".
+- Operations, restore paths, monitoring and scheduled work: [`docs/RUNBOOK.md`](docs/RUNBOOK.md).
 
 ## Contracts
 
