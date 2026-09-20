@@ -246,15 +246,18 @@ All five so far (282–286) match the event within 2 sats, and the reserve chang
 
 ## Day 7 · Slot 1
 
-**Status:** waits for mainnet · **When:** the same day the mainnet deploy lands (no fixed date) · **Clip:** i (to be recorded after the deploy) · **Tags:** none
+**Status:** ready once clip i is recorded · **When:** the mainnet deploy landed on 20 Sep 2026 · **Clip:** i · **Tags:** none
 
 ```text
-pox5-reader is live on Stacks mainnet: a read-only contract that computes PoX-5 coverage, headroom and the bond payout order straight from pox-5 state. The dashboard's headline figures now read "onchain".
+pox5-reader is live on Stacks mainnet: a read-only contract that computes PoX-5 coverage, headroom and the bond payout order from pox-5 state. The dashboard's headline figures now read "onchain".
 
-[MAINNET CONTRACT ID + explorer link]
+SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.pox5-reader
+https://metacenter.0xo.in/dashboard
 ```
 
-**Sources:** fill in the contract ID from `/api/meta` → `reader`. Re-read coverage and headroom from `/api/metrics/current` (onchain) with their block height, if you add figures.
+**Sources:**
+- Contract: `/api/meta` → `reader` = `SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.pox5-reader`, deployed in Stacks block 9,029,707 (Bitcoin 967,790). Explorer: https://explorer.hiro.so/txid/SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.pox5-reader?chain=mainnet
+- "onchain": `/api/metrics/current` → `coverage` and `headroom` carry provenance `onchain`, sourced to `coverage-cache::refresh` calling pox5-reader. Nine of the reader's read-onlys are over Hiro's public read-length cap, so `coverage-cache` stores the reader's own answers in a mainnet transaction and the API reads those.
 
 ## Day 7 · Slot 2
 

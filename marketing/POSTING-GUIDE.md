@@ -214,16 +214,17 @@ All five so far (282–286) match the event within 2 sats, and the reserve chang
 
 ## Day 7 · Slot 1: pox5-reader on mainnet (post the same day the mainnet deploy lands)
 
-**Status:** waits for mainnet. **Trigger:** the mainnet deploy. Post it the same day, not on a fixed date.
-**Clip:** clip i, not recorded yet. After the deploy it will be `marketing/clips/i-mainnet-reader-1080x1080.mp4` (alternative: `marketing/clips/i-mainnet-reader-1280x720.mp4`).
+**Status:** waits for clip i. **Trigger:** the mainnet deploy, which landed on 20 Sep 2026 (Stacks block 9,029,707, Bitcoin 967,790).
+**Clip:** `marketing/clips/i-mainnet-reader-1080x1080.mp4` (alternative: `marketing/clips/i-mainnet-reader-1280x720.mp4`) — being recorded now.
 **Tags:** none
 
-The contract ID and explorer link are filled in after the deploy. When this goes out, pin it in place of D1·1.
+When this goes out, pin it in place of D1·1.
 
 ```text
-pox5-reader is live on Stacks mainnet: a read-only contract that computes PoX-5 coverage, headroom and the bond payout order straight from pox-5 state. The dashboard's headline figures now read "onchain".
+pox5-reader is live on Stacks mainnet: a read-only contract that computes PoX-5 coverage, headroom and the bond payout order from pox-5 state. The dashboard's headline figures now read "onchain".
 
-[MAINNET CONTRACT ID + explorer link]
+SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.pox5-reader
+https://metacenter.0xo.in/dashboard
 ```
 
 ## Day 7 · Slot 2: grant application (post on your submission, planned 23 Sep evening IST)
@@ -270,5 +271,5 @@ https://metacenter.0xo.in
 | D5·2 3,000 BTC thread (2 parts) | e-stress-3000btc-book | Wed 23 Sep · 2 | ready, untagged (price-based: check; @friedger TO VERIFY) |
 | D6·1 methodology and API | h-methodology-source | Thu 24 Sep · 1 | ready |
 | D6·2 recompute check | c-coverage-history | Thu 24 Sep · 2 | ready |
-| D7·1 pox5-reader on mainnet | i (not recorded yet) | same day the mainnet deploy lands | waits for mainnet |
+| D7·1 pox5-reader on mainnet | i | deploy landed 20 Sep; post once clip i is recorded | waits for clip i |
 | D7·2 grant application | a-landing-hero | on your submission (planned 23 Sep evening IST) | waits for submission |

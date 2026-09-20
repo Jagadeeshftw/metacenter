@@ -47,6 +47,9 @@ const fork = countTests("contracts/tests-fork");
 const readerLine = meta.reader
   ? `| pox5-reader | mainnet | [\`${meta.reader}\`](${explorer(meta.reader, "mainnet")}) |`
   : "| pox5-reader | mainnet | not deployed yet (waiting for deployer funding) |";
+const cacheLine = meta.cache
+  ? `| coverage-cache | mainnet | [\`${meta.cache}\`](${explorer(meta.cache, "mainnet")}) |`
+  : null;
 const traitMainLine = meta.trait.mainnet
   ? `| risk-feed-trait | mainnet | [\`${meta.trait.mainnet}\`](${explorer(meta.trait.mainnet, "mainnet")}) |`
   : "| risk-feed-trait | mainnet | not deployed yet (deploys with pox5-reader) |";
@@ -78,7 +81,7 @@ Generated ${new Date().toISOString().slice(0, 16).replace("T", " ")} UTC by \`re
 | Contract | Network | ID |
 |---|---|---|
 ${readerLine}
-${traitMainLine}
+${traitMainLine}${cacheLine ? "\n" + cacheLine : ""}
 | risk-feed | testnet | [\`${meta.feed}\`](${explorer(meta.feed, "testnet")}) |
 | risk-feed-trait | testnet | [\`${meta.trait.testnet}\`](${explorer(meta.trait.testnet, "testnet")}) |
 | coverage-guard (example consumer) | testnet | [\`${meta.guard}\`](${explorer(meta.guard, "testnet")}) |
