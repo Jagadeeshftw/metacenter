@@ -1,6 +1,6 @@
 # Metacenter: application facts
 
-Generated 2026-09-20 04:49 UTC by `research/scripts/application-facts.mjs` from public data. Rerun it to refresh.
+Generated 2026-09-20 23:29 UTC by `research/scripts/application-facts.mjs` from public data. Rerun it to refresh.
 
 ## Links
 
@@ -21,6 +21,7 @@ Generated 2026-09-20 04:49 UTC by `research/scripts/application-facts.mjs` from 
 | pox5-reader | mainnet | [`SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.pox5-reader`](https://explorer.hiro.so/txid/SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.pox5-reader?chain=mainnet) |
 | risk-feed-trait | mainnet | [`SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.risk-feed-trait`](https://explorer.hiro.so/txid/SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.risk-feed-trait?chain=mainnet) |
 | coverage-cache | mainnet | [`SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.coverage-cache`](https://explorer.hiro.so/txid/SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.coverage-cache?chain=mainnet) |
+| coverage-guard-cached (example consumer) | mainnet | [`SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.coverage-guard-cached`](https://explorer.hiro.so/txid/SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.coverage-guard-cached?chain=mainnet) |
 | risk-feed | testnet | [`ST24MYZSDF0TAVZ452R2TJY3RCQAVT3KR0FJHYCAJ.risk-feed`](https://explorer.hiro.so/txid/ST24MYZSDF0TAVZ452R2TJY3RCQAVT3KR0FJHYCAJ.risk-feed?chain=testnet) |
 | risk-feed-trait | testnet | [`ST24MYZSDF0TAVZ452R2TJY3RCQAVT3KR0FJHYCAJ.risk-feed-trait`](https://explorer.hiro.so/txid/ST24MYZSDF0TAVZ452R2TJY3RCQAVT3KR0FJHYCAJ.risk-feed-trait?chain=testnet) |
 | coverage-guard (example consumer) | testnet | [`ST24MYZSDF0TAVZ452R2TJY3RCQAVT3KR0FJHYCAJ.coverage-guard`](https://explorer.hiro.so/txid/ST24MYZSDF0TAVZ452R2TJY3RCQAVT3KR0FJHYCAJ.coverage-guard?chain=testnet) |
@@ -30,7 +31,7 @@ The testnet feed mirrors mainnet data. Every distribution below is posted there 
 
 ## Headline numbers
 
-The indexer last polled at Bitcoin block **967,793** (2026-09-20T04:47:46.507Z). Figures that come from the latest distribution are as of that distribution, **286**: cycle 143, calculation height 967,399.
+The indexer last polled at Bitcoin block **967,910** (2026-09-20T23:25:58.732Z). Figures that come from the latest distribution are as of that distribution, **286**: cycle 143, calculation height 967,399.
 
 | Figure | Value |
 |---|---|
@@ -38,7 +39,7 @@ The indexer last polled at Bitcoin block **967,793** (2026-09-20T04:47:46.507Z).
 | Headroom | 94.0% _(onchain)_. The pool can fall this far before bond yield is impaired |
 | Reserve | 152,669,889 sats _(onchain)_ |
 | Hypothetical cover | 5.52 cycles. The reserve cannot pay out without a SIP |
-| Pending pool | 87,530,663 sats, via pox5-reader::get-pending-pool _(onchain)_, at the Bitcoin tip 967,794 (Stacks 9,030,000) |
+| Pending pool | 87,881,831 sats, via pox5-reader::get-pending-pool _(onchain)_, at the Bitcoin tip 967,910 (Stacks 9,035,243) |
 | STX-only realised yield | 6.67% a year in BTC terms _(mirrored)_. 0.4202 sats/STX in distribution 286, priced at 315.01 sats/STX (coingecko:market_chart/range @ 1789642800) |
 | Cliff price | 18.9 sats/STX _(mirrored; price at distribution 286 × obligation ÷ pool; assumes miner bids scale with STX price)_ |
 | Cliff, 3,000 BTC book | ≈ 246.2 sats/STX _(hypothetical; price at distribution 286, 315.01 sats/STX, × 180,000,000 sats ÷ its pool 230,327,835 sats)_ |
