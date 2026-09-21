@@ -45,7 +45,7 @@ Errors: `u200` the feed is not the trusted one, `u201` only the deployer may cha
 
 | Setting | Value | Reasoning |
 |---|---|---|
-| `MIN_COVERAGE_BPS` | `u20000`, 2.0× | The coverage target discussed in the Bitcoin Staking SIP thread. Equivalent to 50% headroom. Coverage is <Metric name="coverage" />, so a vault using this threshold is not paused today. |
+| `MIN_COVERAGE_BPS` | `u20000`, 2.0× | The level discussed in the [Bitcoin Staking SIP thread](https://forum.stacks.org/t/introducing-the-bitcoin-staking-sip-v1-draft/18862/14) (friedger, post #14); the SIP draft sets no coverage target. Equivalent to 50% headroom. Coverage is <Metric name="coverage" />, so a vault using this threshold is not paused today. |
 | `max-age-blocks` | `u1300` Bitcoin blocks | pox-5 computes a distribution every 1,050 blocks, and the keeper refreshes `coverage-cache` at least every 1,100. 1,300 leaves about 200 blocks, roughly a day and a half, before a feed that stopped being refreshed pauses the caller. Only the deployer can change it; a contract copying this pattern should set its own. |
 
 Pick your own numbers: a conservative vault might pause at 4.0× (`u40000`), and one that reads the feed every block could use a tighter staleness window.

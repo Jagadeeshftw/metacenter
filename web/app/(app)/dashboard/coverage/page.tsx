@@ -27,7 +27,7 @@ export default async function CoveragePage() {
         <Unavailable what="Distribution history" />
       ) : (
         <>
-          <Panel title="Coverage per distribution" provenance="mirrored" source="Reference lines: 1.0× is where bond yield is impaired; 2.0× is the coverage target cited in the Bitcoin Staking SIP discussion (forum.stacks.org/t/18862).">
+          <Panel title="Coverage per distribution" provenance="mirrored" source="Reference lines: 1.0× is where bond yield is impaired; 2.0× is the level discussed in the Bitcoin Staking SIP thread (friedger, forum.stacks.org/t/18862 post #14). The SIP draft itself sets no coverage target.">
             <CoverageChart intervals={intervals} height={320} />
           </Panel>
           <Panel title="Pool vs bond obligation" provenance="mirrored">

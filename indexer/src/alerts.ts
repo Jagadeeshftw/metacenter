@@ -5,7 +5,7 @@
 // the wording live in alerts-core.ts.
 import { config } from "./config.js";
 import { pool } from "./db.js";
-import { evaluate, readState, type Posted } from "./alerts-core.js";
+import { evaluate, readState, seedPosted, type Posted } from "./alerts-core.js";
 
 const TELEGRAM = "https://api.telegram.org";
 
@@ -34,11 +34,19 @@ async function send(text: string): Promise<void> {
 export async function runAlerts(log = console.log) {
   if (!config.telegramToken || !config.telegramChannel) return;
   const state = await readState(`http://127.0.0.1:${config.port}`);
-  const posted = await getPosted();
+  const stored = await getPosted();
+  // on the very first run, the bonds already active are recorded as known, not announced
+  const posted = seedPosted(state, stored);
+  if (!stored.seeded) await setPosted(posted);
   const due = evaluate(state, posted);
   if (due.length === 0) return;
 
-  const next: Posted = { distributions: [...(posted.distributions ?? [])], active: [...(posted.active ?? [])], bonds: [...(posted.bonds ?? [])] };
+  const next: Posted = {
+    seeded: true,
+    distributions: [...(posted.distributions ?? [])],
+    active: [...(posted.active ?? [])],
+    bonds: [...(posted.bonds ?? [])],
+  };
   for (const a of due) {
     await send(a.text);
     log(`alerts: posted ${a.key} to ${config.telegramChannel}`);

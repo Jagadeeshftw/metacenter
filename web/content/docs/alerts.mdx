@@ -33,7 +33,7 @@ These are about the system as a whole, not about any one position.
 | Alert | Threshold | Why this number |
 |---|---|---|
 | Coverage, warning | below **3.0×** | The pool still covers bonds three times over, but a third of it is already spoken for. Early notice, not an emergency. |
-| Coverage, critical | below **2.0×** | The coverage target discussed in the Bitcoin Staking SIP thread. Below it, the pool is closer to what bonds are owed than that discussion treats as comfortable. |
+| Coverage, critical | below **2.0×** | The level discussed in the [Bitcoin Staking SIP thread](https://forum.stacks.org/t/introducing-the-bitcoin-staking-sip-v1-draft/18862/14): friedger's post #14 calls 2.0× the line and ~1.3× the caution band, and post #31 echoes it. The [SIP draft](https://stacks.link/sip-pox5) itself sets no coverage target, so this is a community reference point, not a protocol rule. |
 | Headroom, warning | below **50%** | The same line stated the other way round: 50% headroom is 2.0× coverage. Headroom is the price-free figure, so it is the one to watch. |
 | Cache stale | reading older than **1,200 Bitcoin blocks** | The keeper refreshes `coverage-cache` at least every 1,100 blocks. Past 1,200 the on-chain figures have stopped being refreshed, so the dashboard is showing an old reading. See [Read limits](/docs/verification/read-limits). |
 | Keeper | low balance, or a failed call | The keeper pays its own fees. If it runs out or its last call failed, the on-chain figures stop updating. |

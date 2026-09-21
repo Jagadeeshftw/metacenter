@@ -76,7 +76,7 @@ https://metacenter.0xo.in/dashboard
 ```text
 Coverage history for PoX-5, per distribution: n/a for 282–285 because no bonds existed in cycles 141–142, then 16.68× at 286, when the first bond started earning.
 
-The dashed line is the 2.0× coverage target from the Bitcoin Staking SIP discussion.
+The dashed line is 2.0×, the level discussed in the Bitcoin Staking SIP thread.
 ```
 
 ## Day 3 · Slot 1: the reserve (Mon 21 Sep)

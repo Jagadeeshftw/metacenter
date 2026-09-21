@@ -30,15 +30,15 @@ export function CoverageChart({ intervals, height }: { intervals: Interval[]; he
       yMax={top}
       yFormat={(v) => `${v.toFixed(0)}×`}
       refs={[
-        { value: 2, label: "2.0× SIP target", short: "2.0×", dashed: true },
+        { value: 2, label: "2.0× (SIP thread)", short: "2.0×", dashed: true },
         { value: 1, label: "1.0× impaired", short: "1.0×" },
       ]}
       pointLabel={(v) => `${v.toFixed(2)}×`}
-      ariaLabel="Coverage per distribution, with the 1.0× impairment line and the 2.0× target"
+      ariaLabel="Coverage per distribution, with the 1.0× impairment line and the 2.0× level discussed in the SIP thread"
       legend={[
         { label: "Coverage (×)", swatch: "dot", color: "var(--series-pool)" },
         { label: "n/a: no bonds", swatch: "hatch" },
-        { label: "2.0× coverage target (Bitcoin Staking SIP discussion)", swatch: "line" },
+        { label: "2.0× coverage, the level discussed in the Bitcoin Staking SIP thread", swatch: "line" },
         { label: "1.0× bond yield impaired", swatch: "line", dash: "2 4" },
       ]}
     />

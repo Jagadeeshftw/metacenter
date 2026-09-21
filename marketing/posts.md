@@ -6,7 +6,7 @@ Drafts only. Nothing here has been posted, and no social account has been touche
 
 **Where the numbers come from:** all figures were read from the live public API at `https://metacenter.0xo.in/api`.
 
-- Indexer poll at **Bitcoin block 967,731** (2026-09-19 18:33:22 UTC).
+- Indexer poll at **Bitcoin block 967,968** (2026-09-21 09:14:37 UTC).
 - Distribution figures are from **distribution 286**: cycle 143, calculation height 967,399.
 - Re-read them before posting. The next distribution is due after Bitcoin block 968,449, and any post can cite that one instead.
 
@@ -86,13 +86,13 @@ https://metacenter.0xo.in/dashboard
 ```text
 Coverage history for PoX-5, per distribution: n/a for 282–285 because no bonds existed in cycles 141–142, then 16.68× at 286, when the first bond started earning.
 
-The dashed line is the 2.0× coverage target from the Bitcoin Staking SIP discussion.
+The dashed line is 2.0×, the level discussed in the Bitcoin Staking SIP thread.
 ```
 
 **Sources:**
 - 282–285 n/a: `/api/intervals` → distributions 282–285 `coverage` = null (obligation 0).
 - 16.68× at 286: distribution 286 `coverage` = 16.678.
-- 2.0× target: forum.stacks.org/t/18862, post #14.
+- 2.0×: the level discussed in forum.stacks.org/t/18862, post #14 (friedger), echoed in post #31. The SIP draft (stacks.link/sip-pox5) sets no coverage target.
 - Block: read at block 967,686.
 
 ## Day 3 · Slot 1
@@ -210,7 +210,7 @@ Credit to @friedger for the original derivation: 171.2 sats/STX under the SIP's 
 - 180M sats: 3,000 BTC × 3% ÷ 50 = 180,000,000 sats; `/api/stress?book_btc=3000&bonds=6` → `obligation` = 180,000,000.
 - 1.28×: same call, `coverage` = 1.2795.
 - 30% drop: `/api/stress?book_btc=3000&bonds=6&price_drop=0.3` → the 6th bond `partial`, `shortfall` = 18,770,516 sats.
-- ~246 sats/STX: `/api/metrics/current` → `cliff.sip_book_scenario` = 246.18 = price at distribution 286 (315.01 sats/STX, coingecko:market_chart/range @ 1789642800) × 180,000,000 sats ÷ gross pool 230,327,835 sats (`cliff.inputs`; read at block 967,731).
+- ~246 sats/STX: `/api/metrics/current` → `cliff.sip_book_scenario` = 246.18 = price at distribution 286 (315.01 sats/STX, coingecko:market_chart/range @ 1789642800) × 180,000,000 sats ÷ gross pool 230,327,835 sats (`cliff.inputs`; read at block 967,968).
 - 171.2: `cliff.friedger_sip_inputs` = 171.23; forum.stacks.org/t/18862, post #14.
 
 **Cliff definition:** price at the latest distribution × 180,000,000 sats ÷ that distribution's gross pool. This is the same definition as `/api/stress`, `/api/intervals` and the `risk-feed` contract. It changes only when a new distribution lands. Until 20 Sep 2026 `/api/metrics/current` used the current price instead, which moved the figure hourly (~269 → ~278 → ~276 → ~296 → ~293 over 18–19 Sep, as STX/BTC went from 343.8 to 379.3 sats). That definition was wrong: under the linear-bid assumption today's price cancels out. `refresh-posts.mjs` prints the inputs, and the reason, whenever the cliff changes.

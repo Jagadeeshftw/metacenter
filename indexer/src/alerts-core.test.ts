@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { evaluate, renderDistribution, type AlertState } from "./alerts-core.js";
+import { evaluate, renderDistribution, seedPosted, type AlertState } from "./alerts-core.js";
 
 const base: AlertState = {
   burnHeight: 967910,
@@ -68,8 +68,30 @@ describe("what the channel posts", () => {
   it("posts one resolved message when a condition ends, and then nothing", () => {
     const after = evaluate(base, { ...seen, active: ["coverage-critical"] });
     expect(after.map((a) => a.key)).toEqual(["resolved:coverage-critical"]);
-    expect(after[0].text).toContain("back above 2.0×");
+    expect(after[0].text).toContain("back above the 2.0× level");
     expect(keys(base)).toEqual([]); // the sender clears it from `active`, so nothing follows
+  });
+
+  it("does not announce bonds that were already active when the bot went live", () => {
+    // first run, with the Genesis Bond long since active and nothing recorded
+    const seeded = seedPosted(base, {});
+    expect(seeded.bonds).toEqual([1]);
+    expect(evaluate(base, seeded).map((a) => a.key)).not.toContain("bond:1");
+    // and the distribution summary still goes out on that first run
+    expect(evaluate(base, seeded).map((a) => a.key)).toContain("distribution:286");
+  });
+
+  it("announces a bond that appears after the bot went live", () => {
+    const seeded = seedPosted(base, {});
+    const later = { ...base, bondIndexes: [1, 2] };
+    expect(evaluate(later, seeded).map((a) => a.key)).toContain("bond:2");
+    expect(evaluate(later, seeded).map((a) => a.key)).not.toContain("bond:1");
+  });
+
+  it("seeds only once, so later bonds are not swallowed", () => {
+    const seeded = seedPosted(base, {});
+    const again = seedPosted({ ...base, bondIndexes: [1, 2] }, seeded);
+    expect(again.bonds).toEqual([1]);
   });
 
   it("announces a bond index once", () => {

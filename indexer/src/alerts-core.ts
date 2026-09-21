@@ -8,7 +8,10 @@ const SITE = "https://metacenter.0xo.in";
 /** Thresholds, with the reason each one exists. Shown as-is on the /docs/alerts page. */
 export const THRESHOLDS = {
   coverageWarn: 3, // "thin": a third of the pool would go to bonds
-  coverageCritical: 2, // the target discussed in the Bitcoin Staking SIP thread
+  // The SIP draft itself sets no coverage target; 2.0x is the level friedger's analysis in the
+  // SIP thread (post #14) treats as the line, and post #31 echoes. Cite it that way, not as a
+  // SIP target.
+  coverageCritical: 2,
   headroomWarn: 0.5, // equivalent to 2.0x coverage, stated the other way round
   cacheStaleBlocks: 1200, // the keeper refreshes at least every 1,100 burn blocks
 };
@@ -66,7 +69,7 @@ const warnings = (s: AlertState) => {
   if (c != null && c < THRESHOLDS.coverageCritical)
     out.push({
       key: "coverage-critical",
-      text: `CRITICAL: PoX-5 bond coverage is ${times(c)} [${tag(s.coverage.provenance)}], below the 2.0× target discussed in the Bitcoin Staking SIP thread. The reward pool is ${sats(
+      text: `CRITICAL: PoX-5 bond coverage is ${times(c)} [${tag(s.coverage.provenance)}], below the 2.0× level discussed in the Bitcoin Staking SIP thread (friedger, post #14). The SIP draft sets no coverage target. The reward pool is ${sats(
         s.pool,
       )} against ${sats(s.obligation)} owed to bonds. ${at}.\n${SITE}/dashboard/coverage`,
     });
@@ -101,7 +104,7 @@ const warnings = (s: AlertState) => {
 };
 
 const RESOLVED: Record<string, string> = {
-  "coverage-critical": "Resolved: PoX-5 bond coverage is back above 2.0×",
+  "coverage-critical": "Resolved: PoX-5 bond coverage is back above the 2.0× level discussed in the SIP thread",
   "coverage-warn": "Resolved: PoX-5 bond coverage is back above 3.0×",
   "headroom-warn": "Resolved: headroom is back above 50%",
   "cache-stale": "Resolved: the on-chain coverage-cache is being refreshed again",
@@ -109,7 +112,16 @@ const RESOLVED: Record<string, string> = {
   "keeper-failed": "Resolved: the keeper's calls are succeeding again",
 };
 
-export type Posted = { distributions?: number[]; active?: string[]; bonds?: number[] };
+export type Posted = { distributions?: number[]; active?: string[]; bonds?: number[]; seeded?: boolean };
+
+/**
+ * First run: record the bonds that are already active as known, so the channel does not open by
+ * announcing the Genesis Bond as new. Only bond indexes that appear after this are announced.
+ */
+export function seedPosted(s: AlertState, posted: Posted): Posted {
+  if (posted.seeded) return posted;
+  return { ...posted, seeded: true, bonds: [...new Set([...(posted.bonds ?? []), ...s.bondIndexes])] };
+}
 
 /**
  * What to post, given the state and what has already gone out. Pure, so the dry run and the
