@@ -14,7 +14,8 @@
     "start": "node dist/main.js",
     "dev": "tsx src/main.ts",
     "once": "tsx src/main.ts --once",
-    "test": "vitest run"
+    "test": "vitest run",
+    "alerts:dry-run": "npm run build --silent && node src/alerts-dry-run.mjs"
   },
   "dependencies": {
     "@fastify/cors": "^11.3.0",

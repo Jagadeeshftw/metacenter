@@ -26,6 +26,10 @@ export const config = {
   keeperMinBalanceUstx: BigInt(process.env.KEEPER_MIN_BALANCE_USTX ?? "2000000"),
   // below this the keeper still runs, but /meta and the logs flag it for topping up
   keeperAlertBalanceUstx: BigInt(process.env.KEEPER_ALERT_BALANCE_USTX ?? "1000000"),
+  // Telegram broadcast alerts (prototype). Off unless both are set; the token lives only in the
+  // Railway environment, never in the repo.
+  telegramToken: process.env.TELEGRAM_BOT_TOKEN || undefined,
+  telegramChannel: process.env.TELEGRAM_CHANNEL || undefined,
   // testnet risk-feed and its publisher key
   feedContract: env("FEED_CONTRACT", "ST24MYZSDF0TAVZ452R2TJY3RCQAVT3KR0FJHYCAJ.risk-feed"),
   publisherKey: process.env.PUBLISHER_KEY || undefined,

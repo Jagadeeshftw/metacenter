@@ -5,6 +5,7 @@ import { syncCycles, takeLiveSnapshot } from "./live.js";
 import { currentPrice, fillMissingPrices } from "./price.js";
 import { publishPending } from "./publisher.js";
 import { runKeeper } from "./keeper.js";
+import { runAlerts } from "./alerts.js";
 import { buildApi } from "./api.js";
 
 const log = (...a: unknown[]) => console.log(new Date().toISOString(), ...a);
@@ -33,6 +34,8 @@ async function poll() {
     if (cycle) await step("cycles", () => syncCycles(cycle));
     await step("publish", () => publishPending(log));
     await step("keeper", () => runKeeper(log));
+    // last, and isolated like every other step: a bot failure must not touch the API or keeper
+    await step("alerts", () => runAlerts(log));
   } finally {
     running = false;
     log(`poll done in ${Math.round((Date.now() - t0) / 1000)}s`);
@@ -49,7 +52,7 @@ async function main() {
   const app = await buildApi();
   await app.listen({ port: config.port, host: "0.0.0.0" });
   log(
-    `api listening on ${config.port}; reader ${config.readerContract ?? "(not deployed)"}; cache ${config.cacheContract ?? "(none)"}; feed ${config.feedContract}; publisher ${config.publisherKey ? "on" : "off"}; keeper ${config.keeperKey ? "on" : "off"}`,
+    `api listening on ${config.port}; reader ${config.readerContract ?? "(not deployed)"}; cache ${config.cacheContract ?? "(none)"}; feed ${config.feedContract}; publisher ${config.publisherKey ? "on" : "off"}; keeper ${config.keeperKey ? "on" : "off"}; alerts ${config.telegramToken && config.telegramChannel ? `on (${config.telegramChannel})` : "off"}`,
   );
   void poll();
   setInterval(poll, config.pollMs);

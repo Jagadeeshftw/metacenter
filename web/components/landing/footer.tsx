@@ -1,6 +1,6 @@
 import Link from "next/link";
 import React from "react";
-import { IconBrandGithub, IconBrandX } from "@tabler/icons-react";
+import { IconBrandGithub, IconBrandX, IconBrandTelegram } from "@tabler/icons-react";
 import { Wordmark } from "@/components/shared/wordmark";
 import { site } from "@/lib/site";
 
@@ -25,6 +25,7 @@ export function Footer({ reader, feed }: { reader: string | null; feed: string }
   const socials = [
     { title: "GitHub", href: site.repo, icon: IconBrandGithub },
     ...(site.xUrl ? [{ title: "X", href: site.xUrl, icon: IconBrandX }] : []),
+    ...(site.telegramUrl ? [{ title: "Telegram alerts", href: site.telegramUrl, icon: IconBrandTelegram }] : []),
   ];
 
   return (

@@ -3,6 +3,7 @@
 // No motion here by design; state changes are instant.
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { site } from "@/lib/site";
 import { useEffect, useState } from "react";
 import {
   IconApi,
@@ -126,6 +127,14 @@ export function AppShell({ children, status }: { children: React.ReactNode; stat
         <main className="flex-1 px-4 py-6 md:px-8 md:py-8">{children}</main>
         <footer className="border-t border-line px-4 py-5 text-xs text-subtle md:px-8">
           Testnet feed values mirror mainnet data · every number links to its source on the Methodology page
+          {site.telegramUrl ? (
+            <>
+              {" · "}
+              <a className="underline underline-offset-4 hover:text-foreground" href={site.telegramUrl} target="_blank" rel="noreferrer">
+                Telegram alerts
+              </a>
+            </>
+          ) : null}
         </footer>
       </div>
     </div>

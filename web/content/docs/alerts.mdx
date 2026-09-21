@@ -1,0 +1,69 @@
+---
+title: Telegram alerts
+description: A public channel that posts after each distribution and when a system-wide threshold is crossed.
+---
+
+A broadcast-only channel. It posts what the dashboard shows, when it changes, so you do not have to watch a page. Every figure carries its provenance label and the Bitcoin block it was read at, exactly as on the site.
+
+This is a prototype, kept small on purpose. Per-address alerts are planned; see [What is not here yet](#what-is-not-here-yet).
+
+## What it posts
+
+### After every distribution
+
+pox-5 computes a distribution every 1,050 Bitcoin blocks. Once it is indexed and the on-chain cache has caught up, one message goes out with coverage, headroom, the pool against what bonds are owed, the reserve with its hypothetical cover, and realised STX-only yield.
+
+```text
+PoX-5 distribution 286 settled (cycle 143)
+
+Coverage: 16.68× [onchain]
+Headroom: 94.00% [onchain]
+Pool: 230,327,835 sats vs 13,810,222 sats owed to bonds [mirrored]
+Reserve: 152,669,889 sats [onchain] — hypothetical cover 5.52 cycles, it cannot pay out without a SIP
+STX-only realised yield: 0.4202 sats per STX, 6.67% a year in BTC terms [mirrored]
+
+Read at Bitcoin block 967,940.
+https://metacenter.0xo.in/dashboard
+```
+
+### When a threshold is crossed
+
+These are about the system as a whole, not about any one position.
+
+| Alert | Threshold | Why this number |
+|---|---|---|
+| Coverage, warning | below **3.0×** | The pool still covers bonds three times over, but a third of it is already spoken for. Early notice, not an emergency. |
+| Coverage, critical | below **2.0×** | The coverage target discussed in the Bitcoin Staking SIP thread. Below it, the pool is closer to what bonds are owed than that discussion treats as comfortable. |
+| Headroom, warning | below **50%** | The same line stated the other way round: 50% headroom is 2.0× coverage. Headroom is the price-free figure, so it is the one to watch. |
+| Cache stale | reading older than **1,200 Bitcoin blocks** | The keeper refreshes `coverage-cache` at least every 1,100 blocks. Past 1,200 the on-chain figures have stopped being refreshed, so the dashboard is showing an old reading. See [Read limits](/docs/verification/read-limits). |
+| Keeper | low balance, or a failed call | The keeper pays its own fees. If it runs out or its last call failed, the on-chain figures stop updating. |
+
+Current values: coverage <Metric name="coverage" />, headroom <Metric name="headroom" />. Nothing above is triggered today.
+
+### A new bonding period
+
+When a new bond index becomes active in a cycle, one message says so: a new bond adds to what the reward pool has to cover.
+
+## How it avoids being noisy
+
+- **One message per distribution**, never repeated.
+- **One message per condition.** While coverage stays below a threshold, the channel stays quiet; it does not repeat every ten minutes.
+- **A resolved message when a condition ends**, once, so a channel that warned about something always says when it stopped.
+- **A new bond index is announced once.**
+
+Each message is recorded as sent before the next one is considered, so a failure part-way through cannot repost what already went out.
+
+## What is not here yet
+
+Planned for Milestone 1 of the grant, deliberately not in this prototype:
+
+- Alerts for **your** position: your bond, your stacked STX, your vault.
+- Email, and channels other than Telegram.
+- Thresholds you choose.
+- A delivery log and unsubscribe flows.
+
+## How it is built
+
+The bot is broadcast-only: it reads the same public API this site uses and posts. It cannot accept commands, and it holds no keys or funds. It runs as one isolated step of the indexer's poll loop and is off unless a token and channel are configured, so a failure in it cannot affect the API, the keeper or the dashboard. Its token lives only in the deployment environment.
+
+Rules and wording: [`indexer/src/alerts-core.ts`](https://github.com/Jagadeeshftw/metacenter/blob/main/indexer/src/alerts-core.ts), which is pure and covered by tests, so the messages in this page are the messages the channel sends. Run `npm run alerts:dry-run` in `indexer/` to print every message type from live data without posting anything.

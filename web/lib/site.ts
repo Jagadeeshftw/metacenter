@@ -1,6 +1,7 @@
-// Site-wide configuration. The X handle is the one value to fill in once it exists
-// (without the @); the footer shows the X link only when it is set.
+// Site-wide configuration. Two handles to fill in once they exist: the X handle (without the @)
+// and the Telegram alerts channel (without the @). Each link appears only when its value is set.
 export const X_HANDLE = "";
+export const TELEGRAM_CHANNEL = "";
 
 export const SITE_URL = "https://metacenter.0xo.in";
 
@@ -13,6 +14,7 @@ export const site = {
     "Risk feed for Stacks Bitcoin Staking (PoX-5): bond coverage, the reserve, STX-only yield and stress tests, from public data.",
   repo: "https://github.com/Jagadeeshftw/metacenter",
   xUrl: X_HANDLE ? `https://x.com/${X_HANDLE}` : null,
+  telegramUrl: TELEGRAM_CHANNEL ? `https://t.me/${TELEGRAM_CHANNEL}` : null,
   // server-side only; the browser always goes through /api on this site's own domain
   apiOrigin: process.env.METACENTER_API_ORIGIN ?? "https://metacenter-indexer-production.up.railway.app",
   explorer: (id: string, network: "mainnet" | "testnet") =>
