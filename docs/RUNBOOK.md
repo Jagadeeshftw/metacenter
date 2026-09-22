@@ -35,6 +35,20 @@ Restore, in order of preference:
 
 Five-minute interval is enough: the indexer polls every ten minutes and the health endpoint only calls a figure stale after 45. Alerts go to email.
 
+### A transient 403 from Vercel's edge is not an outage
+
+Seen on 22 Sep 2026: three consecutive requests to `/api/health` answered **403** with a Vercel error page (Astro markup, `server: Vercel`), while the Railway origin answered 200 the whole time. It cleared within about ten seconds on its own, and a 40-request burst afterwards was entirely clean. Two `networkidle` page loads timed out in the same window, which fits the same cause.
+
+How to tell it apart from a real outage:
+
+| Check | Edge blip | Real outage |
+|---|---|---|
+| `curl https://metacenter-indexer-production.up.railway.app/health` | 200 | fails, or `status` is not `ok` |
+| Content type of the 403 body | `text/html`, a Vercel error page | n/a |
+| Duration | seconds, clears without action | persists |
+
+UptimeRobot may alert on it. Confirm against the Railway origin before doing anything; if the origin is healthy, there is nothing to fix. Automated page checks should not use `networkidle` as their only wait for this reason.
+
 ### The health monitor depends on exact bytes
 
 The health monitor matches the raw string `"status":"ok"` — no space after the colon, lowercase, double-quoted, and `status` as the first key of the response. That is a contract with the monitor, not a formatting detail:
