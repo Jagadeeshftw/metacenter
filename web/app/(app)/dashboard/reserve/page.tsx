@@ -55,7 +55,8 @@ export default async function ReservePage() {
         </Panel>
       </section>
       <Note>
-        Hypothetical cover: {h.cover.value === null ? "n/a" : `${h.cover.value.toFixed(2)} cycles`} — how long the reserve
+        Hypothetical cover: {h.cover.value === null ? "n/a" : `${h.cover.value.toFixed(2)} cycles`}{" "}
+        — how long the reserve
         could stand behind the bond obligation at today&apos;s size, if a SIP made it payable. It compares sizes; it is not a
         payout schedule.
       </Note>

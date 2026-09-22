@@ -1,6 +1,6 @@
 # Metacenter: application facts
 
-Generated 2026-09-20 23:29 UTC by `research/scripts/application-facts.mjs` from public data. Rerun it to refresh.
+Generated 2026-09-22 09:00 UTC by `research/scripts/application-facts.mjs` from public data. Rerun it to refresh.
 
 ## Links
 
@@ -31,15 +31,15 @@ The testnet feed mirrors mainnet data. Every distribution below is posted there 
 
 ## Headline numbers
 
-The indexer last polled at Bitcoin block **967,910** (2026-09-20T23:25:58.732Z). Figures that come from the latest distribution are as of that distribution, **286**: cycle 143, calculation height 967,399.
+The indexer last polled at Bitcoin block **968,126** (2026-09-22T08:52:02.636Z). Figures that come from the latest distribution are as of that distribution, **286**: cycle 143, calculation height 967,399.
 
 | Figure | Value |
 |---|---|
 | Coverage | 16.68× _(onchain)_. 230,327,835 sats pool ÷ 13,810,222 sats owed |
 | Headroom | 94.0% _(onchain)_. The pool can fall this far before bond yield is impaired |
 | Reserve | 152,669,889 sats _(onchain)_ |
-| Hypothetical cover | 5.52 cycles. The reserve cannot pay out without a SIP |
-| Pending pool | 87,881,831 sats, via pox5-reader::get-pending-pool _(onchain)_, at the Bitcoin tip 967,910 (Stacks 9,035,243) |
+| Hypothetical cover | 5.52 cycles. A back-stop by design; accrual-only in this iteration, and using it goes through a SIP process |
+| Pending pool | 87,881,831 sats, via pox5-reader::get-pending-pool _(onchain)_, at the Bitcoin tip 968,126 (Stacks 9,042,644) |
 | STX-only realised yield | 6.67% a year in BTC terms _(mirrored)_. 0.4202 sats/STX in distribution 286, priced at 315.01 sats/STX (coingecko:market_chart/range @ 1789642800) |
 | Cliff price | 18.9 sats/STX _(mirrored; price at distribution 286 × obligation ÷ pool; assumes miner bids scale with STX price)_ |
 | Cliff, 3,000 BTC book | ≈ 246.2 sats/STX _(hypothetical; price at distribution 286, 315.01 sats/STX, × 180,000,000 sats ÷ its pool 230,327,835 sats)_ |
@@ -85,7 +85,7 @@ Line numbers refer to the deployed source, identical to stacks-core tag 4.0.1 @6
 | Bonds paid in descending stx-value-ratio, ties to the lower bond index | L2285–2299, enforced with `ERR_INVALID_BOND_PERIOD_ORDERING` |
 | Within a bond, flat per-token accounting | L2304–2309 |
 | Reserve takes 15% of what remains after bonds | L2190 (`RESERVE_RATIO u1500`, L107) |
-| The reserve never pays bonds: `transfer-from-reserve` is private and never called | L2696 |
+| The reserve has no automatic path to bonds in this iteration: `transfer-from-reserve` is private and uncalled | L2696 |
 
 ## Infrastructure
 

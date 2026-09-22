@@ -93,7 +93,8 @@ export default async function Overview() {
             <span className="rounded-full border border-line px-3 py-1 text-sm">{last && Number(last.reserve_deposit.value) > 0 ? "Not drawing" : "Flat"}</span>
           </div>
           <Note>
-            Hypothetical cover: {h.cover.value === null ? "n/a" : `${h.cover.value.toFixed(2)} cycles`} — a back-stop by design; in
+            Hypothetical cover: {h.cover.value === null ? "n/a" : `${h.cover.value.toFixed(2)} cycles`}{" "}
+            — a back-stop by design; in
             this iteration it is accrual-only and using it goes through a SIP process.
           </Note>
           <Link href="/dashboard/reserve" className="mt-auto text-sm text-brand underline underline-offset-4">
