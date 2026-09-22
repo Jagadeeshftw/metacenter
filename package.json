@@ -1,0 +1,11 @@
+{
+  "name": "metacenter",
+  "private": true,
+  "description": "Open risk feed for Stacks Bitcoin Staking (PoX-5): bond coverage, the reserve, STX-only yield and stress tests, from public data.",
+  "license": "MIT",
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "verify": "node scripts/verify.mjs"
+  }
+}
