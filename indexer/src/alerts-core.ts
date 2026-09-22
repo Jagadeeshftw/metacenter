@@ -51,7 +51,9 @@ export function renderDistribution(s: AlertState): string {
     `Headroom: ${pct(s.headroom.value)} [${tag(s.headroom.provenance)}]`,
     `Pool: ${sats(s.pool)} vs ${sats(s.obligation)} owed to bonds [mirrored]`,
     `Reserve: ${sats(s.reserve.value)} [${tag(s.reserve.provenance)}]${
-      s.reserveCover == null ? "" : ` — hypothetical cover ${s.reserveCover.toFixed(2)} cycles, it cannot pay out without a SIP`
+      s.reserveCover == null
+        ? ""
+        : ` — hypothetical cover ${s.reserveCover.toFixed(2)} cycles; a back-stop by design, accrual-only in this iteration (using it goes through a SIP process)`
     }`,
     `STX-only realised yield: ${s.yieldPerStx == null ? "n/a" : `${s.yieldPerStx.toFixed(4)} sats per STX`}${
       s.apyBtc == null ? "" : `, ${pct(s.apyBtc)} a year in BTC terms`

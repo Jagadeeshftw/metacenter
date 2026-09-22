@@ -18,7 +18,7 @@ export default async function ReservePage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Reserve"
-        lead="After bonds are paid, 15% of what remains goes to the reserve. pox-5 has no path from the reserve to bonds: transfer-from-reserve is private and never called. In a shortfall the deposit is zero and the reserve stays flat."
+        lead="After bonds are paid, 15% of what remains goes to the reserve. In a shortfall there is no remainder, so the deposit is zero and the reserve stays flat."
       />
       <section className="grid gap-4 md:grid-cols-3">
         <Stat label="Balance" value={btc(h.reserve.value)} detail={h.reserve.value === null ? undefined : satsExact(h.reserve.value)} provenance={h.reserve.provenance} source={h.reserve.source} />
@@ -37,9 +37,27 @@ export default async function ReservePage() {
           source={last?.reserve_deposit.source}
         />
       </section>
+      <section className="grid gap-4 md:grid-cols-2">
+        <Panel title="Design">
+          <p className="text-sm leading-relaxed">
+            A back-stop that keeps bonds whole when mining rewards fall short of the ~3% target.{" "}
+            <a className="underline underline-offset-4" href="https://docs.stacks.co/learn/bitcoin-staking/glossary#reserve-fund" target="_blank" rel="noreferrer">
+              Reserve fund, Stacks docs
+            </a>
+          </p>
+        </Panel>
+        <Panel title="This iteration">
+          <p className="text-sm leading-relaxed">
+            Accrual-only: it can&apos;t be drawn automatically. <code className="num text-xs">transfer-from-reserve</code> is
+            private and uncalled, and using the reserve goes through a SIP process. An automated process is planned for a
+            later iteration.
+          </p>
+        </Panel>
+      </section>
       <Note>
-        Hypothetical cover: {h.cover.value === null ? "n/a" : `${h.cover.value.toFixed(2)} cycles`} — reserve cannot currently
-        pay out (requires SIP). The figure compares sizes; it is not a payout schedule.
+        Hypothetical cover: {h.cover.value === null ? "n/a" : `${h.cover.value.toFixed(2)} cycles`} — how long the reserve
+        could stand behind the bond obligation at today&apos;s size, if a SIP made it payable. It compares sizes; it is not a
+        payout schedule.
       </Note>
       {intervals.length === 0 ? (
         <Unavailable what="Reserve history" />

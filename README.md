@@ -17,6 +17,32 @@ Everything is computed from public data and published as:
 
 A ship's metacentric height is its stability margin. This project measures the same thing for PoX-5: how far the reward pool can fall before bonds are short-paid.
 
+## Quickstart
+
+```sh
+git clone https://github.com/Jagadeeshftw/metacenter.git
+cd metacenter
+npm run verify          # rebuild every headline figure from public data and compare it with the site
+```
+
+Node 22 or newer, no install step, no keys. It reads `pox-5` through the public Hiro API, the sBTC
+token contract, the deployed Metacenter contracts and CoinGecko, recomputes each figure, and prints
+both sides with the Bitcoin block each was read at. Exit code 0 means every check passed.
+
+```
+  figure                               recomputed here           published
+  --------------------------------  ------------------  ------------------  ---
+  Reward pool (sats)                       230,327,833         230,327,835  ok
+  Coverage (x)                                  16.678              16.678  ok
+  Headroom                                      0.9400              0.9400  ok
+  Reserve (sats)                           152,669,889         152,669,889  ok
+  STX-only yield (sats per STX)                 0.4202              0.4202  ok
+  pox5-reader source                      2a0ebc3a3003        2a0ebc3a3003  ok
+```
+
+It also checks that each deployed contract is byte-identical to the source in this repository.
+`npm run verify -- --json` prints the same as JSON. See [Verify it yourself](#verify-it-yourself).
+
 ## Provenance labels
 
 Every metric carries exactly one label, in the API and in the UI:
@@ -59,6 +85,50 @@ The site is on Vercel, the API and indexer on Railway with a Postgres volume tha
 - Health: [`/api/health`](https://metacenter.0xo.in/api/health) — `ok`, `degraded` or `down`, with per-check detail.
 - When the API is unreachable the site keeps serving the last known figures and says "Data as of block N · refreshing".
 - Operations, restore paths, monitoring and scheduled work: [`docs/RUNBOOK.md`](docs/RUNBOOK.md).
+
+## Verify it yourself
+
+Nothing here asks to be trusted. Three ways to check, in increasing depth:
+
+| | How | What it proves |
+|---|---|---|
+| Fastest | `npm run verify` | Every headline figure, rebuilt from public sources, matches what the site publishes, and each deployed contract matches this repository |
+| By hand | [Recompute it yourself](https://metacenter.0xo.in/docs/verification/recompute) | The same arithmetic, step by step, with the exact API calls |
+| Deepest | `cd contracts && node scripts/verify-at-tip.mjs` | The deployed `pox5-reader` against live mainnet state, in a fork pinned at the chain tip, with every expected value fetched from `pox-5` at that same tip |
+
+Each figure on the site carries its provenance label and the block it was read at. Where a
+figure cannot be produced honestly it is left out and the reason is stated: see
+[Read limits and coverage-cache](https://metacenter.0xo.in/docs/verification/read-limits) for the
+one case where a public node refuses to run the contract's own read-onlys.
+
+## Integrate
+
+A contract reads the feed through `risk-feed-trait` in five lines. The live example on mainnet is
+[`coverage-guard-cached`](https://metacenter.0xo.in/docs/contracts/coverage-guard-cached):
+
+```clarity
+(use-trait risk-feed .risk-feed-trait.risk-feed-trait)
+(define-constant TRUSTED_FEED 'SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.coverage-cache)
+(define-constant MIN_COVERAGE_BPS u20000) ;; 2.0x
+
+(define-public (deposit (feed <risk-feed>) (amount uint))
+    (let ((s (try! (contract-call? feed get-coverage-summary))))
+        (asserts! (is-eq (contract-of feed) TRUSTED_FEED) (err u200))
+        (asserts! (match (get coverage-bps s) c (>= c MIN_COVERAGE_BPS) true) (err u202))
+        (asserts! (<= (- burn-block-height (get updated-at s)) u1300) (err u203))
+        (ok amount)
+    )
+)
+```
+
+From an app or an agent, the JSON API needs no key: `GET https://metacenter.0xo.in/api/metrics/current`.
+Every field carries `value`, `unit`, `provenance` and `source`. See
+[Integrate](https://metacenter.0xo.in/docs/integrate/read-coverage).
+
+## Contributing
+
+Issues and pull requests are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md). The rule that matters
+most is that no number ships without a traceable source.
 
 ## Contracts
 

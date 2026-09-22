@@ -100,17 +100,17 @@ The dashed line is 2.0×, the level discussed in the Bitcoin Staking SIP thread.
 **Status:** ready · **Clip:** g-reserve · **Tags:** none
 
 ```text
-The PoX-5 reserve holds 1.527 BTC, but under the current contract it can't pay bonds.
+The PoX-5 reserve holds 1.527 BTC and is designed as a back-stop for bonds.
 
-It gets 15% of what's left after bonds (pox-5 L2190). transfer-from-reserve (L2696) is private and never called: paying out needs a SIP.
+In this iteration it can't be drawn automatically: transfer-from-reserve is private and uncalled, so using it goes through a SIP process. An automated one is planned later.
 
-Dashboard: "hypothetical cover, 5.52 cycles".
+https://metacenter.0xo.in/dashboard/reserve
 ```
 
 **Sources:**
 - 1.527 BTC: `/api/intervals` → distribution 286 `reserve_balance` = 152,669,889 sats.
 - 5.52 cycles: reserve_balance ÷ (2 × `obligation` 13,810,222), truncated (the same formula as `pox5-reader::get-reserve-cover-cycles`).
-- L2190 and L2696: `research/pox-5.deployed.clar` (stacks-core 4.0.1 @62e03cc).
+- L2190 and L2696: `research/pox-5.deployed.clar` (stacks-core 4.0.1 @62e03cc). Design intent and the SIP process for using the reserve: docs.stacks.co/learn/bitcoin-staking/glossary#reserve-fund, and the SIP authors' replies in the forum thread.
 - Block: calculation height 967,399; read at block 967,686.
 
 ## Day 3 · Slot 2
@@ -296,7 +296,7 @@ One way to look at it: in the latest distribution the reward pool was 16.68× wh
 
 **R2**, on "can the reserve bail out bonds?":
 ```text
-Not under the current contract: transfer-from-reserve in pox-5 is private and never called (L2696), so paying bonds from the reserve would need a SIP. The reserve is 1.527 BTC today: https://metacenter.0xo.in/dashboard/reserve
+The reserve is designed as a back-stop for bonds, but in this iteration it can't be drawn automatically: transfer-from-reserve (L2696) is private and uncalled, and using it goes through a SIP process. It holds 1.527 BTC: https://metacenter.0xo.in/dashboard/reserve
 ```
 
 **R3**, on "who loses first in a shortfall?":

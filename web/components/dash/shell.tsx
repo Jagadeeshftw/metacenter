@@ -40,11 +40,31 @@ export type Status = {
   cycle: number | null;
   burnHeight: number | null;
   updated: string | null;
-  /** true when the indexer has not polled recently: the figures shown are the last published. */
+  /** when the figures were read, so staleness can be judged in the browser, not at render time */
+  takenAt?: string | null;
+  /** what the server decided at render time; the browser takes over once it has mounted */
   stale?: boolean;
 };
 
+/**
+ * A page can be served from cache long after it was rendered, so freshness has to be judged where
+ * it is read. Before mount this returns what the server decided, so the markup matches and there
+ * is no hydration mismatch.
+ */
+function useStale(takenAt: string | null | undefined, serverSaid: boolean | undefined) {
+  const [stale, setStale] = useState(!!serverSaid);
+  useEffect(() => {
+    if (!takenAt) return;
+    const check = () => setStale(Date.now() - new Date(takenAt).getTime() > 25 * 60 * 1000);
+    check();
+    const t = setInterval(check, 30_000);
+    return () => clearInterval(t);
+  }, [takenAt]);
+  return stale;
+}
+
 export function AppShell({ children, status }: { children: React.ReactNode; status: Status }) {
+  const stale = useStale(status.takenAt, status.stale);
   const [collapsed, setCollapsed] = useState(false);
   const [drawer, setDrawer] = useState(false);
   const path = usePathname();
@@ -114,11 +134,11 @@ export function AppShell({ children, status }: { children: React.ReactNode; stat
             >
               <IconMenu2 size={20} />
             </button>
-            <StatusBar status={status} />
+            <StatusBar status={status} stale={stale} />
           </div>
           <ThemeToggle />
         </header>
-        {status.stale && (
+        {stale && (
           <div className="flex items-center gap-2 border-b border-amber-500/30 bg-amber-500/10 px-4 py-2 text-xs text-amber-200 sm:hidden">
             <span className="h-2 w-2 shrink-0 rounded-full bg-amber-400" aria-hidden="true" />
             Data as of block {status.burnHeight?.toLocaleString("en-US") ?? "—"} · refreshing
@@ -127,6 +147,10 @@ export function AppShell({ children, status }: { children: React.ReactNode; stat
         <main className="flex-1 px-4 py-6 md:px-8 md:py-8">{children}</main>
         <footer className="border-t border-line px-4 py-5 text-xs text-subtle md:px-8">
           Testnet feed values mirror mainnet data · every number links to its source on the Methodology page
+          {" · "}
+          <a className="underline underline-offset-4 hover:text-foreground" href="/docs/verification/recompute">
+            Verify these numbers yourself
+          </a>
           {site.telegramUrl ? (
             <>
               {" · "}
@@ -170,7 +194,7 @@ function SideNav({ path, collapsed }: { path: string; collapsed: boolean }) {
   );
 }
 
-function StatusBar({ status }: { status: Status }) {
+function StatusBar({ status, stale }: { status: Status; stale: boolean }) {
   return (
     <div className="flex min-w-0 items-center gap-2 overflow-hidden text-xs md:gap-4 md:text-sm">
       <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-line px-2.5 py-1 font-medium">
@@ -186,7 +210,7 @@ function StatusBar({ status }: { status: Status }) {
       <span className="hidden truncate text-muted md:inline">
         Last updated <b className="num font-medium text-foreground">{status.updated ?? "—"}</b>
       </span>
-      {status.stale && (
+      {stale && (
         <span
           className="hidden shrink-0 items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-amber-200 sm:inline-flex"
           title="The indexer has not reported a new poll recently. These are the last figures it published, with the Bitcoin block they were read at."

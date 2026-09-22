@@ -51,6 +51,31 @@ export default async function Methodology() {
         <ProvenanceLegend />
       </PageHeader>
 
+      <Panel title="Verify these numbers yourself">
+        <p className="text-sm leading-relaxed">
+          One command rebuilds every headline figure from public sources and compares it with what this site is
+          publishing right now. No install, no keys: it reads pox-5 through the Hiro API, the sBTC token contract, the
+          deployed Metacenter contracts and CoinGecko, and prints both sides with the Bitcoin block each was read at.
+          It also checks that each deployed contract is byte-identical to the source in the repository.
+        </p>
+        <pre className="num overflow-x-auto rounded-xl border border-line bg-panel p-4 text-xs leading-relaxed">
+          {`git clone ${site.repo.replace("https://github.com/", "https://github.com/")}.git
+cd metacenter
+npm run verify`}
+        </pre>
+        <p className="text-xs text-muted">
+          Prefer to do it by hand?{" "}
+          <a className="underline underline-offset-4" href="/docs/verification/recompute">
+            Recompute it yourself
+          </a>{" "}
+          walks through the same arithmetic with the exact API calls, and{" "}
+          <a className="underline underline-offset-4" href="/docs/verification/read-limits">
+            Read limits
+          </a>{" "}
+          explains the one case where a public node refuses to run the contract&apos;s own read-onlys.
+        </p>
+      </Panel>
+
       <Panel title="Every metric and its source">
         <div className="-mx-5 overflow-x-auto px-5 md:mx-0 md:px-0">
           <table className="w-full min-w-[860px] text-sm">
@@ -109,7 +134,7 @@ export default async function Methodology() {
           <li>Bonds are paid first, in descending stx-value-ratio; ties go to the lower bond index (L2285–2299). Each gets min(target, what is left).</li>
           <li>Within a bond, rewards are flat per token: every staked sat earns the same (L2304–2309).</li>
           <li>15% of what remains goes to the reserve (L2190); STX-only stakers get the other 85%.</li>
-          <li>The reserve never pays bonds. transfer-from-reserve (L2696) is private and never called; that needs a SIP. In a shortfall the reserve stays flat.</li>
+          <li>The reserve is a back-stop for bonds by design. In this iteration it cannot be drawn automatically: transfer-from-reserve (L2696) is private and uncalled, and using the reserve goes through a SIP process. An automated process is planned for a later iteration. In a shortfall the deposit is zero and the reserve stays flat.</li>
         </ol>
         <p className="text-xs text-subtle">
           Line numbers refer to the <a className="underline underline-offset-4" href={POX5_SRC}>deployed source</a>, identical to stacks-core tag 4.0.1 (commit 62e03cc).

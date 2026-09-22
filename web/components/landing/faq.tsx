@@ -13,7 +13,7 @@ const FAQs = [
   {
     question: "Can the reserve cover a shortfall?",
     answer:
-      "Not today. pox-5 has no path from the reserve to bonds: transfer-from-reserve is private and never called, so it needs a SIP. The dashboard shows the reserve as hypothetical cover and says so next to the number.",
+      "The reserve is designed as a back-stop for bonds, but in this first iteration it can't be drawn automatically: transfer-from-reserve is private and uncalled, and using the reserve goes through a SIP process. An automated process is planned for a later iteration. The dashboard shows it as hypothetical cover and says so next to the number.",
   },
   {
     question: "Who gets short-paid first?",

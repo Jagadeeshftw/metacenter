@@ -14,7 +14,7 @@ description: Terms used across the dashboard, API and contracts.
 | **stx-value-ratio** | A bond parameter that sets its place in the payout order (higher is paid first). |
 | **Target / obligation** | What a bond is owed per interval: `shares × target-rate ÷ 10000 ÷ 50`. The sum over bonds is the obligation. |
 | **Tranche 1 / Tranche 2** | SIP terms for bonds (paid first) and STX-only stakers (paid from the remainder). |
-| **Reserve** | Receives 15% of the remainder after bonds. Accrual-only under the current contract. |
+| **Reserve** | Receives 15% of the remainder after bonds. Designed as a back-stop for bonds ([Stacks docs](https://docs.stacks.co/learn/bitcoin-staking/glossary#reserve-fund)); accrual-only in this iteration, and using it goes through a SIP process. |
 | **Coverage** | Gross pool ÷ obligation. |
 | **Headroom** | How far the pool can fall before bond yield is impaired: `1 − 1/coverage`. |
 | **Hypothetical cover** | Reserve ÷ (2 × obligation per interval), in cycles. A size comparison, not a payout schedule. |

@@ -101,7 +101,7 @@ The indexer last polled at Bitcoin block **${n(cur.as_of.burn_height)}** (${cur.
 | Coverage | ${x(cur.coverage.value ?? last.coverage.value)}${cur.coverage.value != null ? label(cur.coverage) : " _(mirrored, distribution " + last.distribution_index + ")_"}. ${n(last.gross_pool.value)} sats pool ÷ ${n(last.obligation.value)} sats owed |
 | Headroom | ${pct(cur.headroom.value ?? last.headroom.value)}${cur.headroom.value != null ? label(cur.headroom) : " _(mirrored)_"}. The pool can fall this far before bond yield is impaired |
 | Reserve | ${n(cur.reserve.value ?? last.reserve_balance.value)} sats${cur.reserve.value != null ? label(cur.reserve) : " _(mirrored)_"} |
-| Hypothetical cover | ${cur.reserve_cover.value != null ? cur.reserve_cover.value.toFixed(2) : (Math.floor((Number(last.reserve_balance.value) * 100) / (2 * Number(last.obligation.value))) / 100).toFixed(2)} cycles. The reserve cannot pay out without a SIP |
+| Hypothetical cover | ${cur.reserve_cover.value != null ? cur.reserve_cover.value.toFixed(2) : (Math.floor((Number(last.reserve_balance.value) * 100) / (2 * Number(last.obligation.value))) / 100).toFixed(2)} cycles. A back-stop by design; accrual-only in this iteration, and using it goes through a SIP process |
 | Pending pool | ${pending.value == null ? "n/a" : n(pending.value) + " sats"}, via ${pending.how}, at the Bitcoin tip ${n(info.burn_block_height)} (Stacks ${n(info.stacks_tip_height)}) |
 | STX-only realised yield | ${pct(last.stx_only_apy_btc.value, 2)} a year in BTC terms _(mirrored)_. ${Number(last.stx_only_yield.value).toFixed(4)} sats/STX in distribution ${last.distribution_index}, priced at ${Number(last.price.value).toFixed(2)} sats/STX (${last.price.source}) |
 | Cliff price | ${cur.cliff.price.value?.toFixed(1) ?? "n/a"} sats/STX _(mirrored; price at distribution ${last.distribution_index} × obligation ÷ pool; assumes miner bids scale with STX price)_ |
@@ -144,7 +144,7 @@ Line numbers refer to the deployed source, identical to stacks-core tag 4.0.1 @6
 | Bonds paid in descending stx-value-ratio, ties to the lower bond index | L2285–2299, enforced with \`ERR_INVALID_BOND_PERIOD_ORDERING\` |
 | Within a bond, flat per-token accounting | L2304–2309 |
 | Reserve takes 15% of what remains after bonds | L2190 (\`RESERVE_RATIO u1500\`, L107) |
-| The reserve never pays bonds: \`transfer-from-reserve\` is private and never called | L2696 |
+| The reserve has no automatic path to bonds in this iteration: \`transfer-from-reserve\` is private and uncalled | L2696 |
 
 ## Infrastructure
 

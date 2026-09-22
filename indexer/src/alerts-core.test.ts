@@ -41,7 +41,7 @@ describe("what the channel posts", () => {
     expect(text).toContain("6.67% a year in BTC terms [mirrored]");
     expect(text).toContain("Bitcoin block 967,910");
     expect(text).toContain("https://metacenter.0xo.in/dashboard");
-    expect(text).toContain("cannot pay out without a SIP");
+    expect(text).toContain("accrual-only in this iteration");
   });
 
   it("warns under 3.0x and escalates under 2.0x, never both", () => {

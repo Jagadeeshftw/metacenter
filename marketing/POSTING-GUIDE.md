@@ -86,11 +86,11 @@ The dashed line is 2.0×, the level discussed in the Bitcoin Staking SIP thread.
 **Tags:** none
 
 ```text
-The PoX-5 reserve holds 1.527 BTC, but under the current contract it can't pay bonds.
+The PoX-5 reserve holds 1.527 BTC and is designed as a back-stop for bonds.
 
-It gets 15% of what's left after bonds (pox-5 L2190). transfer-from-reserve (L2696) is private and never called: paying out needs a SIP.
+In this iteration it can't be drawn automatically: transfer-from-reserve is private and uncalled, so using it goes through a SIP process. An automated one is planned later.
 
-Dashboard: "hypothetical cover, 5.52 cycles".
+https://metacenter.0xo.in/dashboard/reserve
 ```
 
 ## Day 3 · Slot 2: realised STX-only yield (Mon 21 Sep)

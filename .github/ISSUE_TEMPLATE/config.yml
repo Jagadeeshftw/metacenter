@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Verify a figure yourself
+    url: https://metacenter.0xo.in/docs/verification/recompute
+    about: Step-by-step instructions to recompute any published figure from public data.
+  - name: Service health
+    url: https://metacenter.0xo.in/api/health
+    about: Check whether the API, the indexer and the on-chain cache are current before filing.

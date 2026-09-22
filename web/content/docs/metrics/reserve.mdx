@@ -1,19 +1,24 @@
 ---
 title: Reserve & hypothetical cover
-description: What the reserve holds, how it grows, and why it cannot currently pay bonds.
+description: What the reserve holds, how it grows, and how it can be used in this iteration.
 ---
 
 **Balance:** <Metric name="reserve" />
 
-**Hypothetical cover:** <Metric name="cover" />. The reserve cannot currently pay out: that requires a SIP.
+**Hypothetical cover:** <Metric name="cover" />.
+
+| | |
+|---|---|
+| **Design** | A back-stop for bonds: capital that keeps them whole when mining rewards fall short of their target ([Reserve fund, Stacks docs](https://docs.stacks.co/learn/bitcoin-staking/glossary#reserve-fund)). |
+| **This iteration** | Accrual-only. It can't be drawn automatically: `transfer-from-reserve` is private and uncalled, and using the reserve goes through a SIP process. An automated process is planned for a later iteration. |
 
 ## How it grows
 
 The reserve receives 15% of what remains after bonds (<Pox5 lines="2190" />). When no STX is staked it receives the whole remainder. In a shortfall there is no remainder, so it stays **flat**.
 
-## Why it cannot pay bonds
+## How it can be used
 
-`transfer-from-reserve` (<Pox5 lines="2696" />) is private and never called. The SIP authors confirmed in the [forum discussion](https://forum.stacks.org/t/introducing-the-bitcoin-staking-sip-v1-draft/18862/42) that the reserve is accrual-only during PoX-5.
+`transfer-from-reserve` (<Pox5 lines="2696" />) is private and uncalled, so there is no automatic path from the reserve to bonds in this iteration; using the reserve goes through a SIP process, and an automated process is planned for a later one. The SIP authors describe the reserve as accrual-only during PoX-5 in the [forum discussion](https://forum.stacks.org/t/introducing-the-bitcoin-staking-sip-v1-draft/18862/42).
 
 ## Definitions
 

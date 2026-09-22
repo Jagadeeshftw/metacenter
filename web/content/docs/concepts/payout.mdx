@@ -41,10 +41,12 @@ Bonds are paid in **descending `stx-value-ratio`**, with ties going to the **low
 
 So when the pool is short, the bond paid last in this order is the first to be short-paid.
 
-## The reserve cannot pay bonds
+## The reserve: a back-stop, not an automatic one
 
-`transfer-from-reserve` (<Pox5 lines="2696" />) is private and nothing in the contract calls it. Paying bonds from the reserve would need a SIP. In a shortfall the reserve deposit is zero, so the reserve simply stays flat: it does not drain.
+The reserve is designed as a back-stop for bonds: capital that keeps bonds whole when mining rewards fall short of their target ([Reserve fund, Stacks docs](https://docs.stacks.co/learn/bitcoin-staking/glossary#reserve-fund)).
+
+In this first iteration it can't be drawn automatically. `transfer-from-reserve` (<Pox5 lines="2696" />) is private and uncalled, and using the reserve goes through a SIP process. An automated process is planned for a later iteration. In a shortfall the reserve deposit is zero, so the reserve stays flat: it does not drain.
 
 <Callout title="Why this matters for the metrics">
-Metacenter never counts the reserve as protection for bonds. It shows the reserve as **hypothetical cover**: how many cycles of obligation it would equal if a SIP ever allowed it to pay out.
+Because it cannot be drawn automatically today, Metacenter does not count the reserve as protection already in place. It shows it as **hypothetical cover**: how many cycles of obligation it would equal at today's sizes, if the SIP process made it payable.
 </Callout>

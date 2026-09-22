@@ -39,7 +39,8 @@ const CACHE_NOTE =
 const READER_CAPPED =
   "pox5-reader is deployed on mainnet, but this read-only cannot be called through the public Hiro API: reading pox-5 costs about 569k of read length, over the 500,000 cap. It is checked against live mainnet state by contracts/scripts/verify-at-tip.mjs.";
 const PRICE_ASSUMPTION = "assumes miner BTC bids scale linearly with the STX price";
-const RESERVE_NOTE = "reserve cannot currently pay out (requires SIP)";
+const RESERVE_NOTE =
+  "a back-stop for bonds by design; accrual-only in this iteration, and using the reserve goes through a SIP process";
 const SIP_BOOK_NOTE =
   "SIP launch book: 3,000 BTC at 3% target (forum.stacks.org/t/18862, post #14)";
 

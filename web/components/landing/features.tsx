@@ -324,7 +324,7 @@ const CARDS = [
     name: "pox-5 L2696",
     content: (
       <p>
-        <Highlight>transfer-from-reserve</Highlight> is private and never called. The reserve cannot pay bonds without a
+        <Highlight>transfer-from-reserve</Highlight> is private and uncalled in this iteration. Using the reserve goes through a SIP process without a
         SIP; in a shortfall it stays flat.
       </p>
     ),
