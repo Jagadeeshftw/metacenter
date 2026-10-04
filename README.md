@@ -27,21 +27,36 @@ npm run verify          # rebuild every headline figure from public data and com
 
 Node 22 or newer, no install step, no keys. It reads `pox-5` through the public Hiro API, the sBTC
 token contract, the deployed Metacenter contracts and CoinGecko, recomputes each figure, and prints
-both sides with the Bitcoin block each was read at. Exit code 0 means every check passed.
+both sides with the block each was read at. Exit code 0 means every check passed.
+
+Each figure is recomputed from `pox-5` as it stood at the block the published figure describes, not
+from today's state: the latest distribution from the state just before and just after its
+`calculate-rewards` block, the headline figures at the block where `coverage-cache` stored them,
+and the reserve and pending pool at the chain tip. A bond's shares can change after a
+distribution; that must not make a correct published number look wrong.
 
 ```
-  figure                               recomputed here           published
-  --------------------------------  ------------------  ------------------  ---
-  Reward pool (sats)                       230,327,833         230,327,835  ok
-  Coverage (x)                                  16.678              16.678  ok
-  Headroom                                      0.9400              0.9400  ok
-  Reserve (sats)                           152,669,889         152,669,889  ok
-  STX-only yield (sats per STX)                 0.4202              0.4202  ok
-  pox5-reader source                      2a0ebc3a3003        2a0ebc3a3003  ok
+  figure                              recomputed here          published
+  -- distribution 288 ----------------------------------------------------
+  Reward pool (sats)                      351,979,582        351,979,584  ok
+  Obligation (sats)                        13,810,186         13,810,186  ok
+  Coverage (x)                                 25.487             25.487  ok
+  Reserve deposit (sats)                   50,725,409         50,725,409  ok
+  ...
+  -- headline, Bitcoin block 969503 --------------------------------------
+  Coverage (x)                                25.4869            25.4869  ok
+  Headroom                                     0.9607             0.9607  ok
+  ...
+  -- contracts -----------------------------------------------------------
+  pox5-reader source                     2a0ebc3a3003       2a0ebc3a3003  ok
+  ...
+  18/18 checks pass.
 ```
 
 It also checks that each deployed contract is byte-identical to the source in this repository.
-`npm run verify -- --json` prints the same as JSON. See [Verify it yourself](#verify-it-yourself).
+`npm run verify -- --json` prints the same as JSON, with the source of every figure and the block
+hashes it read at. `npm test` replays the script against recorded public data, with no network.
+See [Verify it yourself](#verify-it-yourself).
 
 ## Provenance labels
 

@@ -21,6 +21,7 @@ than a number nobody can reproduce.
 
 ```sh
 npm run verify                              # headline figures still match public data
+npm test                                    # verify's regression tests, replayed offline
 cd indexer && npm test                      # 28 tests, including the /api/health byte contract
 cd contracts && npx vitest run              # 36 simnet tests
 cd contracts && npx vitest run --config vitest.fork.config.ts   # 11 mainnet-fork tests, pinned

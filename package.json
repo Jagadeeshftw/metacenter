@@ -6,6 +6,7 @@
   "type": "module",
   "engines": { "node": ">=22" },
   "scripts": {
-    "verify": "node scripts/verify.mjs"
+    "verify": "node scripts/verify.mjs",
+    "test": "node --test \"scripts/test/*.test.mjs\""
   }
 }
