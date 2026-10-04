@@ -9,6 +9,8 @@ import { GlowingEffect } from "@/components/ui/glowing-effect";
 import { Spotlight } from "@/components/ui/spotlight-new";
 import { ProvenanceTag } from "@/components/shared/provenance";
 import type { Provenance } from "@/lib/api";
+import { DemoVideo } from "@/components/shared/demo-video";
+import { site } from "@/lib/site";
 
 export type HeroStat = { label: string; value: string; detail: string; provenance: Provenance };
 export type HeroBar = { index: number; pool: number; owed: number };
@@ -73,27 +75,54 @@ export function Hero({ stats, bars, asOf }: { stats: HeroStat[]; bars: HeroBar[]
       >
         <div className="relative rounded-[28px]">
           <GlowingEffect spread={60} glow={true} disabled={false} proximity={64} inactiveZone={0.01} borderWidth={3} blur={10} />
-          <div
-            className={cn(
-              "relative grid gap-8 rounded-3xl border border-line p-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] md:p-10",
-              "[background:linear-gradient(180deg,var(--card-top),var(--card-bottom))]",
-            )}
-          >
-            <MiniChart bars={bars} />
-            <div className="grid grid-cols-2 gap-x-6 gap-y-8 content-center">
-              {stats.map((s) => (
-                <div key={s.label} className="flex flex-col gap-1.5">
-                  <span className="flex items-center justify-between gap-2 text-xs text-muted">
-                    {s.label}
-                    <ProvenanceTag kind={s.provenance} />
-                  </span>
-                  <span className="num text-[26px] sm:text-3xl md:text-5xl font-medium tracking-tight text-foreground whitespace-nowrap">{s.value}</span>
-                  <span className="text-xs md:text-sm text-muted">{s.detail}</span>
+          {site.demo.youtubeId ? (
+            <div
+              className={cn(
+                "relative grid gap-6 rounded-3xl border border-line p-3 md:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] md:gap-8 md:p-6",
+                "[background:linear-gradient(180deg,var(--card-top),var(--card-bottom))]",
+              )}
+            >
+              <DemoVideo autoplay />
+              <div className="flex flex-col justify-center gap-5 px-2 pb-2 md:px-0 md:pb-0">
+                <div className="grid grid-cols-2 gap-x-5 gap-y-6">
+                  {stats.map((s) => (
+                    <div key={s.label} className="flex flex-col gap-1">
+                      <span className="flex items-center justify-between gap-2 text-xs text-muted">
+                        {s.label}
+                        <ProvenanceTag kind={s.provenance} />
+                      </span>
+                      <span className="num text-2xl md:text-3xl font-medium tracking-tight text-foreground whitespace-nowrap">{s.value}</span>
+                      <span className="text-xs text-muted">{s.detail}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+                <p className="num text-[11px] text-subtle">{asOf}</p>
+                <Link href="/demo" className="text-sm text-brand underline underline-offset-4">Full demo page</Link>
+              </div>
             </div>
-            <p className="num text-[11px] text-subtle md:col-span-2">{asOf}</p>
-          </div>
+          ) : (
+          <div
+              className={cn(
+                "relative grid gap-8 rounded-3xl border border-line p-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] md:p-10",
+                "[background:linear-gradient(180deg,var(--card-top),var(--card-bottom))]",
+              )}
+            >
+              <MiniChart bars={bars} />
+              <div className="grid grid-cols-2 gap-x-6 gap-y-8 content-center">
+                {stats.map((s) => (
+                  <div key={s.label} className="flex flex-col gap-1.5">
+                    <span className="flex items-center justify-between gap-2 text-xs text-muted">
+                      {s.label}
+                      <ProvenanceTag kind={s.provenance} />
+                    </span>
+                    <span className="num text-[26px] sm:text-3xl md:text-5xl font-medium tracking-tight text-foreground whitespace-nowrap">{s.value}</span>
+                    <span className="text-xs md:text-sm text-muted">{s.detail}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="num text-[11px] text-subtle md:col-span-2">{asOf}</p>
+            </div>
+          )}
         </div>
       </motion.div>
     </div>

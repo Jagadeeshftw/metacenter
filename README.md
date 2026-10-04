@@ -13,7 +13,7 @@ Everything is computed from public data and published as:
 - a mirrored feed on testnet,
 - a public JSON API.
 
-**Live:** https://metacenter.0xo.in · **API:** https://metacenter.0xo.in/api
+**Live:** https://metacenter.0xo.in · **API:** https://metacenter.0xo.in/api · **Demo (2:54):** https://metacenter.0xo.in/demo
 
 A ship's metacentric height is its stability margin. This project measures the same thing for PoX-5: how far the reward pool can fall before bonds are short-paid.
 

@@ -9,6 +9,7 @@ export function Footer({ reader, feed }: { reader: string | null; feed: string }
     { title: "Dashboard", href: "/dashboard" },
     { title: "Stress test", href: "/dashboard/stress" },
     { title: "Methodology", href: "/methodology" },
+    { title: "Demo video", href: "/demo" },
     { title: "Docs", href: "/docs" },
     { title: "API reference", href: "/api-reference" },
   ];

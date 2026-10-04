@@ -1,0 +1,207 @@
+1
+00:00:00,620 --> 00:00:04,300
+Bitcoin Staking on Stacks pays bonds first.
+
+2
+00:00:04,320 --> 00:00:07,210
+But the contract never measures whether it can keep
+
+3
+00:00:07,230 --> 00:00:08,620
+doing that.
+
+4
+00:00:08,640 --> 00:00:10,680
+Metacenter does.
+
+5
+00:00:10,700 --> 00:00:12,680
+How far can the reward pool fall,
+
+6
+00:00:12,700 --> 00:00:14,990
+before bonds are short-paid?
+
+7
+00:00:15,899 --> 00:00:21,039
+At distribution 288: coverage, 25.49×.
+
+8
+00:00:21,059 --> 00:00:25,719
+Headroom, 96.1%.
+
+9
+00:00:25,739 --> 00:00:27,689
+Every figure carries one label.
+
+10
+00:00:27,709 --> 00:00:31,839
+Onchain: computed by our contract, on mainnet.
+
+11
+00:00:31,859 --> 00:00:36,829
+Mirrored: posted from mainnet events and prices.
+
+12
+00:00:36,849 --> 00:00:38,240
+Hypothetical: a what-if.
+
+13
+00:00:39,150 --> 00:00:42,840
+Coverage, distribution by distribution.
+
+14
+00:00:42,860 --> 00:00:46,580
+The dashed line, at 2×, is the coverage the Bitcoin
+
+15
+00:00:46,600 --> 00:00:49,040
+Staking SIP draft targets,
+
+16
+00:00:49,060 --> 00:00:52,230
+with an acceptable range of 1.5× to 3×.
+
+17
+00:00:52,250 --> 00:00:54,680
+The contract itself doesn't compute it,
+
+18
+00:00:54,700 --> 00:00:55,840
+or enforce it.
+
+19
+00:00:56,851 --> 00:00:58,451
+The stress test.
+
+20
+00:00:58,471 --> 00:01:01,091
+All of it, hypothetical.
+
+21
+00:01:01,111 --> 00:01:04,451
+Cut miner bitcoin commits, by half.
+
+22
+00:01:04,471 --> 00:01:07,371
+Coverage falls to 12.74×.
+
+23
+00:01:07,391 --> 00:01:10,461
+Today's single bond is still paid in full.
+
+24
+00:01:11,351 --> 00:01:16,691
+Now swap in the SIP's launch book: 3,000 BTC, at 3%.
+
+25
+00:01:16,711 --> 00:01:18,571
+Also hypothetical.
+
+26
+00:01:18,591 --> 00:01:21,251
+Coverage: 0.98×.
+
+27
+00:01:21,271 --> 00:01:23,531
+The last bond is short-paid.
+
+28
+00:01:23,551 --> 00:01:25,631
+Nothing reaches the reserve,
+
+29
+00:01:25,651 --> 00:01:29,171
+and STX-only stakers get zero.
+
+30
+00:01:29,191 --> 00:01:31,280
+That's the zero-yield cliff.
+
+31
+00:01:32,690 --> 00:01:35,620
+PoX-5 enforces the payout order:
+
+32
+00:01:35,640 --> 00:01:38,610
+bonds in descending stx-value-ratio.
+
+33
+00:01:38,630 --> 00:01:41,610
+The reserve is designed as a back-stop.
+
+34
+00:01:41,630 --> 00:01:45,610
+In this iteration, it can't be drawn automatically:
+
+35
+00:01:45,630 --> 00:01:47,610
+using it goes through a SIP process,
+
+36
+00:01:47,630 --> 00:01:51,610
+and automatic responses are anticipated for PoX-6.
+
+37
+00:01:51,630 --> 00:01:56,024
+So its 8.71 cycles are hypothetical cover.
+
+38
+00:01:56,914 --> 00:02:00,814
+This is what makes it a contract, not a website.
+
+39
+00:02:00,834 --> 00:02:03,494
+pox5-reader, on mainnet.
+
+40
+00:02:03,514 --> 00:02:10,354
+get-reserve: 240,763,960 sats.
+
+41
+00:02:10,374 --> 00:02:12,614
+Exactly the dashboard's figure.
+
+42
+00:02:12,634 --> 00:02:17,694
+coverage-cache keeps its answer on-chain: 25.49×.
+
+43
+00:02:17,714 --> 00:02:21,628
+It only reads PoX-5, and it holds no funds.
+
+44
+00:02:22,538 --> 00:02:24,568
+Don't take our word for it.
+
+45
+00:02:24,588 --> 00:02:27,458
+Clone the repo, and run npm run verify.
+
+46
+00:02:27,478 --> 00:02:31,458
+Every headline figure, rebuilt from public data and
+
+47
+00:02:31,478 --> 00:02:32,458
+checked against the site.
+
+48
+00:02:32,478 --> 00:02:35,587
+18 checks, all pass.
+
+49
+00:02:36,697 --> 00:02:38,877
+The waterfall, the labels,
+
+50
+00:02:38,897 --> 00:02:42,317
+the contracts, with line numbers into PoX-5:
+
+51
+00:02:42,337 --> 00:02:44,217
+it's all in the docs.
+
+52
+00:02:44,237 --> 00:02:49,387
+Anything you want to know: metacenter.0xo.in/docs.
