@@ -19,7 +19,7 @@ export default async function YieldPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="STX-only yield"
-        lead="STX-only stakers get 85% of what remains after bonds and the reserve cut. Realised yield is sats earned per STX staked in each distribution; the APY converts it to BTC terms at the STX/BTC price of that distribution."
+        lead="STX-only stakers get 85% of what remains after bonds; the reserve takes the other 15%. Realised yield is sats earned per STX staked in each distribution; the APY converts it to BTC terms at the STX/BTC price of that distribution."
       />
       <section className="grid gap-4 md:grid-cols-3">
         <Stat

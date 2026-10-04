@@ -125,7 +125,7 @@ describe("pox5-reader against mainnet state at the tip", () => {
     }
   });
 
-  it("reserve matches pox-5, and cannot pay bonds", async () => {
+  it("reserve matches pox-5, and reports no path from it to bonds in this iteration", async () => {
     const reserve = n(await pox5("get-reserve-balance"));
     expect(n(ro("get-reserve"))).toBe(reserve);
     const c = ro("get-reserve-cover-cycles", [Cl.uint(cycle)]);

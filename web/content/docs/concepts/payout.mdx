@@ -37,15 +37,15 @@ The other 85% is shared flat per uSTX among STX-only stakers (<Pox5 lines="2191-
 
 ## Bond order
 
-Bonds are paid in **descending `stx-value-ratio`**, with ties going to the **lower bond index**. The contract enforces this: a call with bonds in the wrong order fails with `ERR_INVALID_BOND_PERIOD_ORDERING` (<Pox5 lines="2285-2299" />). Within a bond, rewards are flat per staked sat (<Pox5 lines="2304-2309" />): no staker in a bond is paid before another.
+Bonds are paid in **descending `stx-value-ratio`**, with ties going to the **lower bond index**. The contract enforces this: a call with bonds in the wrong order fails with `ERR_INVALID_BOND_PERIOD_ORDERING` (<Pox5 lines="2285-2299" />). Within a bond, rewards are flat per staked sat (<Pox5 lines="2276-2279" />, <Pox5 lines="2304-2309" />): no staker in a bond is paid before another.
 
 So when the pool is short, the bond paid last in this order is the first to be short-paid.
 
 ## The reserve: a back-stop, not an automatic one
 
-The reserve is designed as a back-stop for bonds: capital that keeps bonds whole when mining rewards fall short of their target ([Reserve fund, Stacks docs](https://docs.stacks.co/learn/bitcoin-staking/glossary#reserve-fund)).
+The reserve is designed as a back-stop for bonds: "The reserve exists to buffer protocol bond shortfalls" ([Stacks docs, Rewards and tranches](https://docs.stacks.co/learn/bitcoin-staking/rewards-and-tranches#the-reserve-fund-tranche)).
 
-In this first iteration it can't be drawn automatically. `transfer-from-reserve` (<Pox5 lines="2696" />) is private and uncalled, and using the reserve goes through a SIP process. An automated process is planned for a later iteration. In a shortfall the reserve deposit is zero, so the reserve stays flat: it does not drain.
+In this first iteration it can't be drawn automatically. `transfer-from-reserve` (<Pox5 lines="2696" />) is private and uncalled, and using the reserve goes through a SIP process (<Pox5 lines="2692-2694" />). Automatic responses are anticipated for PoX-6 ([Stacks docs](https://docs.stacks.co/learn/bitcoin-staking/rewards-and-tranches#coverage-ratio)). In a shortfall the reserve deposit is zero, so the reserve stays flat: it does not drain.
 
 <Callout title="Why this matters for the metrics">
 Because it cannot be drawn automatically today, Metacenter does not count the reserve as protection already in place. It shows it as **hypothetical cover**: how many cycles of obligation it would equal at today's sizes, if the SIP process made it payable.

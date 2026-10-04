@@ -40,17 +40,25 @@ export default async function ReservePage() {
       <section className="grid gap-4 md:grid-cols-2">
         <Panel title="Design">
           <p className="text-sm leading-relaxed">
-            A back-stop that keeps bonds whole when mining rewards fall short of the ~3% target.{" "}
-            <a className="underline underline-offset-4" href="https://docs.stacks.co/learn/bitcoin-staking/glossary#reserve-fund" target="_blank" rel="noreferrer">
-              Reserve fund, Stacks docs
+            A back-stop for bonds: &ldquo;The reserve exists to buffer protocol bond shortfalls.&rdquo;{" "}
+            <a className="underline underline-offset-4" href="https://docs.stacks.co/learn/bitcoin-staking/rewards-and-tranches#the-reserve-fund-tranche" target="_blank" rel="noreferrer">
+              Stacks docs, Rewards and tranches
             </a>
           </p>
         </Panel>
         <Panel title="This iteration">
           <p className="text-sm leading-relaxed">
-            Accrual-only: it can&apos;t be drawn automatically. <code className="num text-xs">transfer-from-reserve</code> is
-            private and uncalled, and using the reserve goes through a SIP process. An automated process is planned for a
-            later iteration.
+            Accrual-only: it can&apos;t be drawn automatically. <code className="num text-xs">transfer-from-reserve</code>{" "}is
+            private and uncalled, and using the reserve goes through a SIP process (pox-5 L2692&ndash;2694). Automatic
+            responses are anticipated for PoX-6 (
+            <a className="underline underline-offset-4" href="https://docs.stacks.co/learn/bitcoin-staking/rewards-and-tranches#coverage-ratio" target="_blank" rel="noreferrer">
+              Stacks docs
+            </a>
+            ), and the SIP authors say a complete reserve model will be designed and ratified as part of the PoX-6 work (
+            <a className="underline underline-offset-4" href="https://forum.stacks.org/t/introducing-the-bitcoin-staking-sip-v1-draft/18862/42" target="_blank" rel="noreferrer">
+              forum post #42
+            </a>
+            ).
           </p>
         </Panel>
       </section>

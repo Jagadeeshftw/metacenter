@@ -9,7 +9,7 @@ No. It is an independent open-source project (MIT). Forum quotes on the site are
 
 ### Why are some headline figures "mirrored"?
 
-They come from the latest distribution's events. When `pox5-reader` is available on mainnet, the dashboard uses its onchain figures instead.
+Headline coverage and headroom are onchain: `pox5-reader`'s own answers, stored on-chain by `coverage-cache`. Per-distribution figures and anything priced in STX/BTC are mirrored. A headline falls back to its mirrored source only if the reader or the cache is unavailable.
 
 ### Why does the testnet feed show mainnet numbers?
 
@@ -17,7 +17,7 @@ Testnet has almost no bond stake. The testnet `risk-feed` mirrors mainnet distri
 
 ### Can the reserve cover a shortfall?
 
-Not under the current contract. See [Reserve & hypothetical cover](/docs/metrics/reserve).
+The reserve is designed as a back-stop for bonds. In this iteration it can't be drawn automatically: using it goes through a SIP process, and automatic responses are anticipated for PoX-6. See [Reserve & hypothetical cover](/docs/metrics/reserve).
 
 ### Who is short-paid first?
 

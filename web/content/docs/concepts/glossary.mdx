@@ -14,10 +14,10 @@ description: Terms used across the dashboard, API and contracts.
 | **stx-value-ratio** | A bond parameter that sets its place in the payout order (higher is paid first). |
 | **Target / obligation** | What a bond is owed per interval: `shares × target-rate ÷ 10000 ÷ 50`. The sum over bonds is the obligation. |
 | **Tranche 1 / Tranche 2** | SIP terms for bonds (paid first) and STX-only stakers (paid from the remainder). |
-| **Reserve** | Receives 15% of the remainder after bonds. Designed as a back-stop for bonds ([Stacks docs](https://docs.stacks.co/learn/bitcoin-staking/glossary#reserve-fund)); accrual-only in this iteration, and using it goes through a SIP process. |
+| **Reserve** | Receives 15% of the remainder after bonds. Designed as a back-stop for bonds: "The reserve exists to buffer protocol bond shortfalls" ([Stacks docs](https://docs.stacks.co/learn/bitcoin-staking/rewards-and-tranches#the-reserve-fund-tranche)). In this iteration it can't be drawn automatically: using it goes through a SIP process, and automatic responses are anticipated for PoX-6. |
 | **Coverage** | Gross pool ÷ obligation. |
 | **Headroom** | How far the pool can fall before bond yield is impaired: `1 − 1/coverage`. |
 | **Hypothetical cover** | Reserve ÷ (2 × obligation per interval), in cycles. A size comparison, not a payout schedule. |
 | **Rewards per token (rpt)** | pox-5's cumulative per-sat / per-uSTX reward counter for a cycle. |
-| **Sortition** | A Bitcoin block in which a Stacks miner won a tenure. Blocks without one pay nothing into the pool. |
+| **Sortition** | A Bitcoin block in which a Stacks miner won a tenure. Most blocks without one pay nothing into the pool: in distribution 286, all 345 non-paying blocks had no sortition, while 14 no-sortition blocks still carried commits that paid. |
 | **Provenance** | onchain, mirrored or hypothetical. See [Provenance labels](/docs/concepts/provenance). |

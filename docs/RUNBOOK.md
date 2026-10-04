@@ -6,7 +6,7 @@ How Metacenter runs, what happens when a piece fails, and the jobs that are due 
 
 | Piece | Where | Restart | State |
 |---|---|---|---|
-| Site (`web/`) | Vercel, `metacenter.0xo.in` | Vercel serves the last successful build; a failed build never replaces a working one | none; pages are rebuilt from the API every 60 s |
+| Site (`web/`) | Vercel, `metacenter.0xo.in` | Vercel serves the last successful build; a failed build never replaces a working one | none; pages are rebuilt from the API every 60 s (Methodology every 300 s) |
 | API and indexer (`indexer/`) | Railway service `metacenter-indexer` | `ON_FAILURE`, up to 10 retries, with `/health` as the deploy health check (`indexer/railway.json`) | none in the container |
 | Database | Railway Postgres, volume `postgres-volume` at `/var/lib/postgresql/data` | Railway restarts the service; the volume is not touched | all indexed history |
 
@@ -64,7 +64,7 @@ If the response shape genuinely has to change, change the UptimeRobot keyword in
 
 - Address: `SPKD48VPM45ACPEV9WKSF07SP1MJD4Q03ENCKC0X`, fees only, its own key (never the deployer's).
 - Fee per call: `KEEPER_FEE_USTX`, 150,000 uSTX by default. It stops below `KEEPER_MIN_BALANCE_USTX` and flags itself below `KEEPER_ALERT_BALANCE_USTX` (1 STX) in `/api/health` and `/api/meta`.
-- Top it up with a plain STX transfer. About 0.3 STX a cycle covers it.
+- Top it up with a plain STX transfer. Each distribution costs two calls (snapshot and refresh), 0.3 STX at the default fee: about 0.6 STX a cycle.
 
 ## Scheduled work
 

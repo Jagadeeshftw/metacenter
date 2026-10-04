@@ -31,18 +31,18 @@ const f = (value: unknown, unit: string, provenance: Provenance, source: string,
 const POLL_STALE_S = Number(process.env.HEALTH_POLL_STALE_S ?? 45 * 60);
 const CACHE_STALE_BLOCKS = Number(process.env.HEALTH_CACHE_STALE_BLOCKS ?? 1200);
 const READER_MISSING = "pox5-reader is not deployed on mainnet yet";
-// Hiro's /v2/contracts/call-read allows 500,000 of read length; a contract-call? into pox-5 loads
-// that contract, about 569k. So the reader is on mainnet but these functions cannot be called
+// Hiro's /v2/contracts/call-read allows 500,000 of read length; each contract-call? into pox-5 loads
+// that contract, about 136k, so a reader function that calls pox-5 four or more times is refused
 // through the public API, and the figure falls back to its mirrored source.
 const CACHE_NOTE =
   "pox5-reader computed this from pox-5 state in a mainnet transaction; coverage-cache stores its answer so the public API can read it";
 const READER_CAPPED =
-  "pox5-reader is deployed on mainnet, but this read-only cannot be called through the public Hiro API: reading pox-5 costs about 569k of read length, over the 500,000 cap. It is checked against live mainnet state by contracts/scripts/verify-at-tip.mjs.";
+  "pox5-reader is deployed on mainnet, but this read-only cannot be called through the public Hiro API: it calls into pox-5 four or more times, each about 136k of read length, over the 500,000 cap. It is checked against live mainnet state by contracts/scripts/verify-at-tip.mjs.";
 const PRICE_ASSUMPTION = "assumes miner BTC bids scale linearly with the STX price";
 const RESERVE_NOTE =
   "a back-stop for bonds by design; accrual-only in this iteration, and using the reserve goes through a SIP process";
 const SIP_BOOK_NOTE =
-  "SIP launch book: 3,000 BTC at 3% target (forum.stacks.org/t/18862, post #14)";
+  "SIP launch book: 3,000 BTC at a 3% target (SIP draft, stacks.link/sip-pox5; as used in forum.stacks.org/t/18862 post #14)";
 
 const bps = (v: string | bigint | null | undefined) => (v === null || v === undefined ? null : Number(v) / 10000);
 const reader = (fn: string) => `${config.readerContract ?? "pox5-reader"}::${fn}`;
@@ -296,7 +296,7 @@ export async function buildApi() {
         "state",
         "mirrored",
         last ? `${txSource(last.txid)}: reserve-deposit` : "no distribution yet",
-        "pox-5 never pays bonds from the reserve; in a shortfall the deposit is zero and the reserve stays flat",
+        "the reserve is a back-stop for bonds by design; in this iteration pox-5 has no call path from it to bonds (transfer-from-reserve is private and uncalled), so using it goes through a SIP process. In a shortfall the deposit is zero and the reserve stays flat",
       ),
       payout_order: onchain(order?.map((b: any) => ({ bond_index: Number(b["bond-index"]), stx_value_ratio: b["stx-value-ratio"], target_rate_bps: b["target-rate"], shares_sats: b.shares, target_per_interval_sats: b["target-per-interval"] })), "bonds", `get-bond-payout-order(u${cycle})`, "descending stx-value-ratio, ties to the lower bond index"),
       latest_interval: iv,
@@ -441,12 +441,12 @@ export async function buildApi() {
       },
       assumption: `pool = base_pool * (1 - commit_drop) * (1 - price_drop); ${PRICE_ASSUMPTION}`,
       commit_model:
-        "pool = sum of confirmed miner commits to the sBTC address over the interval ~= 1,050 blocks x paying fraction (0.66-0.72 observed) x per-block spend (332,500 sats from 5 miners since block 965,936); commit_drop cuts that total (fewer paying blocks, fewer miners or lower spend). PoX-5 burns nothing. See research/missing-blocks.",
+        "pool = sum of confirmed miner commits to the sBTC address over the interval, roughly 1,050 blocks x paying fraction x per-block spend (in distribution 286: 705 of 1,050 blocks paid, mostly 332,500 sats from 5 miners); commit_drop cuts that total (fewer paying blocks, fewer miners or lower spend). PoX-5 burns nothing. See research/missing-blocks.",
       pool: hyp(pool_, "sats per interval", "stressed base_pool"),
       obligation: hyp(w.obligation, "sats per interval", "sum of shares * rate / 10000 / 50"),
       coverage: hyp(w.coverageBps === null ? null : Number(w.coverageBps) / 10000, "x", "pool / obligation", w.coverageBps === null ? "n/a: no bonds" : undefined),
       headroom: hyp(w.headroomBps === null ? null : Number(w.headroomBps) / 10000, "fraction", "1 - obligation / pool"),
-      shortfall: hyp(w.shortfall, "sats per interval", "obligation - bond payouts", "the reserve stays flat; pox-5 cannot pay bonds from it"),
+      shortfall: hyp(w.shortfall, "sats per interval", "obligation - bond payouts", "the reserve stays flat; in this iteration it cannot be drawn automatically, and using it goes through a SIP process"),
       payout: hyp(
         w.bonds.map((b, i) => ({ position: i, bond_index: b.bondIndex, stx_value_ratio: b.stxValueRatio.toString(), target_sats: b.target.toString(), paid_sats: b.paid.toString(), status: b.status })),
         "bonds",

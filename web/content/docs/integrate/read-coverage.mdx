@@ -1,9 +1,9 @@
 ---
 title: Read coverage from your contract
-description: Call get-coverage-summary on pox5-reader (mainnet) or risk-feed (testnet).
+description: Call get-coverage-summary on coverage-cache (mainnet) or risk-feed (testnet).
 ---
 
-Both feeds implement [risk-feed-trait](/docs/contracts/risk-feed-trait), so a contract can take either as a trait argument.
+`coverage-cache` (mainnet), `pox5-reader` (mainnet) and `risk-feed` (testnet) all implement [risk-feed-trait](/docs/contracts/risk-feed-trait), so a contract can take any of them as a trait argument. On mainnet, read `coverage-cache`.
 
 ```clarity
 (use-trait risk-feed '<deployer>.risk-feed-trait.risk-feed-trait)

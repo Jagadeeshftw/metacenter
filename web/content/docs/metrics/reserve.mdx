@@ -9,8 +9,8 @@ description: What the reserve holds, how it grows, and how it can be used in thi
 
 | | |
 |---|---|
-| **Design** | A back-stop for bonds: capital that keeps them whole when mining rewards fall short of their target ([Reserve fund, Stacks docs](https://docs.stacks.co/learn/bitcoin-staking/glossary#reserve-fund)). |
-| **This iteration** | Accrual-only. It can't be drawn automatically: `transfer-from-reserve` is private and uncalled, and using the reserve goes through a SIP process. An automated process is planned for a later iteration. |
+| **Design** | A back-stop for bonds: "The reserve exists to buffer protocol bond shortfalls" ([Stacks docs, Rewards and tranches](https://docs.stacks.co/learn/bitcoin-staking/rewards-and-tranches#the-reserve-fund-tranche)). |
+| **This iteration** | Accrual-only. It can't be drawn automatically: `transfer-from-reserve` is private and uncalled, and using the reserve goes through a SIP process (<Pox5 lines="2692-2694" />). Automatic responses are anticipated for PoX-6. |
 
 ## How it grows
 
@@ -18,7 +18,7 @@ The reserve receives 15% of what remains after bonds (<Pox5 lines="2190" />). Wh
 
 ## How it can be used
 
-`transfer-from-reserve` (<Pox5 lines="2696" />) is private and uncalled, so there is no automatic path from the reserve to bonds in this iteration; using the reserve goes through a SIP process, and an automated process is planned for a later one. The SIP authors describe the reserve as accrual-only during PoX-5 in the [forum discussion](https://forum.stacks.org/t/introducing-the-bitcoin-staking-sip-v1-draft/18862/42).
+`transfer-from-reserve` (<Pox5 lines="2696" />) is private and uncalled, so there is no automatic path from the reserve to bonds in this iteration; using the reserve goes through a SIP process. pox-5's own comment says so: it "can only be called by the node as part of consensus (via the SIP process)" (<Pox5 lines="2692-2694" />). The SIP authors describe the reserve as accrual-only during PoX-5 and say "a complete reserve model will be designed and ratified as part of the PoX-6 work" ([forum post #42](https://forum.stacks.org/t/introducing-the-bitcoin-staking-sip-v1-draft/18862/42)); the [Stacks docs](https://docs.stacks.co/learn/bitcoin-staking/rewards-and-tranches#coverage-ratio) say automatic on-chain responses are anticipated for PoX-6.
 
 ## Definitions
 

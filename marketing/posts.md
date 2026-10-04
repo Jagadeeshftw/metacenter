@@ -86,13 +86,13 @@ https://metacenter.0xo.in/dashboard
 ```text
 Coverage history for PoX-5, per distribution: n/a for 282–285 because no bonds existed in cycles 141–142, then 16.68× at 286, when the first bond started earning.
 
-The dashed line is 2.0×, the level discussed in the Bitcoin Staking SIP thread.
+The dashed line is 2.0×, the coverage the Bitcoin Staking SIP draft targets.
 ```
 
 **Sources:**
 - 282–285 n/a: `/api/intervals` → distributions 282–285 `coverage` = null (obligation 0).
 - 16.68× at 286: distribution 286 `coverage` = 16.678.
-- 2.0×: the level discussed in forum.stacks.org/t/18862, post #14 (friedger), echoed in post #31. The SIP draft (stacks.link/sip-pox5) sets no coverage target.
+- 2.0×: the SIP draft (stacks.link/sip-pox5): "The protocol targets a coverage multiple of 2.0x (acceptable range 1.5x to 3.0x)". pox-5 neither computes nor enforces it. Also discussed in forum.stacks.org/t/18862, post #14 (friedger).
 - Block: read at block 967,686.
 
 ## Day 3 · Slot 1

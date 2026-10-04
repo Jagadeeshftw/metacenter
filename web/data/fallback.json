@@ -53,14 +53,14 @@
         "unit": "cycles",
         "provenance": "onchain",
         "source": "SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.pox5-reader::get-reserve-cover-cycles(u143) via coverage-cache::refresh at burn height 967793",
-        "note": "Hypothetical cover — reserve cannot currently pay out (requires SIP). pox5-reader computed this from pox-5 state in a mainnet transaction; coverage-cache stores its answer so the public API can read it"
+        "note": "Hypothetical cover — a back-stop for bonds by design; accrual-only in this iteration, and using the reserve goes through a SIP process. pox5-reader computed this from pox-5 state in a mainnet transaction; coverage-cache stores its answer so the public API can read it"
       },
       "reserve_state": {
         "value": "not drawing",
         "unit": "state",
         "provenance": "mirrored",
         "source": "mainnet pox-5 calculate-rewards event, tx 0x4a0218d7b13de29ae47015e72345876d362c47159216675d40d03cd09ad1cc5d: reserve-deposit",
-        "note": "pox-5 never pays bonds from the reserve; in a shortfall the deposit is zero and the reserve stays flat"
+        "note": "the reserve is a back-stop for bonds by design; in this iteration pox-5 has no call path from it to bonds (transfer-from-reserve is private and uncalled), so using it goes through a SIP process. In a shortfall the deposit is zero and the reserve stays flat"
       },
       "payout_order": {
         "value": [

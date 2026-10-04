@@ -33,7 +33,7 @@ Implements [risk-feed-trait](/docs/contracts/risk-feed-trait). Every figure it r
 
 ## Calling it off-chain
 
-Most of these read-onlys read `pox-5`, which costs about 569k of read length: over the 500,000 a public Hiro node allows on `/v2/contracts/call-read`. [`coverage-cache`](/docs/verification/read-limits) stores the reader's answers from a transaction so the public API can serve them, and the figures keep the <Tag kind="onchain" /> label.
+Nine of these read-onlys call into `pox-5` four or more times. Each call loads pox-5 (about 136k of read length), which takes them over the 500,000 a public Hiro node allows on `/v2/contracts/call-read`. [`coverage-cache`](/docs/verification/read-limits) stores the reader's answers from a transaction so the public API can serve them, and the figures keep the <Tag kind="onchain" /> label.
 
 ## Precision
 

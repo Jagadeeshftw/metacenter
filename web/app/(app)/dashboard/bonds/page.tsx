@@ -52,7 +52,7 @@ export default async function BondsPage() {
           </div>
         ) : last ? (
           <p className="text-sm text-muted">
-            The live order comes from pox5-reader::get-bond-payout-order once it is deployed on mainnet. The latest
+            The live order comes from pox5-reader::get-bond-payout-order, which is unavailable right now. The latest
             distribution ({last.distribution_index}) paid bond #1 (Genesis Bond) {satsExact(last.bond_paid.value)} against a
             target of {satsExact(last.obligation.value)}.
           </p>
@@ -66,7 +66,10 @@ export default async function BondsPage() {
           runs out. The stress test shows both: the current book, and a hypothetical multi-bond book with the SIP&apos;s
           3,000 BTC launch size.
         </p>
-        <Note>The reserve does not step in: pox-5 cannot pay bonds from it without a SIP.</Note>
+        <Note>
+          The reserve is designed as a back-stop for bonds. In this iteration it can&apos;t be drawn automatically: using it
+          goes through a SIP process, and automatic responses are anticipated for PoX-6.
+        </Note>
         <Link href="/dashboard/stress" className="text-sm text-brand underline underline-offset-4">
           Open the stress test
         </Link>

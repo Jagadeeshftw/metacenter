@@ -10,6 +10,7 @@ const SOURCES = [
   { name: "calculate-rewards", detail: "one event per distribution" },
   { name: "Hiro API", detail: "v3 staking cycles, call-read ?tip=" },
   { name: "Bitcoin", detail: "miner commits to the sBTC address" },
+  { name: "CoinGecko", detail: "STX/BTC price, Coinbase as fallback" },
 ];
 
 export function SpotlightLogoCloud() {

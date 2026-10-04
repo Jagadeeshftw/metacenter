@@ -79,7 +79,7 @@ export default async function Overview() {
           ) : (
             <p className="text-sm text-muted">
               {last && Number(last.obligation.value) > 0
-                ? `Distribution ${last.distribution_index} paid bond #1 (Genesis Bond) its full target. Live order needs pox5-reader on mainnet.`
+                ? `Distribution ${last.distribution_index} paid bond #1 (Genesis Bond) its full target. The live order from pox5-reader is unavailable right now.`
                 : "No active bonds."}
             </p>
           )}

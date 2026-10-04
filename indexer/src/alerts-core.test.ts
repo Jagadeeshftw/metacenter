@@ -68,7 +68,7 @@ describe("what the channel posts", () => {
   it("posts one resolved message when a condition ends, and then nothing", () => {
     const after = evaluate(base, { ...seen, active: ["coverage-critical"] });
     expect(after.map((a) => a.key)).toEqual(["resolved:coverage-critical"]);
-    expect(after[0].text).toContain("back above the 2.0× level");
+    expect(after[0].text).toContain("back above the SIP draft's 2.0× target");
     expect(keys(base)).toEqual([]); // the sender clears it from `active`, so nothing follows
   });
 

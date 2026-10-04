@@ -8,8 +8,8 @@
 // computed here from pox-5 (and sbtc-token) on the right. Nothing is written.
 //
 // Hiro's /v2/contracts/call-read allows 500,000 of read length, and every contract-call? into
-// pox-5 loads that contract: about 569k. So the reader functions that read pox-5 cannot be
-// called through the public endpoint, and show as "Hiro cap" here. That limit does not exist
+// pox-5 loads that contract: about 136k. So the reader functions that call pox-5 four or more
+// times cannot be called through the public endpoint, and show as "Hiro cap" here. That limit does not exist
 // inside a transaction or a fork; scripts/verify-at-tip.mjs checks those against the same
 // state. The independent column is filled in either way.
 import { Cl, cvToValue, hexToCV, cvToHex } from "@stacks/transactions";

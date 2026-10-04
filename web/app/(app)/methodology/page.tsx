@@ -37,8 +37,10 @@ const ROWS: { metric: string; formula: string; unit: string; label: Provenance; 
 export default async function Methodology() {
   const meta = await getMeta();
   const contracts = [
-    { name: "pox5-reader", network: "mainnet" as const, id: meta?.reader ?? null, role: "onchain figures, read-only, holds no funds" },
-    { name: "risk-feed-trait", network: "mainnet" as const, id: meta?.trait.mainnet ?? null, role: "interface implemented by pox5-reader" },
+    { name: "pox5-reader", network: "mainnet" as const, id: meta?.reader ?? null, role: "onchain figures: read-only computation plus a permissionless snapshot; holds no funds" },
+    { name: "coverage-cache", network: "mainnet" as const, id: meta?.cache ?? null, role: "stores pox5-reader's answers on-chain so the public API can read them; holds no funds" },
+    { name: "risk-feed-trait", network: "mainnet" as const, id: meta?.trait.mainnet ?? null, role: "interface implemented by pox5-reader and coverage-cache" },
+    { name: "coverage-guard-cached", network: "mainnet" as const, id: meta?.guard_mainnet ?? null, role: "example consumer of coverage-cache: ok / paused" },
     { name: "risk-feed", network: "testnet" as const, id: meta?.feed ?? null, role: "mirrored per-distribution records with raw inputs" },
     { name: "risk-feed-trait", network: "testnet" as const, id: meta?.trait.testnet ?? null, role: "interface implemented by risk-feed" },
     { name: "coverage-guard", network: "testnet" as const, id: meta?.guard ?? null, role: "example consumer: ok / paused" },
@@ -134,7 +136,7 @@ npm run verify`}
           <li>Bonds are paid first, in descending stx-value-ratio; ties go to the lower bond index (L2285–2299). Each gets min(target, what is left).</li>
           <li>Within a bond, rewards are flat per token: every staked sat earns the same (L2304–2309).</li>
           <li>15% of what remains goes to the reserve (L2190); STX-only stakers get the other 85%.</li>
-          <li>The reserve is a back-stop for bonds by design. In this iteration it cannot be drawn automatically: transfer-from-reserve (L2696) is private and uncalled, and using the reserve goes through a SIP process. An automated process is planned for a later iteration. In a shortfall the deposit is zero and the reserve stays flat.</li>
+          <li>The reserve is a back-stop for bonds by design. In this iteration it cannot be drawn automatically: transfer-from-reserve (L2696) is private and uncalled, and using the reserve goes through a SIP process (L2692–2694). Automatic responses are anticipated for PoX-6. In a shortfall the deposit is zero and the reserve stays flat.</li>
         </ol>
         <p className="text-xs text-subtle">
           Line numbers refer to the <a className="underline underline-offset-4" href={POX5_SRC}>deployed source</a>, identical to stacks-core tag 4.0.1 (commit 62e03cc).
@@ -152,9 +154,11 @@ npm run verify`}
             <p className="font-medium">friedger&apos;s ~171 sats/STX, reproduced (hypothetical)</p>
             <p className="num mt-2 text-xs">3,000 BTC × 3% ÷ (1,000 STX/block × 52,560 blocks/year) = 171.23 sats/STX</p>
             <p className="mt-2 text-xs text-muted">
-              Inputs are the SIP&apos;s hypothetical launch book (
+              Inputs are the SIP&apos;s launch book, 3,000 BTC at a 3% target (
+              <a className="underline underline-offset-4" href="https://stacks.link/sip-pox5">SIP draft</a>
+              ), as friedger used them in{" "}
               <a className="underline underline-offset-4" href="https://forum.stacks.org/t/introducing-the-bitcoin-staking-sip-v1-draft/18862/14">forum post #14</a>
-              ). The same inputs give the post's 1.65× coverage at 282 sats/STX.
+              . The same inputs give the post's 1.65× coverage at 282 sats/STX.
             </p>
           </div>
           <div className="rounded-xl border border-line p-4 text-sm">
@@ -168,7 +172,7 @@ npm run verify`}
       <Panel title="Where the pool comes from">
         <p className="text-sm leading-relaxed">
           Under PoX-5 every Stacks block-commit pays one output to the sBTC deposit address; nothing is burned. In
-          distribution 286, 705 of 1,050 Bitcoin blocks carried commits (five miners, 332,500 sats per block); the other
+          distribution 286, 705 of 1,050 Bitcoin blocks carried commits (five miners; 680 of them at 332,500 sats per block); the other
           345 had no sortition. The stress test&apos;s miner-commit drop cuts that total directly.{" "}
           <a className="underline underline-offset-4" href={`${site.repo}/tree/main/research/missing-blocks`}>
             Evidence

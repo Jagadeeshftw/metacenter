@@ -23,7 +23,9 @@ export const config = {
   // keeper: calls coverage-cache::refresh and pox5-reader::snapshot when they are due
   keeperKey: process.env.KEEPER_KEY || undefined,
   keeperFeeUstx: BigInt(process.env.KEEPER_FEE_USTX ?? "150000"),
-  keeperMinBalanceUstx: BigInt(process.env.KEEPER_MIN_BALANCE_USTX ?? "2000000"),
+  // stop below this; production sets 300,000. Keep it under the alert level, so the keeper flags
+  // itself before it stops
+  keeperMinBalanceUstx: BigInt(process.env.KEEPER_MIN_BALANCE_USTX ?? "300000"),
   // below this the keeper still runs, but /meta and the logs flag it for topping up
   keeperAlertBalanceUstx: BigInt(process.env.KEEPER_ALERT_BALANCE_USTX ?? "1000000"),
   // Telegram broadcast alerts (prototype). Off unless both are set; the token lives only in the

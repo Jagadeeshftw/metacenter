@@ -43,8 +43,9 @@ against live mainnet state at the current chain tip. It needs network access, no
   Telegram token and database URL are environment variables on the deployment. Nothing secret
   belongs in a commit, a log or an error message.
 - **Wording about PoX-5 is held to the same standard as numbers.** Cite what a source actually
-  says. The 2.0× coverage figure, for example, is discussed in the SIP thread; the SIP draft
-  itself sets no coverage target, and the docs say so.
+  says. The 2.0× coverage figure, for example, is the target in the SIP draft ("acceptable range
+  1.5x to 3.0x"), and the Stacks docs say the same; the pox-5 contract neither computes nor enforces
+  it. Quote the draft and say which part the contract does not implement.
 
 ## Reporting a wrong number
 

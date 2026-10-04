@@ -24,8 +24,8 @@ export async function syncCycles(currentCycle: number) {
  * pox5-reader reads, exactly what the contract returns.
  *
  * Best-effort per call. Hiro's /v2/contracts/call-read allows 500,000 of read length and every
- * contract-call? into pox-5 loads that contract (~569k), so the reader functions that read pox-5
- * are refused by the public endpoint. For those, coverage-cache holds pox5-reader's own answers,
+ * contract-call? into pox-5 loads that contract (~136k), so the reader functions that call pox-5
+ * four or more times are refused by the public endpoint. For those, coverage-cache holds pox5-reader's own answers,
  * stored by a transaction, and reading the cache touches no pox-5: the values are the reader's,
  * with the burn height they were recorded at. Anything still missing comes back null with the
  * reason in `errors`, and the figure falls back to its mirrored source.

@@ -5,7 +5,7 @@ export const metadata = { title: "API", alternates: { canonical: "/api-reference
 
 const ENDPOINTS = [
   { path: "/metrics/current", about: "Coverage, headroom, obligation, pending pool, reserve and hypothetical cover, payout order, the latest distribution and the cliff figures." },
-  { path: "/metrics/cycles/143", about: "pox5-reader::get-coverage-for-cycle(n), the Hiro v3 cycle record, and the cycle's distributions." },
+  { path: "/metrics/cycles/143", about: "The Hiro v3 cycle record and the cycle's distributions. The pox5-reader::get-coverage-for-cycle(n) fields are null with a note: the public endpoint refuses that read-only." },
   { path: "/intervals", about: "Every distribution since cycle 141, with cross-check results and testnet publication status." },
   { path: "/bonds/order", about: "Bond payout order in pox-5 order. Optional ?cycle=." },
   { path: "/stress?commit_drop=0.3&price_drop=0.5", about: "Hypothetical waterfall. Add &book_btc=3000&bonds=6 for a hypothetical book." },

@@ -78,7 +78,7 @@ Once per distribution interval (1,050 Bitcoin blocks, two per cycle), `calculate
 2. **15% of what remains goes to the reserve.**
 3. **STX-only stakers get the other 85%.**
 
-**The reserve never pays bonds.** `transfer-from-reserve` is private and never called. In a shortfall, the reserve stays flat.
+**The reserve has no automatic path to bonds.** It is designed as a back-stop for bonds, but `transfer-from-reserve` is private and never called, so in this iteration using it goes through a SIP process (L2692–2694: it "can only be called by the node as part of consensus (via the SIP process)"). Automatic responses are anticipated for PoX-6. In a shortfall, the reserve stays flat.
 
 ## Layout
 
@@ -118,8 +118,9 @@ one case where a public node refuses to run the contract's own read-onlys.
 
 ## Integrate
 
-A contract reads the feed through `risk-feed-trait` in five lines. The live example on mainnet is
-[`coverage-guard-cached`](https://metacenter.0xo.in/docs/contracts/coverage-guard-cached):
+A contract reads the feed through `risk-feed-trait`, pinning the trusted feed before it calls it. The
+live example on mainnet is [`coverage-guard-cached`](https://metacenter.0xo.in/docs/contracts/coverage-guard-cached)
+(`u202` and `u203` below are your own contract's error codes):
 
 ```clarity
 (use-trait risk-feed .risk-feed-trait.risk-feed-trait)
@@ -127,11 +128,14 @@ A contract reads the feed through `risk-feed-trait` in five lines. The live exam
 (define-constant MIN_COVERAGE_BPS u20000) ;; 2.0x
 
 (define-public (deposit (feed <risk-feed>) (amount uint))
-    (let ((s (try! (contract-call? feed get-coverage-summary))))
+    (begin
+        ;; pin the feed before calling it: an unchecked trait argument runs the caller's contract
         (asserts! (is-eq (contract-of feed) TRUSTED_FEED) (err u200))
-        (asserts! (match (get coverage-bps s) c (>= c MIN_COVERAGE_BPS) true) (err u202))
-        (asserts! (<= (- burn-block-height (get updated-at s)) u1300) (err u203))
-        (ok amount)
+        (let ((s (try! (contract-call? feed get-coverage-summary))))
+            (asserts! (match (get coverage-bps s) c (>= c MIN_COVERAGE_BPS) true) (err u202))
+            (asserts! (<= (- burn-block-height (get updated-at s)) u1300) (err u203))
+            (ok amount)
+        )
     )
 )
 ```
@@ -158,7 +162,7 @@ most is that no number ships without a traceable source.
 | coverage-guard | testnet | `ST24MYZSDF0TAVZ452R2TJY3RCQAVT3KR0FJHYCAJ.coverage-guard` |
 
 - Testnet feed values mirror mainnet data.
-- Nine of pox5-reader's thirteen read-onlys cannot be called through Hiro's public `/v2/contracts/call-read`: each `contract-call?` into pox-5 loads that contract, about 569k of read length, over the endpoint's 500,000 cap. A transaction has no such limit, so `coverage-cache::refresh` calls pox5-reader on-chain and stores its answers, and the public API reads the stored copy. The figures stay `onchain`, sourced to the refresh transaction and the burn height it ran at.
+- Nine of pox5-reader's thirteen read-onlys cannot be called through Hiro's public `/v2/contracts/call-read`: each `contract-call?` into pox-5 loads that contract (about 136k of read length; its source is 136,052 bytes), and those nine call into pox-5 four or more times, over the endpoint's 500,000 cap (`get-cycle-calc-heights` is refused at 569,370). A transaction has no such limit, so `coverage-cache::refresh` calls pox5-reader on-chain and stores its answers, and the public API reads the stored copy. The figures stay `onchain`, sourced to the refresh transaction and the burn height it ran at.
 - `contracts/scripts/verify-at-tip.mjs` checks the reader and the cache against live mainnet state (a fork at the chain tip, expectations fetched from pox-5 at the same tip). `contracts/scripts/verify-mainnet.mjs` calls what the public endpoint allows and records which functions it refuses.
 - The keeper in the indexer calls `pox5-reader::snapshot` once per distribution index and `coverage-cache::refresh` when a distribution lands, the cycle rolls over, or the reading is about a week old. Both calls are permissionless and take no arguments, so the keeper chooses only when a reading is taken. It runs with its own key (`SPKD48VPM45ACPEV9WKSF07SP1MJD4Q03ENCKC0X`), funded with fees only.
 - `ST24…vault-guard` on testnet is an earlier deployment of the example, superseded by `coverage-guard`.
@@ -175,6 +179,9 @@ most is that no number ships without a traceable source.
 | risk-feed | u104 | No data. |
 | coverage-guard | u200 | Untrusted feed. |
 | coverage-guard | u201 | Not owner. |
+| coverage-cache | u200 | pox5-reader returned an error (also what it answers before its first refresh). |
+| coverage-guard-cached | u200 | Untrusted feed. |
+| coverage-guard-cached | u201 | Not owner. |
 
 ## API
 
@@ -183,7 +190,7 @@ Base URL: `https://metacenter.0xo.in/api` (for example `https://metacenter.0xo.i
 | Endpoint | What |
 |---|---|
 | `/metrics/current` | Coverage, headroom, obligation, pending pool, reserve and hypothetical cover, payout order, latest interval, cliff figures. |
-| `/metrics/cycles/:n` | `pox5-reader::get-coverage-for-cycle(n)`, the Hiro cycle record, and the cycle's intervals. |
+| `/metrics/cycles/:n` | The Hiro cycle record and the cycle's intervals. The `pox5-reader::get-coverage-for-cycle(n)` fields are `null`, with a note: the public endpoint refuses that read-only (see read limits). |
 | `/intervals` | Every distribution since cycle 141, with cross-check results and the testnet publication status. |
 | `/bonds/order?cycle=` | Bond payout order in contract order. |
 | `/stress?commit_drop=&price_drop=&book_btc=&bonds=` | Hypothetical waterfall. |

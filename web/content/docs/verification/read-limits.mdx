@@ -3,20 +3,20 @@ title: Read limits and coverage-cache
 description: Why most pox5-reader read-onlys cannot be called through a public node, and how the figures stay onchain.
 ---
 
-`pox5-reader` computes its figures by reading `pox-5`. Every `contract-call?` into that contract loads it, which costs about **569,000 of read length**. A public Hiro node allows **500,000** on `/v2/contracts/call-read`, so those calls are refused:
+`pox5-reader` computes its figures by reading `pox-5`. Every `contract-call?` into that contract loads it, which costs about **136,000 of read length** (the source is 136,052 bytes). A public Hiro node allows **500,000** on `/v2/contracts/call-read`, so a read-only that calls into pox-5 four or more times is refused. `get-cycle-calc-heights` makes four such calls and stops at 569,370:
 
 ```json
 {
   "okay": false,
-  "cause": "RuntimeCheck(CostBalanceExceeded(ExecutionCost { read_length: 569372, ... }, ExecutionCost { read_length: 500000, ... }))"
+  "cause": "RuntimeCheck(CostBalanceExceeded(ExecutionCost { read_length: 569370, ... }, ExecutionCost { read_length: 500000, ... }))"
 }
 ```
 
-This is a limit on the read-only HTTP endpoint, not on the chain or on the contract. In a transaction the budget is far larger: the `coverage-cache::refresh` that produced today's figures used 8.5M of read length and confirmed normally. Contracts calling `pox5-reader` on-chain, such as [coverage-guard](/docs/contracts/coverage-guard), are unaffected.
+This is a limit on the read-only HTTP endpoint, not on the chain or on the contract. In a transaction the budget is far larger: the `coverage-cache::refresh` that produced today's figures used 8.5M of read length and confirmed normally. Contracts calling `pox5-reader` on-chain, such as `coverage-cache` (its `refresh` makes these calls in a transaction), are unaffected.
 
 ## What is affected
 
-| Callable through a public node | Refused (reads pox-5) |
+| Callable through a public node | Refused (four or more reads of pox-5) |
 |---|---|
 | `get-current-cycle`, `get-reserve`, `bond-target-per-interval`, `get-snapshot` | `get-coverage-summary`, `get-coverage-for-cycle`, `get-cycle-calc-heights`, `get-intervals-computed`, `get-bond-payout-order`, `get-obligation-per-interval`, `get-reserve-cover-cycles`, `get-pending-pool`, `simulate-waterfall` |
 

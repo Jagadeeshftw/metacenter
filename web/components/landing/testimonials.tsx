@@ -28,7 +28,7 @@ const QUOTES: Quote[] = [
     name: "alexlmiller",
     post: 42,
     quote: "The reserve remains accrual-only during PoX-5, and disbursement remains possible only through consensus.",
-    answer: "The reserve is shown as hypothetical cover: it grows, but pox-5 cannot pay bonds from it.",
+    answer: "The reserve is shown as hypothetical cover: a back-stop by design that grows each distribution, with no automatic path to bonds in this iteration.",
   },
   {
     name: "friedger",

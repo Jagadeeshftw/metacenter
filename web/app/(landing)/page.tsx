@@ -20,7 +20,7 @@ export default async function Home() {
   const stats: HeroStat[] = [
     { label: "Headroom", value: pct(h.headroom.value), detail: "pool can fall this far before bond yield is impaired", provenance: h.headroom.provenance },
     { label: "Coverage", value: times(h.coverage.value), detail: `reward pool ÷ what bonds are owed${h.cycle.value ? `, cycle ${h.cycle.value}` : ""}`, provenance: h.coverage.provenance },
-    { label: "Reserve", value: btc(h.reserve.value), detail: `hypothetical cover ${h.cover.value === null ? "n/a" : h.cover.value.toFixed(2) + " cycles"} (needs a SIP to pay out)`, provenance: h.reserve.provenance },
+    { label: "Reserve", value: btc(h.reserve.value), detail: `hypothetical cover ${h.cover.value === null ? "n/a" : h.cover.value.toFixed(2) + " cycles"} (a back-stop by design; drawn only through a SIP process)`, provenance: h.reserve.provenance },
     { label: "STX-only yield", value: pct(h.apy?.value ?? null, 2), detail: `annualised in BTC terms, distribution ${last?.distribution_index ?? "—"}`, provenance: "mirrored" },
   ];
   const bars = intervals.map((i) => ({ index: i.distribution_index, pool: Number(i.gross_pool.value), owed: Number(i.obligation.value) }));

@@ -17,12 +17,15 @@ Five lines inside your own function: take the feed as a trait, check it is the o
 (define-constant MIN_COVERAGE_BPS u20000) ;; 2.0x
 
 (define-public (deposit (feed <risk-feed>) (amount uint))
-    (let ((s (try! (contract-call? feed get-coverage-summary))))
+    (begin
+        ;; pin the feed before calling it: an unchecked trait argument runs the caller's contract
         (asserts! (is-eq (contract-of feed) TRUSTED_FEED) (err u200))
-        (asserts! (match (get coverage-bps s) c (>= c MIN_COVERAGE_BPS) true) (err u202))
-        (asserts! (<= (- burn-block-height (get updated-at s)) u1300) (err u203))
-        ;; ... your deposit logic
-        (ok amount)
+        (let ((s (try! (contract-call? feed get-coverage-summary))))
+            (asserts! (match (get coverage-bps s) c (>= c MIN_COVERAGE_BPS) true) (err u202))
+            (asserts! (<= (- burn-block-height (get updated-at s)) u1300) (err u203))
+            ;; ... your deposit logic
+            (ok amount)
+        )
     )
 )
 ```
@@ -45,7 +48,7 @@ Errors: `u200` the feed is not the trusted one, `u201` only the deployer may cha
 
 | Setting | Value | Reasoning |
 |---|---|---|
-| `MIN_COVERAGE_BPS` | `u20000`, 2.0× | The level discussed in the [Bitcoin Staking SIP thread](https://forum.stacks.org/t/introducing-the-bitcoin-staking-sip-v1-draft/18862/14) (friedger, post #14); the SIP draft sets no coverage target. Equivalent to 50% headroom. Coverage is <Metric name="coverage" />, so a vault using this threshold is not paused today. |
+| `MIN_COVERAGE_BPS` | `u20000`, 2.0× | The coverage the [Bitcoin Staking SIP draft](https://stacks.link/sip-pox5) targets (acceptable range 1.5× to 3.0×); the pox-5 contract neither computes nor enforces it. Equivalent to 50% headroom. Coverage is <Metric name="coverage" />, so a vault using this threshold is not paused today. |
 | `max-age-blocks` | `u1300` Bitcoin blocks | pox-5 computes a distribution every 1,050 blocks, and the keeper refreshes `coverage-cache` at least every 1,100. 1,300 leaves about 200 blocks, roughly a day and a half, before a feed that stopped being refreshed pauses the caller. Only the deployer can change it; a contract copying this pattern should set its own. |
 
 Pick your own numbers: a conservative vault might pause at 4.0× (`u40000`), and one that reads the feed every block could use a tighter staleness window.
@@ -57,6 +60,6 @@ Pick your own numbers: a conservative vault might pause at 4.0× (`u40000`), and
 | Called with the trusted feed | [`0xa5faac80…`](https://explorer.hiro.so/txid/0xa5faac8016169a8b3fc155de239072929e373c3f86b288239fdd2b7f8f6486ff?chain=mainnet) | `(ok { status "ok", coverage-bps (some u166780), age-blocks u117, stale false, provenance "onchain" })` |
 | Called with another contract as the feed | [`0xf51d4309…`](https://explorer.hiro.so/txid/0xf51d43090a73beca05fcaccd00745ae8bf4f8b1332e5293c76b1930d0becbb2a?chain=mainnet) | `(err u200)`: refused, because it is not the trusted feed |
 
-The `"paused"` branches cannot be shown on mainnet without a real shortfall, so they are covered against live chain state in `contracts/tests-tip`, which mines past the staleness window and checks the verdict flips. See [Health and degradation](/docs/verification/uptime) for how the feed behaves when a piece of the service is down.
+The `"paused"` branches cannot be shown on mainnet while coverage is above 2.0× and the cache is fresh. The stale branch is covered against live chain state in `contracts/tests-tip`, which mines past the staleness window and checks the verdict flips. The low-coverage branch is covered with synthetic data on the testnet guard's identical logic in `contracts/tests/coverage-guard.test.ts`. See [Health and degradation](/docs/verification/uptime) for how the feed behaves when a piece of the service is down.
 
 Source: [`contracts/contracts/coverage-guard-cached.clar`](https://github.com/Jagadeeshftw/metacenter/blob/main/contracts/contracts/coverage-guard-cached.clar). The testnet [coverage-guard](/docs/contracts/coverage-guard) is the same guard reading the testnet `risk-feed`.

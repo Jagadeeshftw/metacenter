@@ -9,11 +9,13 @@ A live example any vault can copy is on mainnet: [coverage-guard-cached](/docs/c
 (define-constant MIN_HEADROOM_BPS u5000) ;; pause when the pool could fall less than 50%
 
 (define-public (deposit (feed <risk-feed>) (amount uint))
-  (let ((s (try! (contract-call? feed get-coverage-summary))))
+  (begin
+    ;; pin the feed before calling it: an unchecked trait argument runs the caller's contract
     (asserts! (is-eq (contract-of feed) TRUSTED_FEED) ERR_UNTRUSTED_FEED)
-    (asserts! (match (get headroom-bps s) h (>= h MIN_HEADROOM_BPS) true) ERR_PAUSED)
-    ;; ... your deposit logic
-    (ok amount)))
+    (let ((s (try! (contract-call? feed get-coverage-summary))))
+      (asserts! (match (get headroom-bps s) h (>= h MIN_HEADROOM_BPS) true) ERR_PAUSED)
+      ;; ... your deposit logic
+      (ok amount))))
 ```
 
 ## Choosing thresholds
@@ -21,4 +23,4 @@ A live example any vault can copy is on mainnet: [coverage-guard-cached](/docs/c
 - Headroom is currently <Metric name="headroom" />; coverage is <Metric name="coverage" />.
 - 2.0× coverage equals 50% headroom.
 - Always check staleness with `updated-at`. Mirrored feeds post once per distribution (about weekly).
-- Pin the trusted feed (`contract-of`), so a caller cannot pass in a contract that returns whatever it likes.
+- Pin the trusted feed (`contract-of`) before calling it, so a caller cannot pass in a contract that returns whatever it likes, or that runs code of its own.

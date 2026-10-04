@@ -9,7 +9,7 @@ curl https://metacenter.0xo.in/api/metrics/current
 
 Fields: `as_of`, `cycle`, `coverage`, `headroom`, `obligation_per_interval`, `pending_pool`, `reserve`, `reserve_cover`, `reserve_state`, `payout_order`, `latest_interval`, `price`, `cliff`.
 
-The fields labelled onchain come from `pox5-reader`. Until it is deployed on mainnet, their `value` is `null` with a note saying so.
+The fields labelled onchain come from `pox5-reader`, through `coverage-cache` where the public endpoint refuses the call. If the reader or the cache is unavailable, their `value` is `null` with a note saying so.
 
 ## Live response (excerpt)
 

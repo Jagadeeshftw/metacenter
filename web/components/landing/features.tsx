@@ -40,8 +40,8 @@ export function Features({ testCount }: { testCount: { simnet: number; fork: num
               <br /> from pox-5
             </CardTitle>
             <CardDescription>
-              pox5-reader is a read-only Clarity contract on mainnet. It computes obligation, coverage and payout order
-              from pox-5 state, with no publisher in the loop.
+              pox5-reader is a Clarity contract on mainnet: read-only computation, plus a permissionless snapshot. It
+              computes obligation, coverage and payout order from pox-5 state, with no publisher in the loop.
             </CardDescription>
           </CardContent>
         </Card>
@@ -82,8 +82,8 @@ export function Features({ testCount }: { testCount: { simnet: number; fork: num
               Tested against <br /> mainnet state
             </CardTitle>
             <CardDescription>
-              {testCount.simnet} simnet tests cover every error code. {testCount.fork} more run pox5-reader against a fork
-              of mainnet and match the live distribution within 2 sats.
+              {testCount.simnet} simnet tests cover the error codes of pox5-reader, risk-feed and coverage-guard. {testCount.fork} more run
+              pox5-reader against a fork of mainnet and match the live distributions within 4 sats.
             </CardDescription>
           </CardContent>
           <div className="absolute right-4 bottom-4 opacity-10 md:opacity-100">
@@ -324,8 +324,8 @@ const CARDS = [
     name: "pox-5 L2696",
     content: (
       <p>
-        <Highlight>transfer-from-reserve</Highlight> is private and uncalled in this iteration. Using the reserve goes through a SIP process without a
-        SIP; in a shortfall it stays flat.
+        <Highlight>transfer-from-reserve</Highlight> is private and uncalled, so in this iteration using the reserve goes through a SIP
+        process. In a shortfall it stays flat.
       </p>
     ),
   },

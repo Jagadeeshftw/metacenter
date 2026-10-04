@@ -27,8 +27,8 @@ Every metric comes back as `{ value, unit, provenance, source }`. See [Coverage]
 ### Read it from a contract
 
 ```clarity
-;; any contract that implements risk-feed-trait
-(contract-call? .risk-feed get-coverage-summary)
+;; the mainnet feed; any contract that implements risk-feed-trait answers the same way
+(contract-call? 'SP2Q3XVGTTA4CW3E2AHFZPAGQ0HM9QPHTTBJTQGJY.coverage-cache get-coverage-summary)
 ```
 
 See [Read coverage from your contract](/docs/integrate/read-coverage) and [Deployments](/docs/contracts/deployments) for contract IDs.

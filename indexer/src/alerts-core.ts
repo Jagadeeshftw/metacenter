@@ -8,9 +8,8 @@ const SITE = "https://metacenter.0xo.in";
 /** Thresholds, with the reason each one exists. Shown as-is on the /docs/alerts page. */
 export const THRESHOLDS = {
   coverageWarn: 3, // "thin": a third of the pool would go to bonds
-  // The SIP draft itself sets no coverage target; 2.0x is the level friedger's analysis in the
-  // SIP thread (post #14) treats as the line, and post #31 echoes. Cite it that way, not as a
-  // SIP target.
+  // The SIP draft's target: "The protocol targets a coverage multiple of 2.0x (acceptable range 1.5x
+  // to 3.0x)" (stacks.link/sip-pox5). pox-5 neither computes nor enforces it.
   coverageCritical: 2,
   headroomWarn: 0.5, // equivalent to 2.0x coverage, stated the other way round
   cacheStaleBlocks: 1200, // the keeper refreshes at least every 1,100 burn blocks
@@ -71,7 +70,7 @@ const warnings = (s: AlertState) => {
   if (c != null && c < THRESHOLDS.coverageCritical)
     out.push({
       key: "coverage-critical",
-      text: `CRITICAL: PoX-5 bond coverage is ${times(c)} [${tag(s.coverage.provenance)}], below the 2.0× level discussed in the Bitcoin Staking SIP thread (friedger, post #14). The SIP draft sets no coverage target. The reward pool is ${sats(
+      text: `CRITICAL: PoX-5 bond coverage is ${times(c)} [${tag(s.coverage.provenance)}], below the 2.0× coverage the Bitcoin Staking SIP draft targets (acceptable range 1.5× to 3.0×). The reward pool is ${sats(
         s.pool,
       )} against ${sats(s.obligation)} owed to bonds. ${at}.\n${SITE}/dashboard/coverage`,
     });
@@ -106,7 +105,7 @@ const warnings = (s: AlertState) => {
 };
 
 const RESOLVED: Record<string, string> = {
-  "coverage-critical": "Resolved: PoX-5 bond coverage is back above the 2.0× level discussed in the SIP thread",
+  "coverage-critical": "Resolved: PoX-5 bond coverage is back above the SIP draft's 2.0× target",
   "coverage-warn": "Resolved: PoX-5 bond coverage is back above 3.0×",
   "headroom-warn": "Resolved: headroom is back above 50%",
   "cache-stale": "Resolved: the on-chain coverage-cache is being refreshed again",
