@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * The demo video from YouTube, as a facade: the poster renders with the page, and the player
- * (about 1 MB of YouTube script) is mounted only once the page has loaded and the slot is on
+ * (about 1 MB of YouTube script) is mounted only once the visitor has scrolled and the slot is on
  * screen. With `autoplay`, it then starts muted (browsers block autoplay with sound; the subtitles
  * are built into the video) and pauses when it scrolls out of view. A click mounts it at once.
  */
@@ -18,7 +18,7 @@ export function DemoVideo({ autoplay = false, priority = false, className }: { a
   const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(false);
 
-  // watch the slot; mount when it is at least half on screen after the page has loaded
+  // watch the slot: it counts as on screen when at least half of it is visible
   useEffect(() => {
     if (!id || !box.current) return;
     const io = new IntersectionObserver(([e]) => setVisible(e.isIntersecting && e.intersectionRatio >= 0.5), { threshold: [0, 0.5, 1] });
@@ -26,16 +26,19 @@ export function DemoVideo({ autoplay = false, priority = false, className }: { a
     return () => io.disconnect();
   }, [id]);
 
+  // autoplay starts once the visitor has scrolled and the slot is on screen; loading the page alone
+  // never pulls in the YouTube player
+  const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
-    if (!autoplay || !visible || mounted) return;
-    const go = () => setMounted(true);
-    if (document.readyState === "complete") {
-      const t = window.setTimeout(go, 400);
-      return () => window.clearTimeout(t);
-    }
-    window.addEventListener("load", go, { once: true });
-    return () => window.removeEventListener("load", go);
-  }, [autoplay, visible, mounted]);
+    if (!autoplay || scrolled) return;
+    const on = () => setScrolled(true);
+    window.addEventListener("scroll", on, { passive: true, once: true });
+    return () => window.removeEventListener("scroll", on);
+  }, [autoplay, scrolled]);
+
+  useEffect(() => {
+    if (autoplay && visible && scrolled && !mounted) setMounted(true);
+  }, [autoplay, visible, scrolled, mounted]);
 
   // pause when scrolled away, resume when back (YouTube iframe API over postMessage)
   useEffect(() => {
