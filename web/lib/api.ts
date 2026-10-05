@@ -156,6 +156,22 @@ export const getCurrent = () => get<Current>("/metrics/current");
 export const getIntervals = () => get<{ count: number; intervals: Interval[] }>("/intervals");
 export const getMeta = () => get<Meta>("/meta", 300);
 export const getStress = (q = "") => get<Stress>(`/stress${q}`);
+
+export type BondTerm = {
+  period_start_burn_height: number;
+  l1_unlock_burn_height: number;
+  term_blocks: number;
+  elapsed_blocks: number;
+  remaining_blocks: number;
+  remaining_intervals: number | null;
+  read_at_burn_height: number | null;
+};
+export type BondsOrder = {
+  cycle: number;
+  bonding_period?: { length_blocks: number; new_period_every_blocks: number; concurrent_max: number; note: string };
+  order: Field<({ position: number; bond_index: number; term: BondTerm | null } & PayoutRow)[] | null>;
+};
+export const getBondsOrder = () => get<BondsOrder>("/bonds/order");
 export const getCycle = (n: number) =>
   get<{ cycle: number; coverage: Field<number | null>; pool: Field<string | null>; obligation: Field<string | null>; hiro: Field<CycleHiro> | null; intervals: Interval[] }>(
     `/metrics/cycles/${n}`,

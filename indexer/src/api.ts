@@ -39,11 +39,19 @@ const CACHE_NOTE =
 const READER_CAPPED =
   "pox5-reader is deployed on mainnet, but this read-only cannot be called through the public Hiro API: it calls into pox-5 four or more times, each about 136k of read length, over the 500,000 cap. It is checked against live mainnet state by contracts/scripts/verify-at-tip.mjs.";
 const PRICE_ASSUMPTION = "assumes miner BTC bids scale linearly with the STX price";
+// pox-5 bonding period geometry, as the SIP draft specifies and the deployed contract follows:
+// a 25,200-block term with a new period every 4,200 blocks means six run concurrently, which is
+// the cap pox-5 enforces on its payout list.
+const DISTRIBUTION_INTERVAL_BLOCKS = 1050;
+const BONDING_PERIOD_BLOCKS = 25200;
+const BOND_PERIOD_SPACING_BLOCKS = 4200;
+const MAX_CONCURRENT_BONDS = 6;
 const RESERVE_NOTE =
   "a back-stop for bonds by design; accrual-only in this iteration, and using the reserve goes through a SIP process";
 const SIP_BOOK_NOTE =
   "SIP launch book: 3,000 BTC at a 3% target (SIP draft, stacks.link/sip-pox5; as used in forum.stacks.org/t/18862 post #14)";
 
+const int = (v: number) => v.toLocaleString("en-US");
 const bps = (v: string | bigint | null | undefined) => (v === null || v === undefined ? null : Number(v) / 10000);
 const reader = (fn: string) => `${config.readerContract ?? "pox5-reader"}::${fn}`;
 const txSource = (txid: string) => `mainnet pox-5 calculate-rewards event, tx ${txid}`;
@@ -366,15 +374,85 @@ export async function buildApi() {
     if (!Number.isInteger(cycle)) return reply.code(400).send({ error: "cycle must be an integer" });
     const src = reader(`get-bond-payout-order(u${cycle})`);
     if (!config.readerContract) return { cycle, order: f(null, "bonds", "onchain", src, READER_MISSING) };
-    const order = await cached(`order:${cycle}`, 10 * 60_000, () => callRead(config.readerContract!, "get-bond-payout-order", [Cl.uint(cycle!)]));
+
+    // get-bond-payout-order reads pox-5 several times, so a public node refuses it (see
+    // /docs/verification/read-limits). For the current cycle the poll already holds the answer,
+    // via coverage-cache when the direct call is refused; older cycles are attempted directly and
+    // report why if the endpoint turns them down, rather than failing the request.
+    let order: any = null;
+    let note = "descending stx-value-ratio, ties to the lower bond index; flat per-token within a bond";
+    let via = src;
+    if (live && cycle === live.current_cycle) {
+      order = live.reader?.[`get-bond-payout-order(u${cycle})`] ?? null;
+      const cacheAt = live.reader?.via_cache?.["get-bond-payout-order"];
+      if (cacheAt !== undefined) via = `${src} via coverage-cache::refresh at burn height ${cacheAt}`;
+    }
+    if (order === null) {
+      try {
+        order = await cached(`order:${cycle}`, 10 * 60_000, () => callRead(config.readerContract!, "get-bond-payout-order", [Cl.uint(cycle!)]));
+      } catch (e: any) {
+        return {
+          cycle,
+          order: f(null, "bonds", "onchain", src, /CostBalanceExceeded/.test(String(e?.message)) ? READER_CAPPED : String(e?.message).slice(0, 200)),
+        };
+      }
+    }
+
+    // A bond is not open-ended: pox-5 gives each bonding period a fixed term, which is why only
+    // about six run at once. Read each one's start and unlock height so the page can show how
+    // much of the term is left instead of leaving the reader to assume it never ends.
+    const tip = Number(live?.burn_height ?? 0);
+    const terms = new Map<number, { start: number; unlock: number }>();
+    for (const b of order) {
+      const idx = Number(b["bond-index"]);
+      terms.set(
+        idx,
+        await cached(`term:${idx}`, 24 * 3600_000, async () => ({
+          start: Number(await callRead(config.pox5, "bond-period-to-burn-height", [Cl.uint(idx)])),
+          unlock: Number(await callRead(config.pox5, "get-bond-l1-unlock-height", [Cl.uint(idx)])),
+        })),
+      );
+    }
+
     return {
       cycle,
+      bonding_period: {
+        length_blocks: BONDING_PERIOD_BLOCKS,
+        new_period_every_blocks: BOND_PERIOD_SPACING_BLOCKS,
+        concurrent_max: MAX_CONCURRENT_BONDS,
+        note: `a bonding period runs ${int(BONDING_PERIOD_BLOCKS)} Bitcoin blocks (about 6 months) and a new one opens every ${int(
+          BOND_PERIOD_SPACING_BLOCKS,
+        )} blocks (about a month), so at most ${MAX_CONCURRENT_BONDS} run at once`,
+      },
       order: f(
-        order.map((b: any, i: number) => ({ position: i, bond_index: Number(b["bond-index"]), stx_value_ratio: b["stx-value-ratio"], target_rate_bps: b["target-rate"], shares_sats: b.shares, target_per_interval_sats: b["target-per-interval"] })),
+        order.map((b: any, i: number) => {
+          const idx = Number(b["bond-index"]);
+          const t = terms.get(idx);
+          const remaining = t ? Math.max(0, t.unlock - tip) : null;
+          return {
+            position: i,
+            bond_index: idx,
+            stx_value_ratio: b["stx-value-ratio"],
+            target_rate_bps: b["target-rate"],
+            shares_sats: b.shares,
+            target_per_interval_sats: b["target-per-interval"],
+            term: t
+              ? {
+                  period_start_burn_height: t.start,
+                  l1_unlock_burn_height: t.unlock,
+                  term_blocks: t.unlock - t.start,
+                  elapsed_blocks: Math.max(0, Math.min(t.unlock, tip) - t.start),
+                  remaining_blocks: remaining,
+                  remaining_intervals: remaining === null ? null : Math.floor(remaining / DISTRIBUTION_INTERVAL_BLOCKS),
+                  read_at_burn_height: tip || null,
+                }
+              : null,
+          };
+        }),
         "bonds",
         "onchain",
-        src,
-        "descending stx-value-ratio, ties to the lower bond index; flat per-token within a bond",
+        via,
+        note,
       ),
     };
   });
@@ -383,7 +461,15 @@ export async function buildApi() {
     const q = req.query;
     const num = (k: string, d: number, lo: number, hi: number) => {
       const v = q[k] === undefined ? d : Number(q[k]);
-      if (!Number.isFinite(v) || v < lo || v > hi) throw Object.assign(new Error(`${k} must be in [${lo}, ${hi}]`), { statusCode: 400 });
+      if (!Number.isFinite(v) || v < lo || v > hi) {
+        const why =
+          k === "bonds"
+            ? `. A bonding period runs ${int(BONDING_PERIOD_BLOCKS)} Bitcoin blocks (about 6 months) and a new one opens every ${int(
+                BOND_PERIOD_SPACING_BLOCKS,
+              )} blocks (about a month), so ${MAX_CONCURRENT_BONDS} run concurrently at steady state; pox-5 caps its payout list at ${MAX_CONCURRENT_BONDS} for the same reason. book_btc is the total bonded BTC live at one moment, which this many bonds split between them.`
+            : "";
+        throw Object.assign(new Error(`${k} must be in [${lo}, ${hi}]${why}`), { statusCode: 400 });
+      }
       return v;
     };
     let commitDrop: number, priceDrop: number, bookBtc: number | null, bondCount: number;
@@ -391,7 +477,7 @@ export async function buildApi() {
       commitDrop = num("commit_drop", 0, 0, 1);
       priceDrop = num("price_drop", 0, 0, 1);
       bookBtc = q.book_btc === undefined ? null : num("book_btc", 0, 0, 21_000_000);
-      bondCount = num("bonds", 6, 1, 6);
+      bondCount = num("bonds", 6, 1, MAX_CONCURRENT_BONDS);
     } catch (e: any) {
       return reply.code(400).send({ error: e.message });
     }

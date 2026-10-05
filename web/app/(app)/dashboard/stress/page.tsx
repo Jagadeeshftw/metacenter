@@ -1,4 +1,4 @@
-import { getStress } from "@/lib/api";
+import { getCurrent, getStress } from "@/lib/api";
 import { PageHeader } from "@/components/dash/ui";
 import { StressTest } from "@/components/dash/stress";
 import { ProvenanceTag } from "@/components/shared/provenance";
@@ -7,16 +7,21 @@ export const revalidate = 60;
 export const metadata = { title: "Stress test", alternates: { canonical: "/dashboard/stress" }, openGraph: { url: "/dashboard/stress" } };
 
 export default async function StressPage() {
-  const initial = await getStress();
+  const [initial, cur] = await Promise.all([getStress(), getCurrent()]);
+  // today's real bond, so the worked example starts from a figure the reader can check
+  const live = cur?.payout_order.value?.[0] ?? null;
+  const todaysBond = live
+    ? { index: live.bond_index, sharesSats: Number(live.shares_sats), rateBps: Number(live.target_rate_bps) }
+    : null;
   return (
     <div className="flex flex-col gap-2">
       <PageHeader
         title="Stress test"
-        lead="Cut miner BTC commits or the STX price, or swap in a larger bond book, and see how pox-5 would split one distribution interval: bonds in stx-value-ratio order, then the reserve, then STX-only stakers."
+        lead="Cut miner BTC commits or the STX price, or swap in a larger bond book, and see how pox-5 would split one distribution interval — 1,050 Bitcoin blocks, about 7.3 days, roughly 50 a year: bonds in stx-value-ratio order, then the reserve, then STX-only stakers."
       >
         <ProvenanceTag kind="hypothetical" />
       </PageHeader>
-      <StressTest initial={initial} />
+      <StressTest initial={initial} todaysBond={todaysBond} />
     </div>
   );
 }

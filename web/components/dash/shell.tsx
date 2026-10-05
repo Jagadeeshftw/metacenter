@@ -4,6 +4,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { site } from "@/lib/site";
+import { UnitsToggle } from "@/components/shared/units";
 import { useEffect, useState } from "react";
 import {
   IconApi,
@@ -136,7 +137,10 @@ export function AppShell({ children, status }: { children: React.ReactNode; stat
             </button>
             <StatusBar status={status} stale={stale} />
           </div>
-          <ThemeToggle />
+          <div className="flex shrink-0 items-center gap-2">
+            <UnitsToggle />
+            <ThemeToggle />
+          </div>
         </header>
         {stale && (
           <div className="flex items-center gap-2 border-b border-amber-500/30 bg-amber-500/10 px-4 py-2 text-xs text-amber-200 sm:hidden">

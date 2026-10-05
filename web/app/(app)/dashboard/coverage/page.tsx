@@ -1,9 +1,11 @@
 import { getCurrent, getIntervals } from "@/lib/api";
 import { pct, sats, satsExact, times } from "@/lib/format";
 import { headline } from "@/lib/view";
-import { PageHeader, Panel, Stat, Unavailable } from "@/components/dash/ui";
+import { Note, PageHeader, Panel, Stat, Unavailable } from "@/components/dash/ui";
 import { CoverageChart, PoolChart } from "@/components/dash/charts";
 import { ProvenanceTag } from "@/components/shared/provenance";
+import { Amount } from "@/components/shared/units";
+import { CYCLE_VS_INTERVAL, PER_INTERVAL } from "@/lib/interval";
 
 export const revalidate = 60;
 export const metadata = { title: "Coverage", alternates: { canonical: "/dashboard/coverage" }, openGraph: { url: "/dashboard/coverage" } };
@@ -16,12 +18,13 @@ export default async function CoveragePage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Coverage"
-        lead="Coverage is the reward pool of a distribution interval divided by what bonds are owed for it (shares × target rate ÷ 10000 ÷ 50). Below 1.0× bonds are short-paid and STX-only stakers and the reserve get nothing."
+        lead="Coverage is the reward pool of a distribution interval — 1,050 Bitcoin blocks, about 7.3 days, roughly 50 a year — divided by what bonds are owed for that same interval (shares × target rate ÷ 10000 ÷ 50). Below 1.0× bonds are short-paid and STX-only stakers and the reserve get nothing."
       />
+      <Note>{CYCLE_VS_INTERVAL}</Note>
       <section className="grid gap-4 md:grid-cols-3">
         <Stat label="Coverage" value={times(h.coverage.value)} provenance={h.coverage.provenance} source={h.coverage.source} />
         <Stat label="Headroom" value={pct(h.headroom.value)} detail="pool can fall this far before bond yield is impaired" provenance={h.headroom.provenance} source={h.headroom.source} />
-        <Stat label="Owed to bonds per interval" value={h.obligation.value === null ? "—" : sats(h.obligation.value)} provenance={h.obligation.provenance} source={h.obligation.source} />
+        <Stat label="Owed to bonds, per distribution interval" value={h.obligation.value === null ? "—" : sats(h.obligation.value)} provenance={h.obligation.provenance} source={h.obligation.source} />
       </section>
       {intervals.length === 0 ? (
         <Unavailable what="Distribution history" />
@@ -59,10 +62,10 @@ export default async function CoveragePage() {
                           </a>
                         </td>
                         <td className="num">{i.cycle}</td>
-                        <td className="num text-right">{satsExact(i.gross_pool.value)}</td>
-                        <td className="num text-right">{satsExact(i.obligation.value)}</td>
+                        <td className="num text-right"><Amount sats={i.gross_pool.value} exact /></td>
+                        <td className="num text-right"><Amount sats={i.obligation.value} exact /></td>
                         <td className="num text-right">{i.coverage.value === null ? "n/a (no bonds)" : times(i.coverage.value)}</td>
-                        <td className="num text-right">{satsExact(i.shortfall.value)}</td>
+                        <td className="num text-right"><Amount sats={i.shortfall.value} exact /></td>
                         <td className="text-right text-xs">{i.crosscheck.ok ? "match" : "mismatch"}</td>
                       </tr>
                     ))}

@@ -3,6 +3,7 @@ import { btc, satsExact } from "@/lib/format";
 import { headline } from "@/lib/view";
 import { PageHeader, Panel, Stat, Note, Unavailable } from "@/components/dash/ui";
 import { ReserveChart } from "@/components/dash/charts";
+import { Amount } from "@/components/shared/units";
 
 export const revalidate = 60;
 export const metadata = { title: "Reserve", alternates: { canonical: "/dashboard/reserve" }, openGraph: { url: "/dashboard/reserve" } };
@@ -21,11 +22,11 @@ export default async function ReservePage() {
         lead="After bonds are paid, 15% of what remains goes to the reserve. In a shortfall there is no remainder, so the deposit is zero and the reserve stays flat."
       />
       <section className="grid gap-4 md:grid-cols-3">
-        <Stat label="Balance" value={btc(h.reserve.value)} detail={h.reserve.value === null ? undefined : satsExact(h.reserve.value)} provenance={h.reserve.provenance} source={h.reserve.source} />
+        <Stat label="Balance" value={<Amount sats={h.reserve.value} />} detail={h.reserve.value === null ? undefined : satsExact(h.reserve.value)} provenance={h.reserve.provenance} source={h.reserve.source} />
         <Stat
           label="Hypothetical cover"
           value={h.cover.value === null ? "n/a" : `${h.cover.value.toFixed(2)} cycles`}
-          detail="reserve ÷ (2 × what bonds are owed per interval)"
+          detail="reserve ÷ (2 × what bonds are owed per distribution interval); two intervals make one cycle"
           provenance={h.cover.provenance}
           source={h.cover.source}
         />

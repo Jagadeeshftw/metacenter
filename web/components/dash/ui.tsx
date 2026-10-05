@@ -53,7 +53,7 @@ export function Stat({
   big,
 }: {
   label: string;
-  value: string;
+  value: React.ReactNode;
   detail?: React.ReactNode;
   provenance: Provenance;
   source?: string;

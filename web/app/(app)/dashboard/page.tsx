@@ -5,6 +5,7 @@ import { headline } from "@/lib/view";
 import { PageHeader, Panel, Stat, Note, Unavailable } from "@/components/dash/ui";
 import { CoverageChart, PoolChart, YieldChart } from "@/components/dash/charts";
 import { ProvenanceLegend } from "@/components/shared/provenance";
+import { Amount } from "@/components/shared/units";
 
 export const revalidate = 60;
 export const metadata = { title: "Overview", alternates: { canonical: "/dashboard" }, openGraph: { url: "/dashboard" } };
@@ -43,7 +44,7 @@ export default async function Overview() {
         <Stat label="Coverage" value={times(h.coverage.value)} detail="reward pool ÷ what bonds are owed" provenance={h.coverage.provenance} source={h.coverage.source} />
         <Stat
           label="Pending pool (not yet split)"
-          value={h.pending.value === null ? "—" : sats(h.pending.value)}
+          value={h.pending.value === null ? "—" : <Amount sats={h.pending.value} />}
           detail={h.pending.value === null ? "pox5-reader is on mainnet, but this read-only is over Hiro's public read-length cap." : "sBTC received since the last distribution"}
           provenance={h.pending.provenance}
           source={h.pending.source}
@@ -89,7 +90,7 @@ export default async function Overview() {
         </Panel>
         <Panel title="Reserve" provenance={h.reserve.provenance} source={h.reserve.source}>
           <div className="flex items-baseline justify-between gap-3">
-            <span className="num text-3xl font-medium">{btc(h.reserve.value)}</span>
+            <span className="num text-3xl font-medium"><Amount sats={h.reserve.value} /></span>
             <span className="rounded-full border border-line px-3 py-1 text-sm">{last && Number(last.reserve_deposit.value) > 0 ? "Not drawing" : "Flat"}</span>
           </div>
           <Note>
