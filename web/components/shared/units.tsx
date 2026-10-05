@@ -47,11 +47,14 @@ export const formatSats = (v: string | number | null | undefined) => {
   return n === null || Number.isNaN(n) ? "—" : `${Math.round(n).toLocaleString("en-US")} sats`;
 };
 
-/** sats shortened to BTC or millions, for headline figures. */
+/**
+ * sats, shortened for headline figures. It never switches to BTC: the reader chose sats, and a
+ * card reading BTC beside one reading sats is exactly the confusion the toggle exists to remove.
+ */
 export const formatSatsShort = (v: string | number | null | undefined, digits = 1) => {
   const n = num(v);
   if (n === null || Number.isNaN(n)) return "—";
-  if (Math.abs(n) >= 1e8) return `${(n / 1e8).toFixed(3)} BTC`;
+  if (Math.abs(n) >= 1e9) return `${(n / 1e9).toFixed(2)}B sats`;
   if (Math.abs(n) >= 1e6) return `${(n / 1e6).toFixed(digits)}M sats`;
   return `${Math.round(n).toLocaleString("en-US")} sats`;
 };

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import type { Stress } from "@/lib/api";
-import { pct, satsM as sats, satsExact, satsPerStx, times } from "@/lib/format";
+import { pct, satsPerStx, times } from "@/lib/format";
 import { ProvenanceTag } from "@/components/shared/provenance";
 import { cn } from "@/lib/utils";
 import { Amount } from "@/components/shared/units";
@@ -111,7 +111,7 @@ export function StressTest({ initial, todaysBond = null }: { initial: Stress | n
       ) : (
         <>
           <p className="text-sm text-muted">
-            Base: {data.inputs.base}, pool {satsExact(data.inputs.base_pool.value)}, price {satsPerStx(data.inputs.price.value, 2)} at that
+            Base: {data.inputs.base}, pool <Amount sats={data.inputs.base_pool.value} exact />, price {satsPerStx(data.inputs.price.value, 2)} at that
             distribution. At 0% / 0% with the current book these reproduce the realised figures exactly.
           </p>
           <section className="grid grid-cols-2 gap-4 lg:grid-cols-5">
@@ -155,7 +155,7 @@ export function StressTest({ initial, todaysBond = null }: { initial: Stress | n
             <dl className="mt-5 grid gap-2 border-t border-line pt-4 text-sm md:grid-cols-2">
               <div className="flex justify-between gap-3">
                 <dt className="text-muted">Reserve deposit (15% of remainder)</dt>
-                <dd className="num">{Number(data.reserve_deposit.value) === 0 ? "0 sats · reserve flat" : sats(data.reserve_deposit.value)}</dd>
+                <dd className="num">{Number(data.reserve_deposit.value) === 0 ? "0 sats · reserve flat" : <Amount sats={data.reserve_deposit.value} />}</dd>
               </div>
               <div className="flex justify-between gap-3">
                 <dt className="text-muted">STX-only stakers (85%)</dt>
