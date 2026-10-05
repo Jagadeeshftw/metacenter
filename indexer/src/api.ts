@@ -373,7 +373,13 @@ export async function buildApi() {
       if (cov) return f(v, unit, "onchain", src, note);
       const mirrored = fallback?.();
       if (mirrored !== undefined && mirrored !== null)
-        return f(mirrored, unit, "mirrored", mirrorSrc, `${READER_CAPPED} These are the same figures from the cycle's events.`);
+        return f(
+          mirrored,
+          unit,
+          "mirrored",
+          mirrorSrc,
+          `Summed from this cycle's calculate-rewards events, not computed by pox5-reader: ${READER_CAPPED} The dashboard's headline coverage is the contract's own figure for the current cycle so far, so the two cover different windows and can differ by a couple of sats per interval from integer truncation.`,
+        );
       return f(null, unit, "onchain", src, config.readerContract ? READER_CAPPED : READER_MISSING);
     };
     return {

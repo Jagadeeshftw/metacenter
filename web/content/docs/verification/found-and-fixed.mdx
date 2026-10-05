@@ -1,0 +1,42 @@
+---
+title: What we have found and fixed
+description: Bugs this project found in itself, what caused them, and what now catches them.
+---
+
+A risk feed that never reports a fault in itself is not being checked. These are ours, with dates and causes. Both were found by deliberate checking rather than by a user hitting them, and both led to a check that would have caught them sooner.
+
+## `/api/bonds/order` answered 500 for about two weeks
+
+**20 September – 5 October 2026.**
+
+`pox5-reader` went live on mainnet on 20 September, and the route began calling `get-bond-payout-order` directly through the public Hiro node. That read-only calls into pox-5 several times, so the node refuses it: each call loads the contract, about 136k of read length, against the endpoint's 500,000 cap ([Read limits](/docs/verification/read-limits)). The request threw and the route answered **500**.
+
+Nothing noticed, because nothing used it. The dashboard reads the payout order from `/metrics/current`, which comes through `coverage-cache`; the uptime monitors watch the site and `/api/health`. The route is documented and the grant application points at it, but no automated check called it.
+
+**Fixed:** it now reads the same cached answer the dashboard uses, and falls back to a direct call for older cycles, reporting why if the node refuses that too rather than failing the request. It also carries each bond's term and how much of it remains.
+
+## `/api/metrics/cycles/:n` answered 200 with its figures nulled out
+
+**20 September – 5 October 2026.**
+
+The same capped call, one layer quieter. This route caught the error and returned `null` for `pool`, `obligation`, `coverage`, `headroom` and four other fields, each with a note saying the read was refused. It answered 200 the whole time, so a status check would never have flagged it: a 200 with no numbers in it looks healthy from the outside.
+
+Found while sweeping every public route after the `bonds/order` fix, on the assumption that the first bug would not be the only one.
+
+**Fixed:** where the contract cannot be called, the route sums the cycle's own `calculate-rewards` events instead, labels the result <Tag kind="mirrored" />, and names the distributions it summed. See [why that can differ from the dashboard](/docs/api/metrics-cycles#why-this-can-differ-from-the-dashboard).
+
+## What catches this now
+
+Every poll, the indexer calls each documented route against itself and records the result. A route fails the check if it **stops returning 200**, or if it **returns 200 with fields nulled out by a refused read** — the second bug's shape, which a status check misses. An honest null, such as coverage marked "n/a: no bonds", passes.
+
+A failure puts `/api/health` into `"status": "degraded"` and names the route under `checks.public_routes`. The uptime monitor already watches for the string `"status":"ok"`, so it stops matching and sends mail. No new monitor, and nobody has to remember to try the route by hand.
+
+<ApiExample path="/health" pick="checks.public_routes" />
+
+The check itself is covered by tests, including one that replays the `bonds/order` 500 and one that replays the hollow 200: [`indexer/src/routes-check.ts`](https://github.com/Jagadeeshftw/metacenter/blob/main/indexer/src/routes-check.ts).
+
+## Related
+
+- [Read limits and coverage-cache](/docs/verification/read-limits) — why these calls are refused in the first place, and how the figures stay onchain anyway.
+- [Health and degradation](/docs/verification/uptime) — what a visitor sees when a piece of this service is down.
+- [Recompute it yourself](/docs/verification/recompute) — and `npm run verify`, which rebuilds every headline figure from public sources.

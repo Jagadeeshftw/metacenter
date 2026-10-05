@@ -4,6 +4,7 @@
   "missing-blocks",
   "recompute",
   "read-limits",
-  "uptime"
+  "uptime",
+  "found-and-fixed"
  ]
 }

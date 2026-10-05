@@ -17,7 +17,7 @@ export const metadata = { title: "Methodology", alternates: { canonical: "/metho
 
 const R = "pox5-reader";
 const ROWS: { metric: string; formula: string; unit: string; label: Provenance; source: string; api: string; fn?: string }[] = [
-  { fn: "get-coverage-for-cycle", metric: "Coverage (cycle)", formula: "pool ÷ obligation, over the cycle's computed distributions", unit: "×", label: "onchain", source: `${R}::get-coverage-for-cycle(cycle) → coverage-bps`, api: "/metrics/current coverage · /metrics/cycles/:n coverage" },
+  { fn: "get-coverage-for-cycle", metric: "Coverage (cycle)", formula: "pool ÷ obligation, over the cycle's computed distributions. A public node refuses this call, so /metrics/cycles/:n answers from the cycle's calculate-rewards events instead, labelled mirrored", unit: "×", label: "onchain", source: `${R}::get-coverage-for-cycle(cycle) → coverage-bps`, api: "/metrics/current coverage · /metrics/cycles/:n coverage" },
   { fn: "get-coverage-summary", metric: "Headroom", formula: "1 − obligation ÷ pool", unit: "%", label: "onchain", source: `${R}::get-coverage-summary → headroom-bps`, api: "/metrics/current headroom" },
   { fn: "get-obligation-per-interval", metric: "Obligation per interval", formula: "Σ over active bonds of shares × target-rate ÷ 10000 ÷ 50 (pox-5 L2266)", unit: "sats", label: "onchain", source: `${R}::get-obligation-per-interval(cycle)`, api: "/metrics/current obligation_per_interval" },
   { fn: "get-bond-payout-order", metric: "Bond payout order", formula: "descending stx-value-ratio, ties to the lower bond index", unit: "bonds", label: "onchain", source: `${R}::get-bond-payout-order(cycle)`, api: "/bonds/order" },

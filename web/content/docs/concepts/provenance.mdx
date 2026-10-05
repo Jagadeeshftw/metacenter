@@ -14,3 +14,15 @@ description: Every figure carries exactly one label - onchain, mirrored or hypot
 - **Exactly one label per figure.** The API returns it as the `provenance` field of every metric.
 - **Price-based figures are never onchain.** The STX/BTC price is not on-chain, so anything that uses it is mirrored or hypothetical.
 - **The dashboard prefers onchain.** When `pox5-reader` is unavailable, a headline figure falls back to the latest distribution and says `mirrored`.
+
+## When a figure comes from events instead of the contract
+
+Some of `pox5-reader`'s read-onlys cannot be called through a public node at all: each call into pox-5 costs about 136k of read length and the endpoint allows 500,000 ([Read limits](/docs/verification/read-limits)). Where that happens, a figure has two possible origins, and the label always says which:
+
+| | Computed by the contract | Summed from events |
+|---|---|---|
+| Label | <Tag kind="onchain" /> | <Tag kind="mirrored" /> |
+| How | `pox5-reader` reads pox-5 state, in a transaction recorded by `coverage-cache` | The indexer adds up the `calculate-rewards` events of the distributions concerned |
+| Where you see it | Dashboard headline figures, `/metrics/current` | [`/metrics/cycles/:n`](/docs/api/metrics-cycles), per-distribution figures in [`/intervals`](/docs/api/intervals) |
+
+**They can differ, for two honest reasons.** The windows may not be the same — a whole finished cycle against the current cycle so far — and the contract rebuilds the pool from rewards-per-token × shares, which truncates to within about two sats per interval of the event total. Anything larger than that is a bug, and `npm run verify` fails on it.
