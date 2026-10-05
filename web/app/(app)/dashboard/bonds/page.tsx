@@ -24,7 +24,8 @@ export default async function BondsPage() {
       />
       <Note>
         {period?.note ??
-          "A bonding period runs 25,200 Bitcoin blocks (about 6 months) and a new one opens every 4,200 blocks (about a month), so at most 6 run at once."}{" "}
+          "A bonding period runs 25,200 Bitcoin blocks (about 6 months) and a new one opens every 4,200 blocks (about a month), so at most 6 run at once"}
+        .{" "}
         A bond is not open-ended: each one stops earning when its period ends, which is why the live book is a handful of
         overlapping bonds rather than a growing pile.
       </Note>

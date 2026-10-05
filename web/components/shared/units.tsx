@@ -62,9 +62,10 @@ export const formatSatsShort = (v: string | number | null | undefined, digits = 
 export const formatBtc = (v: string | number | null | undefined, digits = 3) => {
   const n = num(v);
   if (n === null || Number.isNaN(n)) return "—";
-  // keep small amounts readable rather than printing 0.000 BTC
-  const d = Math.abs(n) > 0 && Math.abs(n) < 1e6 ? 8 : digits;
-  return `${(n / 1e8).toFixed(d)} BTC`;
+  // a fraction of a BTC still has to read as a number: show enough places to be meaningful,
+  // without a tail of zeros
+  if (Math.abs(n) > 0 && Math.abs(n) < 1e6) return `${Number((n / 1e8).toFixed(5))} BTC`;
+  return `${(n / 1e8).toFixed(digits)} BTC`;
 };
 
 /**
