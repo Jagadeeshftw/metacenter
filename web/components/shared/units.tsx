@@ -68,6 +68,17 @@ export const formatBtc = (v: string | number | null | undefined, digits = 3) => 
   return `${(n / 1e8).toFixed(digits)} BTC`;
 };
 
+/** The same choice, for code that builds strings rather than elements (chart axes, tooltips). */
+export const formatAmount = (v: string | number | null | undefined, unit: Unit, exact = false) =>
+  unit === "btc" ? formatBtc(v) : exact ? formatSats(v) : formatSatsShort(v);
+
+/** Axis ticks: short, and in the reader's unit. */
+export const formatAxis = (v: number, unit: Unit) => {
+  if (v === 0) return "0";
+  if (unit === "btc") return `${(v / 1e8).toFixed(v / 1e8 < 1 ? 2 : 1)} BTC`;
+  return v >= 1e9 ? `${(v / 1e9).toFixed(1)}B sats` : `${(v / 1e6).toFixed(0)}M sats`;
+};
+
 /**
  * An amount held in sats, shown in the reader's unit.
  * `exact` keeps every sat rather than shortening to millions.

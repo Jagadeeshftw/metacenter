@@ -5,6 +5,7 @@ import cors from "@fastify/cors";
 import { Cl } from "@stacks/transactions";
 import { config } from "./config.js";
 import { keeperStatus } from "./keeper.js";
+import { lastRouteCheck } from "./routes-check.js";
 import { pool } from "./db.js";
 import { callRead } from "./hiro.js";
 import {
@@ -245,6 +246,20 @@ export async function buildApi() {
       : { ok: true, enabled: false };
     if (keeper?.low_balance) problems.push("keeper balance below the alert threshold");
 
+    // every public route, as the last poll found them
+    const routes = await lastRouteCheck();
+    const routeAge = age(routes?.checked_at ?? null);
+    const failingRoutes = (routes?.results ?? []).filter((r) => !r.ok);
+    checks.public_routes = routes
+      ? {
+          ok: failingRoutes.length === 0 && (routeAge == null || routeAge <= POLL_STALE_S),
+          checked: routes.results.length,
+          failing: failingRoutes.map((r) => ({ route: r.route, status: r.status, problem: r.problem })),
+          checked_age_seconds: routeAge,
+        }
+      : { ok: true, checked: 0, note: "no route check recorded yet" };
+    for (const r of failingRoutes) problems.push(`${r.route}: ${r.problem}`);
+
     checks.reader = { ok: config.readerContract != null, contract: config.readerContract ?? null };
     if (!config.readerContract) problems.push("pox5-reader not configured");
 
@@ -344,18 +359,45 @@ export async function buildApi() {
       );
     }
     const src = reader(`get-coverage-for-cycle(u${n})`);
-    const oc = (v: unknown, unit: string, note?: string) =>
-      cov ? f(v, unit, "onchain", src, note) : f(null, unit, "onchain", src, config.readerContract ? READER_CAPPED : READER_MISSING);
+    // get-coverage-for-cycle reads pox-5 several times, so a public node refuses it for any cycle
+    // (see /docs/verification/read-limits). Rather than answer 200 with a column of nulls, fall
+    // back to the cycle's own calculate-rewards events, which is where these figures come from in
+    // the first place: same numbers, honestly labelled mirrored.
+    const sum = (key: string): bigint => (intervals as any[]).reduce((t: bigint, r: any) => t + BigInt(r[key]), 0n);
+    const mirrorSrc = intervals.length
+      ? `calculate-rewards events for distributions ${intervals[0].distribution_index}–${intervals.at(-1).distribution_index}`
+      : "no distribution booked to this cycle yet";
+    const cyclePool = intervals.length ? sum("gross_pool_sats") : null;
+    const cycleObligation = intervals.length ? sum("bond_target_sats") : null;
+    const oc = (v: unknown, unit: string, note?: string, fallback?: () => unknown) => {
+      if (cov) return f(v, unit, "onchain", src, note);
+      const mirrored = fallback?.();
+      if (mirrored !== undefined && mirrored !== null)
+        return f(mirrored, unit, "mirrored", mirrorSrc, `${READER_CAPPED} These are the same figures from the cycle's events.`);
+      return f(null, unit, "onchain", src, config.readerContract ? READER_CAPPED : READER_MISSING);
+    };
     return {
       cycle: n,
-      intervals_computed: oc(cov?.["intervals-computed"], "intervals"),
-      pool: oc(cov?.["pool-sats"], "sats", "rebuilt from rewards-per-token x shares; +-2 sats per interval"),
-      obligation: oc(cov?.["obligation-sats"], "sats"),
-      bond_paid: oc(cov?.["bond-paid-sats"], "sats"),
-      stx_paid: oc(cov?.["stx-paid-sats"], "sats"),
-      shortfall: oc(cov?.["shortfall-sats"], "sats"),
-      coverage: oc(bps(cov?.["coverage-bps"]), "x", cov && cov["coverage-bps"] === null ? "n/a: no bonds" : undefined),
-      headroom: oc(bps(cov?.["headroom-bps"]), "fraction"),
+      intervals_computed: oc(cov?.["intervals-computed"], "intervals", undefined, () => (intervals.length ? intervals.length : null)),
+      pool: oc(cov?.["pool-sats"], "sats", "rebuilt from rewards-per-token x shares; +-2 sats per interval", () => cyclePool),
+      obligation: oc(cov?.["obligation-sats"], "sats", undefined, () => cycleObligation),
+      bond_paid: oc(cov?.["bond-paid-sats"], "sats", undefined, () => (intervals.length ? sum("bond_paid_sats") : null)),
+      stx_paid: oc(cov?.["stx-paid-sats"], "sats", undefined, () => (intervals.length ? sum("stx_only_sats") : null)),
+      shortfall: oc(cov?.["shortfall-sats"], "sats", undefined, () =>
+        cycleObligation === null || cyclePool === null
+          ? null
+          : cycleObligation > sum("bond_paid_sats")
+            ? cycleObligation - sum("bond_paid_sats")
+            : 0n,
+      ),
+      coverage: oc(bps(cov?.["coverage-bps"]), "x", cov && cov["coverage-bps"] === null ? "n/a: no bonds" : undefined, () =>
+        cyclePool === null || cycleObligation === null || cycleObligation === 0n ? null : Number(cyclePool) / Number(cycleObligation),
+      ),
+      headroom: oc(bps(cov?.["headroom-bps"]), "fraction", undefined, () =>
+        cyclePool === null || cycleObligation === null || cycleObligation === 0n || cyclePool === 0n
+          ? null
+          : Math.max(0, 1 - Number(cycleObligation) / Number(cyclePool)),
+      ),
       hiro: hiro
         ? f(hiro.raw, "object", "mirrored", `https://api.hiro.so/extended/v3/staking/cycles/${n} @ ${hiro.fetched_at.toISOString?.() ?? hiro.fetched_at}`, "rewards.btc.waterfall.bonds is the amount paid, not the obligation")
         : null,

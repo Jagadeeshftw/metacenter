@@ -49,6 +49,30 @@ How to tell it apart from a real outage:
 
 UptimeRobot may alert on it. Confirm against the Railway origin before doing anything; if the origin is healthy, there is nothing to fix. Automated page checks should not use `networkidle` as their only wait for this reason.
 
+### 429s during a screenshot or verification run are self-inflicted
+
+A full screenshot gate loads 40–60 pages in a couple of minutes from one address, and each page
+pulls its own assets. Vercel's edge starts answering some of those with **429**, which shows up as
+console errors in the gate's output and occasionally as a page that fails to settle. A single load
+of the same page immediately afterwards records no failed requests at all.
+
+So: 429s that appear only inside a gate run, with a clean single load afterwards, are the gate
+hitting a rate limit, not visitors seeing a fault. Confirm the same way as the 403 above — one
+plain request, plus the Railway origin — before treating it as an incident. If a gate needs to be
+gentler, space the page loads out rather than chasing the symptom.
+
+### Every public API route is checked each poll
+
+`/api/bonds/order` answered **500** for days without anyone noticing: the dashboard did not use it,
+and the uptime monitors watch the site and `/health`, not each documented route. Now the poll calls
+every route in `indexer/src/routes-check.ts` and records the result, and `/health` reports it under
+`checks.public_routes`.
+
+A route that stops answering 200 — or that answers 200 with its figures nulled out by a refused
+read, which is the same failure wearing a better suit — pushes `/health` to `"status":"degraded"`.
+The UptimeRobot keyword monitor matches `"status":"ok"`, so it stops matching and emails. That is
+how you find out next time, without anyone remembering to try the route by hand.
+
 ### The health monitor depends on exact bytes
 
 The health monitor matches the raw string `"status":"ok"` — no space after the colon, lowercase, double-quoted, and `status` as the first key of the response. That is a contract with the monitor, not a formatting detail:

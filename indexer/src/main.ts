@@ -6,6 +6,7 @@ import { currentPrice, fillMissingPrices } from "./price.js";
 import { publishPending } from "./publisher.js";
 import { runKeeper } from "./keeper.js";
 import { runAlerts } from "./alerts.js";
+import { recordRouteCheck } from "./routes-check.js";
 import { buildApi } from "./api.js";
 
 const log = (...a: unknown[]) => console.log(new Date().toISOString(), ...a);
@@ -17,6 +18,8 @@ async function step(name: string, fn: () => Promise<unknown>) {
     log(`${name} failed:`, e?.message ?? e);
   }
 }
+
+let api: Awaited<ReturnType<typeof buildApi>> | null = null;
 
 let running = false;
 async function poll() {
@@ -36,6 +39,9 @@ async function poll() {
     await step("keeper", () => runKeeper(log));
     // last, and isolated like every other step: a bot failure must not touch the API or keeper
     await step("alerts", () => runAlerts(log));
+    // last: every documented route, so a broken one shows up in /health rather than waiting for
+    // somebody to try it
+    if (api) await step("routes", () => recordRouteCheck(api!, log));
   } finally {
     running = false;
     log(`poll done in ${Math.round((Date.now() - t0) / 1000)}s`);
@@ -50,6 +56,7 @@ async function main() {
     return;
   }
   const app = await buildApi();
+  api = app;
   await app.listen({ port: config.port, host: "0.0.0.0" });
   log(
     `api listening on ${config.port}; reader ${config.readerContract ?? "(not deployed)"}; cache ${config.cacheContract ?? "(none)"}; feed ${config.feedContract}; publisher ${config.publisherKey ? "on" : "off"}; keeper ${config.keeperKey ? "on" : "off"}; alerts ${config.telegramToken && config.telegramChannel ? `on (${config.telegramChannel})` : "off"}`,

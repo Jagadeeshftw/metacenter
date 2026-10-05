@@ -2,30 +2,32 @@
 import type { Interval } from "@/lib/api";
 import { coverageSlots, poolSlots, reserveSlots, yieldSlots } from "@/lib/slots";
 import { IntervalChart } from "./chart";
-
-const m = (v: number) => (v === 0 ? "0" : `${(v / 1e6).toFixed(0)}M`);
+import { formatAxis, useUnits } from "@/components/shared/units";
 
 export function PoolChart({ intervals, height }: { intervals: Interval[]; height?: number }) {
+  const { unit } = useUnits();
+  const u = unit === "btc" ? "BTC" : "sats";
   return (
     <IntervalChart
-      slots={poolSlots(intervals)}
+      slots={poolSlots(intervals, unit)}
       height={height}
-      yFormat={(v) => (v === 0 ? "0" : `${m(v)} sats`)}
+      yFormat={(v) => formatAxis(v, unit)}
       ariaLabel="Gross reward pool per distribution, with the amount owed to bonds"
       legend={[
-        { label: "Pool (gross accrued, sats)", swatch: "bar" },
-        { label: "Owed to bonds (sats)", swatch: "tick" },
+        { label: `Pool (gross accrued, ${u})`, swatch: "bar" },
+        { label: `Owed to bonds (${u})`, swatch: "tick" },
       ]}
     />
   );
 }
 
 export function CoverageChart({ intervals, height }: { intervals: Interval[]; height?: number }) {
+  const { unit } = useUnits();
   const vals = intervals.map((i) => i.coverage.value ?? 0);
   const top = Math.max(20, Math.ceil((Math.max(...vals, 0) * 1.15) / 5) * 5);
   return (
     <IntervalChart
-      slots={coverageSlots(intervals)}
+      slots={coverageSlots(intervals, unit)}
       height={height}
       yMax={top}
       yFormat={(v) => `${v.toFixed(0)}×`}
@@ -46,9 +48,10 @@ export function CoverageChart({ intervals, height }: { intervals: Interval[]; he
 }
 
 export function YieldChart({ intervals, height }: { intervals: Interval[]; height?: number }) {
+  const { unit } = useUnits();
   return (
     <IntervalChart
-      slots={yieldSlots(intervals)}
+      slots={yieldSlots(intervals, unit)}
       height={height}
       yMax={Math.max(10, Math.ceil(Math.max(...intervals.map((i) => (i.stx_only_apy_btc.value ?? 0) * 100)) / 5) * 5)}
       yFormat={(v) => `${v.toFixed(0)}%`}
@@ -61,14 +64,15 @@ export function YieldChart({ intervals, height }: { intervals: Interval[]; heigh
 }
 
 export function ReserveChart({ intervals, height }: { intervals: Interval[]; height?: number }) {
+  const { unit } = useUnits();
   return (
     <IntervalChart
-      slots={reserveSlots(intervals)}
+      slots={reserveSlots(intervals, unit)}
       height={height}
-      yFormat={(v) => (v === 0 ? "0" : `${(v / 1e8).toFixed(2)} BTC`)}
+      yFormat={(v) => formatAxis(v, unit)}
       barColor="var(--series-pool)"
       ariaLabel="Reserve balance after each distribution"
-      legend={[{ label: "Reserve balance after distribution (BTC)", swatch: "bar" }]}
+      legend={[{ label: `Reserve balance after distribution (${unit === "btc" ? "BTC" : "sats"})`, swatch: "bar" }]}
     />
   );
 }
